@@ -2,18 +2,23 @@ import React from "react";
 import { View, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
 
 const BottomTab = () => {
+  const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
       <View style={styles.navBackground}></View>
 
       <View style={styles.iconContainer}>
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Login" as never)}
+        >
           <FontAwesome5 name="home" size={24} color="#232761" />
         </TouchableOpacity>
         <TouchableOpacity>
-        <FontAwesome5 name="lightbulb" size={24} color="#232761" />
+          <FontAwesome5 name="lightbulb" size={24} color="#232761" />
         </TouchableOpacity>
         <View style={{ width: 60 }} />
         <TouchableOpacity>

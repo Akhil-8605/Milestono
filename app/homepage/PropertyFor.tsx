@@ -143,6 +143,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: CARD_WIDTH,
+    height: 450,
     paddingBottom: 35,
     backgroundColor: "white",
     borderRadius: 20,
@@ -155,6 +156,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    justifyContent: 'space-between'
   },
   image: {
     width: "90%",

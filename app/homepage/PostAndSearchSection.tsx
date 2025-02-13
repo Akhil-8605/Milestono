@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons"; // Make sure to install expo/vector-icons
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
 
 export default function PropertySearch() {
   const options = [
@@ -15,8 +16,9 @@ export default function PropertySearch() {
     { id: 2, title: "Rent", icon: "key" },
     { id: 3, title: "PG", icon: "bed" },
     { id: 4, title: "Commercial", icon: "building" },
-    { id: 5, title: "Post", icon: "pen" },
+    { id: 5, title: "Post", icon: "pen", screens: "PostPropertyPage" },
   ];
+  const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
@@ -33,7 +35,11 @@ export default function PropertySearch() {
         contentContainerStyle={styles.scrollContainer}
       >
         {options.map((option) => (
-          <TouchableOpacity key={option.id} style={styles.card}>
+          <TouchableOpacity
+            key={option.id}
+            style={styles.card}
+            onPress={() => navigation.navigate("PostPropertyPage" as never)}
+          >
             <View style={styles.iconContainer}>
               <FontAwesome5 name={option.icon} size={24} color="#2E3192" />
             </View>

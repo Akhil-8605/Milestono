@@ -9,11 +9,16 @@ import {
   Dimensions,
   StatusBar,
   ScrollView,
-  Image
+  Image,
 } from "react-native";
+import { useNavigation } from "expo-router";
 
+interface HeroSectionProps {
+  toggleMenu: () => void;
+}
 
-export default function HeroSection(){
+const HeroSection: React.FC<HeroSectionProps> = ({ toggleMenu }) => {
+  const navigation = useNavigation();
   return (
     <View style={stylesHero.container}>
       <StatusBar translucent backgroundColor="transparent" />
@@ -29,7 +34,7 @@ export default function HeroSection(){
           <TouchableOpacity style={stylesHero.buyButton}>
             <Text style={stylesHero.buyLink}>Buy in Nashik</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={stylesHero.menuButton}>
+          <TouchableOpacity style={stylesHero.menuButton} onPress={toggleMenu}>
             <svg
               width="35px"
               height="35px"
@@ -101,7 +106,12 @@ export default function HeroSection(){
                 </g>
               </svg>
               <TouchableOpacity style={stylesHero.searchButton}>
-                <Text style={stylesHero.searchButtonText}>Search</Text>
+                <Text
+                  style={stylesHero.searchButtonText}
+                  onPress={() => navigation.navigate("SearchResults" as never)}
+                >
+                  Search
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -248,3 +258,5 @@ const stylesHero = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
+export default HeroSection
