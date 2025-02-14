@@ -8,12 +8,11 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
+import { useNavigation } from "expo-router";
 
-// Get device width
 const { width } = Dimensions.get("window");
-const cardWidth = width * 0.9; // 90% of screen width
+const cardWidth = width * 0.9; 
 
-// Sample news data
 const newsArticles = [
   {
     id: 1,
@@ -36,6 +35,7 @@ const newsArticles = [
 ];
 
 const NewsArticlesSection = () => {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       {/* Section Header */}
@@ -66,7 +66,9 @@ const NewsArticlesSection = () => {
       </ScrollView>
 
       {/* See More Button */}
-      <TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("NewsArticalsPage" as never)}
+      >
         <Text style={styles.seeMore}>See More</Text>
       </TouchableOpacity>
     </View>
@@ -107,7 +109,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 5,
-    borderWidth: .5,
+    borderWidth: 0.5,
     borderColor: "lightgrey",
   },
   image: {
@@ -132,7 +134,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#fff",
-    borderWidth: .5,
+    borderWidth: 0.5,
     marginTop: 5,
     borderColor: "#242a80",
     paddingVertical: 6,

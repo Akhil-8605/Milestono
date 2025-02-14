@@ -36,13 +36,13 @@ const MenuDrawer = ({ menuOpen, toggleMenu, userData, isAuthenticated }: { menuO
       title: "Home",
       subtitle: "Go to homepage",
       screen: "homepage",
-      image: require("../assets/images/PersonDummy.png"),
+      image: require("../../assets/images/PersonDummy.png"),
     },
     {
       title: "Services",
       subtitle: "View our services",
       screen: "ServicesSection",
-      image: require("../assets/images/PersonDummy.png"),
+      image: require("../../assets/images/PersonDummy.png"),
     },
     // Add more menu items as needed
   ];
@@ -54,14 +54,14 @@ const MenuDrawer = ({ menuOpen, toggleMenu, userData, isAuthenticated }: { menuO
           <View style={styles.topHeader}>
             <View style={styles.userInfo}>
               <Image
-                source={require("../assets/images/PersonDummy.png")}
+                source={require("../../assets/images/PersonDummy.png")}
                 style={styles.userImage}
               />
               <Text style={styles.greeting}>
                 Hello
                 {userData?.userFullName
                   ? ` ${userData.userFullName.split(" ")[0]},`
-                  : ""}{" "}
+                  : " User..!"}{" "}
                 👋
               </Text>
             </View>

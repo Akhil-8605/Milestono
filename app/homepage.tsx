@@ -16,7 +16,7 @@ import PostAndSearchSection from "./homepage/PostAndSearchSection";
 import Properties from "./homepage/Properties";
 import PropertyForSection from "./homepage/PropertyFor";
 import PostPropertySection from "./homepage/PostPropertySection";
-import BottomNavbar from "./BottomNavbar";
+import BottomNavbar from "./components/BottomNavbar";
 import PreferredAgents from "./homepage/PrefferedAgents";
 import ServicesSection from "./homepage/ServicesSection";
 import NewProjects from "./homepage/NewProjects";
@@ -26,9 +26,9 @@ import RealEstateTabs from "./homepage/RealestateSection";
 import NewsArticlesSection from "./homepage/NewsArticalsSection";
 import UserFeedbackSection from "./homepage/UserFeedbackSection";
 import AboutMilestono from "./homepage/AboutMilestono";
-import MenuDrawer from "./MenuDrawer";
+import MenuDrawer from "./components/MenuDrawer";
 export default function homepage() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(true);
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -37,13 +37,7 @@ export default function homepage() {
     <ScrollView
       style={{ position: "relative", flex: 1, backgroundColor: "#f5f5f5" }}
     >
-      <HeroSection toggleMenu={toggleMenu}/>
-      {/* <MenuDrawer 
-        menuOpen={menuOpen}
-        toggleMenu={toggleMenu}
-        userData={{}} // Replace with actual user data
-        isAuthenticated={true} // Replace with actual authentication status
-      /> */}
+      <HeroSection />
       <PostAndSearchSection />
       <Properties />
       <PropertyForSection />

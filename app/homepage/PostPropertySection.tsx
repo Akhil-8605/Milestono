@@ -1,13 +1,14 @@
-"use client"
-
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native"
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useNavigation } from "expo-router";
 
 export default function PropertyRegistration() {
   const stats = [
     { number: "04", label: "Property Listings" },
     { number: "05", label: "Projects" },
     { number: "27", label: "Total Users" },
-  ]
+  ];
+
+  const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
@@ -15,7 +16,9 @@ export default function PropertyRegistration() {
 
       <Text style={styles.title}>Register to post your property</Text>
 
-      <Text style={styles.subtitle}>Post your residential / commercial property</Text>
+      <Text style={styles.subtitle}>
+        Post your residential / commercial property
+      </Text>
 
       <View style={styles.statsContainer}>
         {stats.map((stat, index) => (
@@ -26,15 +29,19 @@ export default function PropertyRegistration() {
         ))}
       </View>
 
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate("PostPropertyPage" as never)}
+      >
         <Text style={styles.buttonText}>Post your property</Text>
       </TouchableOpacity>
 
       <Text style={styles.footerText}>
-        Or post via <Text style={styles.whatsappText}>Whatsapp, send a "hi" to</Text>
+        Or post via{" "}
+        <Text style={styles.whatsappText}>Whatsapp, send a "hi" to</Text>
       </Text>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -43,11 +50,12 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: "center",
     width: "100%",
-    borderRadius: 16,
+    borderRadius: 19,
     shadowColor: "#000",
-    shadowOpacity: .1,
+    shadowOpacity: 0.1,
     shadowRadius: 10,
     marginBottom: 24,
+    marginHorizontal: "auto",
   },
   headerText: {
     color: "#6B7280",
@@ -107,5 +115,4 @@ const styles = StyleSheet.create({
   whatsappText: {
     color: "#6B7280",
   },
-})
-
+});

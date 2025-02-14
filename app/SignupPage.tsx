@@ -171,7 +171,7 @@ export default function SignupScreen() {
                     Already have an account?{" "}
                   </Text>
                   <TouchableOpacity
-                    onPress={() => navigation.navigate("Login" as never)}
+                    onPress={() => navigation.navigate("LoginPage" as never)}
                   >
                     <Text style={styles.linkText}>Log in</Text>
                   </TouchableOpacity>

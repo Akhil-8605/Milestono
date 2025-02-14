@@ -13,7 +13,7 @@ const BottomTab = () => {
 
       <View style={styles.iconContainer}>
         <TouchableOpacity
-          onPress={() => navigation.navigate("Login" as never)}
+          onPress={() => navigation.navigate("LoginPage" as never)}
         >
           <FontAwesome5 name="home" size={24} color="#232761" />
         </TouchableOpacity>

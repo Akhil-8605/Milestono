@@ -80,7 +80,7 @@ export default function LoginScreen() {
 
               <TouchableOpacity
                 style={styles.forgotPassword}
-                onPress={() => navigation.navigate("ForgotPassword" as never)}
+                onPress={() => navigation.navigate("ForgotPasswordPage" as never)}
               >
                 <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
               </TouchableOpacity>
@@ -131,7 +131,7 @@ export default function LoginScreen() {
               <View style={styles.signupContainer}>
                 <Text style={styles.signupText}>Don't have an account? </Text>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate("Signup" as never)}
+                  onPress={() => navigation.navigate("SignupPage" as never)}
                 >
                   <Text style={styles.signupTextLink}>Sign up</Text>
                 </TouchableOpacity>

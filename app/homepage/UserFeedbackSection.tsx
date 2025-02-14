@@ -8,6 +8,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
+import { useNavigation } from "expo-router";
 
 // Get device width
 const { width } = Dimensions.get("window");
@@ -36,6 +37,7 @@ const feedbacks = [
 ];
 
 const UserFeedbackSection = () => {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       {/* Section Header */}
@@ -65,7 +67,9 @@ const UserFeedbackSection = () => {
       </ScrollView>
 
       {/* See More Button */}
-      <TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("UserFeedbackPage" as never)}
+      >
         <Text style={styles.seeMore}>See More</Text>
       </TouchableOpacity>
     </View>
@@ -109,7 +113,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#222",
     marginBottom: 15,
-    alignItems: "flex-start"
+    alignItems: "flex-start",
   },
   userInfo: {
     flexDirection: "row",

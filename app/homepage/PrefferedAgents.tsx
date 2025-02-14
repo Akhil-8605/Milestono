@@ -1,5 +1,3 @@
-"use client";
-
 import {
   View,
   Text,
@@ -7,8 +5,10 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
 } from "react-native";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
 
 const agents = [
   {
@@ -51,14 +51,20 @@ const agents = [
 ];
 
 export default function PreferredAgents() {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Milestono Preferred Agents</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("AgentsPage" as never)}>
           <Text style={styles.seeAll}>
             See all{" "}
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" width={7.5} fill="#FF4444">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 320 512"
+              width={7.5}
+              fill="#FF4444"
+            >
               <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z" />
             </svg>
           </Text>
@@ -102,6 +108,8 @@ export default function PreferredAgents() {
   );
 }
 
+const { width, height } = Dimensions.get("window");
+
 const styles = StyleSheet.create({
   container: {
     padding: 16,
@@ -130,13 +138,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginRight: 16,
-    width: 300,
+    width: width * .6,
     margin: "auto",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
     },
+    justifyContent: "center",
     shadowOpacity: 0.08,
     shadowRadius: 5,
     elevation: 10,

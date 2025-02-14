@@ -55,7 +55,7 @@ export default function ForgotPasswordScreen() {
 
               <TouchableOpacity
                 style={styles.backToLogin}
-                onPress={() => navigation.navigate("Login" as never)}
+                onPress={() => navigation.navigate("LoginPage" as never)}
               >
                 <Text style={styles.linkText}>Back to Login</Text>
               </TouchableOpacity>

@@ -13,11 +13,7 @@ import {
 } from "react-native";
 import { useNavigation } from "expo-router";
 
-interface HeroSectionProps {
-  toggleMenu: () => void;
-}
-
-const HeroSection: React.FC<HeroSectionProps> = ({ toggleMenu }) => {
+const HeroSection= () => {
   const navigation = useNavigation();
   return (
     <View style={stylesHero.container}>
@@ -29,12 +25,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({ toggleMenu }) => {
       >
         <View style={stylesHero.overlay} />
 
-        <View style={stylesHero.header}>
+        <TouchableOpacity style={stylesHero.header}>
           <Text style={stylesHero.logo}>milestono</Text>
           <TouchableOpacity style={stylesHero.buyButton}>
             <Text style={stylesHero.buyLink}>Buy in Nashik</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={stylesHero.menuButton} onPress={toggleMenu}>
+          <TouchableOpacity style={stylesHero.menuButton}>
             <svg
               width="35px"
               height="35px"
@@ -50,7 +46,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ toggleMenu }) => {
               ></path>
             </svg>
           </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
 
         <View style={stylesHero.content}>
           <View style={stylesHero.textWrapper}>
@@ -79,6 +75,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ toggleMenu }) => {
                 placeholder="Search 'Delhi'"
                 placeholderTextColor="#666"
               />
+              <TouchableOpacity>
               <svg
                 width="30px"
                 height="30px"
@@ -105,6 +102,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ toggleMenu }) => {
                   </g>{" "}
                 </g>
               </svg>
+              </TouchableOpacity>
               <TouchableOpacity style={stylesHero.searchButton}>
                 <Text
                   style={stylesHero.searchButtonText}
@@ -159,6 +157,7 @@ const stylesHero = StyleSheet.create({
   },
   menuButton: {
     padding: 10,
+    cursor: "pointer",
   },
   content: {
     flex: 1,
