@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -10,11 +10,54 @@ import {
   StatusBar,
   ScrollView,
   Image,
+  Animated,
 } from "react-native";
+import Svg, { G, Path } from "react-native-svg";
 import { useNavigation } from "expo-router";
 
-const HeroSection= () => {
+const cities = [
+  "Pune",
+  "Mumbai",
+  "Solapur",
+  "Satara",
+  "Amravati",
+  "Nashik",
+  "Delhi",
+  "Hyderabad",
+  "Noida",
+  "Bangalore",
+  "Chennai",
+  "Kolkata",
+  "Ahmedabad",
+];
+
+const HeroSection = () => {
   const navigation = useNavigation();
+
+  const [index, setIndex] = useState(0);
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      Animated.sequence([
+        Animated.timing(translateY, {
+          toValue: -20,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setIndex((prevIndex) => (prevIndex + 1) % cities.length);
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <View style={stylesHero.container}>
       <StatusBar translucent backgroundColor="transparent" />
@@ -25,28 +68,22 @@ const HeroSection= () => {
       >
         <View style={stylesHero.overlay} />
 
-        <TouchableOpacity style={stylesHero.header}>
+        <View style={stylesHero.header}>
           <Text style={stylesHero.logo}>milestono</Text>
-          <TouchableOpacity style={stylesHero.buyButton}>
+          <View style={stylesHero.buyButton}>
             <Text style={stylesHero.buyLink}>Buy in Nashik</Text>
-          </TouchableOpacity>
+          </View>
           <TouchableOpacity style={stylesHero.menuButton}>
-            <svg
-              width="35px"
-              height="35px"
-              viewBox="0 0 24 24"
-              fill="white"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
+            <Svg width="35" height="35" viewBox="0 0 24 24" fill="white">
+              <Path
                 fillRule="evenodd"
                 clipRule="evenodd"
                 d="M4 5C3.44772 5 3 5.44772 3 6C3 6.55228 3.44772 7 4 7H20C20.5523 7 21 6.55228 21 6C21 5.44772 20.5523 5 20 5H4ZM7 12C7 11.4477 7.44772 11 8 11H20C20.5523 11 21 11.4477 21 12C21 12.5523 20.5523 13 20 13H8C7.44772 13 7 12.5523 7 12ZM13 18C13 17.4477 13.4477 17 14 17H20C20.5523 17 21 17.4477 21 18C21 18.5523 20.5523 19 20 19H14C13.4477 19 13 18.5523 13 18Z"
                 fill="white"
-              ></path>
-            </svg>
+              />
+            </Svg>
           </TouchableOpacity>
-        </TouchableOpacity>
+        </View>
 
         <View style={stylesHero.content}>
           <View style={stylesHero.textWrapper}>
@@ -69,49 +106,36 @@ const HeroSection= () => {
               </TouchableOpacity>
             </View>
 
-            <View style={stylesHero.searchContainer}>
-              <TextInput
-                style={stylesHero.searchInput}
-                placeholder="Search 'Delhi'"
-                placeholderTextColor="#666"
-              />
-              <TouchableOpacity>
-              <svg
-                width="30px"
-                height="30px"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="#232761"
-                style={stylesHero.searchIcon}
-              >
-                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                <g
-                  id="SVGRepo_tracerCarrier"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                ></g>
-                <g id="SVGRepo_iconCarrier">
-                  {" "}
-                  <g>
-                    {" "}
-                    <path fill="none" d="M0 0h24v24H0z"></path>{" "}
-                    <path
-                      fill-rule="nonzero"
-                      d="M13 1l.001 3.062A8.004 8.004 0 0 1 19.938 11H23v2l-3.062.001a8.004 8.004 0 0 1-6.937 6.937L13 23h-2v-3.062a8.004 8.004 0 0 1-6.938-6.937L1 13v-2h3.062A8.004 8.004 0 0 1 11 4.062V1h2zm-1 5a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm0 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"
-                    ></path>{" "}
-                  </g>{" "}
-                </g>
-              </svg>
-              </TouchableOpacity>
-              <TouchableOpacity style={stylesHero.searchButton}>
-                <Text
-                  style={stylesHero.searchButtonText}
-                  onPress={() => navigation.navigate("SearchResults" as never)}
+            <TouchableOpacity
+              style={stylesHero.searchContainer}
+              onPress={() => navigation.navigate("SearchPage" as never)}
+            >
+              <Animated.Text style={[stylesHero.searchInput]}>
+                {`Search "${cities[index]}"`}
+              </Animated.Text>
+              <View>
+                <Svg
+                  width="30"
+                  height="30"
+                  viewBox="0 0 24 24"
+                  fill="#232761"
+                  style={stylesHero.searchIcon}
                 >
-                  Search
-                </Text>
-              </TouchableOpacity>
-            </View>
+                  <G id="SVGRepo_iconCarrier">
+                    <G>
+                      <Path fill="none" d="M0 0h24v24H0z" />
+                      <Path
+                        fillRule="nonzero"
+                        d="M13 1l.001 3.062A8.004 8.004 0 0 1 19.938 11H23v2l-3.062.001a8.004 8.004 0 0 1-6.937 6.937L13 23h-2v-3.062a8.004 8.004 0 0 1-6.938-6.937L1 13v-2h3.062A8.004 8.004 0 0 1 11 4.062V1h2zm-1 5a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm0 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"
+                      />
+                    </G>
+                  </G>
+                </Svg>
+              </View>
+              <View style={stylesHero.searchButton}>
+                <Text style={stylesHero.searchButtonText}>Search</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
       </ImageBackground>
@@ -157,7 +181,6 @@ const stylesHero = StyleSheet.create({
   },
   menuButton: {
     padding: 10,
-    cursor: "pointer",
   },
   content: {
     flex: 1,
@@ -258,4 +281,4 @@ const stylesHero = StyleSheet.create({
   },
 });
 
-export default HeroSection
+export default HeroSection;
