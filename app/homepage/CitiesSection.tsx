@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   projectImage: {
     width: 120,
     height: 120,
-    borderRadius: '50%',
+    borderRadius: 100,
   },
   projectTitle: {
     fontSize: 16,

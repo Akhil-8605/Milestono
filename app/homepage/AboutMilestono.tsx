@@ -14,7 +14,14 @@ const MilestonoVideoSection = () => {
 
       {/* Embedded YouTube Video */}
       <View style={styles.videoContainer}>
-        <iframe
+        <WebView
+          style={{ flex: 1 }}
+          javaScriptEnabled
+          source={{
+            uri: "https://www.youtube.com/embed/QyF0oGxdG80?si=q2_PHs5qza8PFSGV",
+          }}
+        />
+        {/* <iframe
           width="100%"
           height="100%"
           src="https://www.youtube.com/embed/QyF0oGxdG80?si=q2_PHs5qza8PFSGV"
@@ -22,7 +29,7 @@ const MilestonoVideoSection = () => {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerPolicy="strict-origin-when-cross-origin"
           allowFullScreen
-        ></iframe>
+        ></iframe> */}
       </View>
     </View>
   );

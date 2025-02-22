@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
+import Svg, { Path } from "react-native-svg";
 
 const agents = [
   {
@@ -17,7 +18,7 @@ const agents = [
     company: "Sri Sai Associates",
     operatingSince: "2009",
     logo: require("../../assets/images/agentsdummy.png"),
-    address: "adress address address",
+    address: "address address address address",
   },
   {
     id: "1",
@@ -56,17 +57,20 @@ export default function PreferredAgents() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Milestono Preferred Agents</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("AgentsPage" as never)}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("AgentsPage" as never)}
+        >
           <Text style={styles.seeAll}>
             See all{" "}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 320 512"
-              width={7.5}
-              fill="#FF4444"
-            >
-              <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z" />
-            </svg>
+            <Svg width={25} height={25} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M9 18l6-6-6-6"
+                stroke={"red"}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
           </Text>
         </TouchableOpacity>
       </View>
@@ -114,31 +118,42 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     backgroundColor: "#f5f5f5",
+    alignItems: "flex-start",
   },
   header: {
+    width: "100%",
+    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 30,
   },
   title: {
     fontSize: 25,
     fontWeight: "700",
     color: "#333333",
+    width: "70%",
   },
   seeAll: {
     fontSize: 16,
     color: "#FF4444",
+    marginTop: 5,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent:"center"
   },
   scrollContent: {
     paddingRight: 16,
+    paddingTop: 2,
+    paddingBottom: 10,
   },
   card: {
     backgroundColor: "white",
     borderRadius: 12,
     padding: 16,
     marginRight: 16,
-    width: width * .6,
+    width: 250,
     margin: "auto",
     shadowColor: "#000",
     shadowOffset: {
@@ -149,6 +164,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 5,
     elevation: 10,
+    alignItems: "flex-start",
   },
   logoContainer: {
     display: "flex",
@@ -200,6 +216,7 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: "#ecfdf5",
     borderRadius: 6,
+    width: 100,
   },
   addressLabel: {
     fontSize: 12,
@@ -207,8 +224,7 @@ const styles = StyleSheet.create({
   },
   addressDetail: {
     fontSize: 12,
-    flexWrap: "wrap",
     marginTop: 2,
-    width: 125,
+    width: 100,
   },
 });

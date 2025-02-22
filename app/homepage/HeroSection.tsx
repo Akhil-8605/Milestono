@@ -87,10 +87,8 @@ const HeroSection = () => {
 
         <View style={stylesHero.content}>
           <View style={stylesHero.textWrapper}>
-            <Text style={stylesHero.mainTitle}>
-              Milestono <Text style={stylesHero.description}>is an online</Text>
-            </Text>
             <Text style={stylesHero.description}>
+              <Text style={stylesHero.mainTitle}>Milestono</Text> is an online
               platform offering properties in every city, perfect for sellers to
               reach more buyers and get the best deals.
             </Text>
@@ -192,17 +190,15 @@ const stylesHero = StyleSheet.create({
     alignItems: "flex-end",
     textAlign: "left",
     marginBottom: 30,
+    paddingTop: 25,
     width: "100%",
     paddingHorizontal: 20,
-    flexWrap: "wrap",
-    maxWidth: 500,
+    maxWidth: 600,
+    maxHeight: 175,
   },
   mainTitle: {
-    color: "white",
     fontSize: 38,
     fontWeight: "600",
-    textAlign: "left",
-    width: "60%",
   },
   boldText: {
     fontWeight: "bold",
@@ -210,8 +206,8 @@ const stylesHero = StyleSheet.create({
   description: {
     color: "white",
     fontSize: 16,
-    lineHeight: 24,
     textAlign: "left",
+    justifyContent: "flex-end",
     fontWeight: "400",
     maxWidth: "80%",
     width: "60%",

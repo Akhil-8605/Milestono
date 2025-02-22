@@ -1,18 +1,21 @@
 import React from "react";
-import { ScrollView } from "react-native";
-import Homepage from "./homepage";  // adjust path as needed
+import { View, ScrollView, StyleSheet } from "react-native";
+import Homepage from "./homepage"; // adjust path as needed
 import Footer from "./components/Footer";
 import BottomNavbar from "./components/BottomNavbar";
 
 export default function Main() {
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      style={{ position: "relative", flex: 1, backgroundColor: "#f5f5f5" }}
-    >
-      <Homepage />
-      <Footer />
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 80 }}
+        style={{ flex: 1, backgroundColor: "#f5f5f5" }}
+      >
+        <Homepage />
+        <Footer />
+      </ScrollView>
       <BottomNavbar />
-    </ScrollView>
+    </View>
   );
 }

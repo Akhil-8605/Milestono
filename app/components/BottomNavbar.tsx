@@ -13,7 +13,7 @@ const BottomTab = () => {
 
       <View style={styles.iconContainer}>
         <TouchableOpacity
-          onPress={() => navigation.navigate("LoginPage" as never)}
+          onPress={() => navigation.navigate("index" as never)}
         >
           <FontAwesome5 name="home" size={24} color="#232761" />
         </TouchableOpacity>
@@ -24,7 +24,9 @@ const BottomTab = () => {
         <TouchableOpacity>
           <FontAwesome5 name="bell" size={24} color="#232761" />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("LoginPage" as never)}
+        >
           <FontAwesome5 name="user" size={24} color="#232761" />
         </TouchableOpacity>
       </View>
@@ -37,8 +39,12 @@ const BottomTab = () => {
 
 const styles = StyleSheet.create({
   container: {
-    position: "sticky",
+    position: "absolute",
     bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100000000,
+    elevation: 10,
     width: "100%",
     height: 80,
     alignItems: "center",
@@ -51,7 +57,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    // borderWidth: .1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.3,

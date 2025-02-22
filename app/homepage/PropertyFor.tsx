@@ -10,12 +10,13 @@ import {
   Image,
   Modal,
 } from "react-native";
+import { BlurView } from "expo-blur";
 
-const CARD_WIDTH = Dimensions.get("window").width * 0.7;
+const CARD_WIDTH = Dimensions.get("window").width * 0.75;
 
 export default function PropertyForSection() {
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedType, setSelectedType] = useState(null);
+  const [selectedType, setSelectedType] = useState<string>("");
   const [location, setLocation] = useState("");
 
   const cardData = [
@@ -33,7 +34,7 @@ export default function PropertyForSection() {
     },
   ];
 
-  const handleExplore = (type) => {
+  const handleExplore = (type: string) => {
     setSelectedType(type);
     setModalVisible(true);
   };
@@ -66,7 +67,7 @@ export default function PropertyForSection() {
           </View>
         ))}
 
-        <View key={2} style={styles.card}>
+        <View key={3} style={styles.card}>
           <Image
             source={require("../../assets/images/ForInvestorsImg.jpg")}
             style={styles.image}
@@ -92,7 +93,11 @@ export default function PropertyForSection() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <BlurView
+            style={styles.modalContent}
+            intensity={50}
+            tint="systemThinMaterialLight"
+          >
             <Text style={styles.modalTitle}>
               Find Properties {selectedType}
             </Text>
@@ -119,7 +124,7 @@ export default function PropertyForSection() {
             >
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
-          </View>
+          </BlurView>
         </View>
       </Modal>
     </View>
@@ -140,6 +145,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     gap: 20,
     paddingRight: 10,
+    paddingLeft: 2,
   },
   card: {
     width: CARD_WIDTH,
@@ -198,18 +204,17 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   modalContent: {
     width: "95%",
-    // maxWidth: 400,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    maxWidth: 400,
     borderRadius: 20,
     padding: 24,
-    backdropFilter: "blur(10px)",
+    overflow: "hidden",
   },
   modalTitle: {
     fontSize: 24,
@@ -245,8 +250,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   closeButton: {
-    color: "#fff",
-    backgroundColor: "#ffffff00",
+    backgroundColor: "transparent",
     paddingVertical: 14,
     borderRadius: 8,
     borderWidth: 1,

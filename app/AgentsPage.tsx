@@ -316,11 +316,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 30,
+    gap: 10,
   },
   title: {
     fontSize: 25,
     fontWeight: "700",
     color: "#333333",
+    maxWidth: "85%",
   },
   dropdown: {
     padding: 8,
@@ -336,13 +338,15 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "center",
     gap: 16,
+    paddingVertical: 10,
+    marginHorizontal: "auto"
   },
   card: {
     backgroundColor: "white",
     borderRadius: 12,
     padding: 16,
     marginRight: 16,
-    width: width * 0.7,
+    width: width * 0.85,
     margin: "auto",
     shadowColor: "#000",
     shadowOffset: {

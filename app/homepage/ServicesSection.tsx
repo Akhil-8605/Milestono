@@ -115,9 +115,9 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
     }),
-    width: "90%",
-    transform: [{ translateY: 80 }, { translateX: 0 }],
-    margin: "auto",
+    width: "95%",
+    transform: [{ translateY: 100 }, { translateX: 0 }],
+    marginHorizontal: 25,
   },
   scrollContent: {
     padding: 16,

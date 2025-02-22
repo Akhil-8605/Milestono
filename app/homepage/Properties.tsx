@@ -123,6 +123,8 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingRight: 20,
+    paddingLeft: 2,
+    paddingVertical: 10,
   },
   card: {
     width: CARD_WIDTH,
