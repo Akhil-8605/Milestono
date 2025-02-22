@@ -12,11 +12,16 @@ import { useNavigation } from "expo-router";
 
 export default function PropertySearch() {
   const options = [
-    { id: 1, title: "Buy", icon: "home" },
-    { id: 2, title: "Rent", icon: "key" },
-    { id: 3, title: "PG", icon: "bed" },
-    { id: 4, title: "Commercial", icon: "building" },
-    { id: 5, title: "Post", icon: "pen", screens: "PostPropertyPage" },
+    { id: 1, title: "Buy", icon: "home", linkTo: "SearchPage" },
+    { id: 2, title: "Rent", icon: "key", linkTo: "SearchPage" },
+    { id: 3, title: "PG", icon: "bed", linkTo: "SearchPage" },
+    { id: 4, title: "Commercial", icon: "building", linkTo: "SearchPage" },
+    {
+      id: 5,
+      title: "Post",
+      icon: "pen",
+      linkTo: "PostPropertyPage",
+    },
   ];
   const navigation = useNavigation();
 
@@ -38,7 +43,7 @@ export default function PropertySearch() {
           <TouchableOpacity
             key={option.id}
             style={styles.card}
-            onPress={() => navigation.navigate("PostPropertyPage" as never)}
+            onPress={() => navigation.navigate(option.linkTo as never)}
           >
             <View style={styles.iconContainer}>
               <FontAwesome5 name={option.icon} size={24} color="#2E3192" />
