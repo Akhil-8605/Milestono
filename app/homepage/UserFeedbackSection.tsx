@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -38,6 +38,28 @@ const feedbacks = [
 
 const UserFeedbackSection = () => {
   const navigation = useNavigation();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Auto-scroll every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) =>
+        prevIndex === feedbacks.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        x: currentIndex * (cardWidth + 12), // card width + marginRight from card style
+        animated: true,
+      });
+    }
+  }, [currentIndex]);
+
   return (
     <View style={styles.container}>
       {/* Section Header */}
@@ -45,6 +67,7 @@ const UserFeedbackSection = () => {
 
       {/* Scrollable Feedback Cards */}
       <ScrollView
+        ref={scrollViewRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollView}

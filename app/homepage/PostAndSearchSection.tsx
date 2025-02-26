@@ -65,10 +65,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   headerText: {
-    fontSize: 24,
+    fontSize: 18,
     color: "#333",
     fontWeight: "500",
-    textAlign: "left",
+    textAlign: "center",
   },
   highlightText: {
     color: "#2E3192",

@@ -64,7 +64,7 @@ export default function PropertySlider() {
                 slide.id === selectedSlide && styles.activeItem,
               ]}
             >
-              {slide.title}
+              <Text style={styles.activeItemBefore}>{slide.id === selectedSlide? '+': '-'}</Text>{" "}{slide.title}
             </Text>
           </TouchableOpacity>
         ))}
@@ -109,8 +109,12 @@ const styles = StyleSheet.create({
     color: "#666",
     marginVertical: 5,
   },
+  activeItemBefore:{
+    fontSize: 20,
+  },
   activeItem: {
-    color: "#232761",
+    fontSize: 17,
+    color: "#fff",
     fontWeight: "bold",
   },
   slideContainer: {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -10,7 +10,7 @@ import {
   Dimensions,
   Platform,
 } from "react-native";
-
+import { useNavigation } from "expo-router";
 const projects = [
   {
     id: "1",
@@ -47,13 +47,36 @@ const projects = [
 ];
 
 export default function ProjectsSection() {
-  const [selectedProject, setSelectedProject] = useState(null);
+  const navigation = useNavigation();
+  const [selectedProject, setSelectedProject] = useState<null | typeof projects[0]>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) =>
+        prevIndex === projects.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        x: currentIndex * width * 0.75, // Adjust width according to card size
+        animated: true,
+      });
+    }
+  }, [currentIndex]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Explore our Projects</Text>
 
       <ScrollView
+        ref={scrollViewRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -73,7 +96,7 @@ export default function ProjectsSection() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={()=>{navigation.navigate("NewProjectsPage" as never)}}>
         <Text style={styles.seeMore}>See More</Text>
       </TouchableOpacity>
 
@@ -85,13 +108,6 @@ export default function ProjectsSection() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {/* <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setSelectedProject(null)}
-            >
-              <Text style={styles.closeButtonText}>✕</Text>
-            </TouchableOpacity> */}
-
             {selectedProject && (
               <>
                 <Image
@@ -173,8 +189,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
   },
   projectTitle: {
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: 17,
+    fontWeight: "700",
     color: "#1A1A1A",
     textAlign: "center",
     marginVertical: 12,

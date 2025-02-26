@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
+import { useNavigation } from "expo-router";
 
 const CARD_WIDTH = Dimensions.get("window").width * 0.75;
 
@@ -63,6 +64,8 @@ export default function NewLaunchProperties() {
     },
   ];
 
+  const navigation = useNavigation()
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>New Launch Properties</Text>
@@ -93,7 +96,7 @@ export default function NewLaunchProperties() {
                 <TouchableOpacity style={styles.saveButton}>
                   <Text style={styles.saveButtonText}>Save Property</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.viewButton}>
+                <TouchableOpacity style={styles.viewButton} onPress={()=>{navigation.navigate("PropertyDetailsPage" as never)}}>
                   <Text style={styles.viewButtonText}>View Details</Text>
                 </TouchableOpacity>
               </View>
@@ -171,7 +174,7 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#2E3192",
+    color: "green",
   },
   typeText: {
     fontSize: 14,

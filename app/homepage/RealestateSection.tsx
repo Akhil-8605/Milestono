@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   ImageBackground,
   TouchableOpacity,
   StyleSheet,
+  Animated,
 } from "react-native";
 
 // Data for each section
@@ -29,20 +30,61 @@ const realEstateData = {
   },
 };
 
+const categories = Object.keys(realEstateData); // ["Residential", "Commercial", "Investment"]
+
 const RealEstateSection = () => {
   const [selectedCategory, setSelectedCategory] =
     useState<keyof typeof realEstateData>("Residential");
+
+  const fadeAnim = useRef(new Animated.Value(1)).current; // Initial opacity set to 1
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0, // Fade out
+        duration: 400, // Animation duration
+        useNativeDriver: true,
+      }).start(() => {
+        // Change category after fade-out
+        setSelectedCategory((prevCategory) => {
+          const currentIndex = categories.indexOf(prevCategory);
+          const nextIndex = (currentIndex + 1) % categories.length;
+          return categories[nextIndex] as keyof typeof realEstateData;
+        });
+
+        // Fade in new category
+        Animated.timing(fadeAnim, {
+          toValue: 1, // Fade in
+          duration: 400,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, 5000); // Change category every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View style={styles.container}>
       {/* Toggle Buttons */}
       <View style={styles.tabContainer}>
-        {Object.keys(realEstateData).map((category) => (
+        {categories.map((category) => (
           <TouchableOpacity
             key={category}
-            onPress={() =>
-              setSelectedCategory(category as keyof typeof realEstateData)
-            }
+            onPress={() => {
+              Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+              }).start(() => {
+                setSelectedCategory(category as keyof typeof realEstateData);
+                Animated.timing(fadeAnim, {
+                  toValue: 1,
+                  duration: 300,
+                  useNativeDriver: true,
+                }).start();
+              });
+            }}
             style={[
               styles.tabButton,
               selectedCategory === category ? styles.activeTab : {},
@@ -60,21 +102,23 @@ const RealEstateSection = () => {
         ))}
       </View>
 
-      {/* Background Image with Overlay */}
-      <ImageBackground
-        source={realEstateData[selectedCategory].image}
-        style={styles.backgroundImage}
-      >
-        <View style={styles.overlay} />
-        <View style={styles.contentContainer}>
-          <Text style={styles.title}>
-            {realEstateData[selectedCategory].title}
-          </Text>
-          <Text style={styles.description}>
-            {realEstateData[selectedCategory].description}
-          </Text>
-        </View>
-      </ImageBackground>
+      {/* Background Image with Animated Opacity */}
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <ImageBackground
+          source={realEstateData[selectedCategory].image}
+          style={styles.backgroundImage}
+        >
+          <View style={styles.overlay} />
+          <View style={styles.contentContainer}>
+            <Text style={styles.title}>
+              {realEstateData[selectedCategory].title}
+            </Text>
+            <Text style={styles.description}>
+              {realEstateData[selectedCategory].description}
+            </Text>
+          </View>
+        </ImageBackground>
+      </Animated.View>
     </View>
   );
 };

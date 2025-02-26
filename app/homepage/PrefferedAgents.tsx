@@ -7,9 +7,10 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
-import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { useEffect, useRef, useState } from "react";
 import { useNavigation } from "expo-router";
 import Svg, { Path } from "react-native-svg";
+import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 
 const agents = [
   {
@@ -21,38 +22,55 @@ const agents = [
     address: "address address address address",
   },
   {
-    id: "1",
-    name: "Sri Sai Builders",
-    company: "Sri Sai Associates",
-    operatingSince: "2009",
+    id: "2",
+    name: "Sri Sai Developers",
+    company: "Sri Sai Group",
+    operatingSince: "2012",
     logo: require("../../assets/images/agentsdummy.png"),
+    address: "address address address address",
   },
   {
-    id: "1",
-    name: "Sri Sai Builders",
-    company: "Sri Sai Associates",
-    operatingSince: "2009",
+    id: "3",
+    name: "Sai Ventures",
+    company: "Sai Associates",
+    operatingSince: "2018",
     logo: require("../../assets/images/agentsdummy.png"),
+    address: "address address address address",
   },
   {
-    id: "1",
-    name: "Sri Sai Builders",
-    company: "Sri Sai Associates",
-    operatingSince: "2009",
+    id: "4",
+    name: "Sai Infra",
+    company: "Sai Builders",
+    operatingSince: "2020",
     logo: require("../../assets/images/agentsdummy.png"),
+    address: "address address address address",
   },
-  {
-    id: "1",
-    name: "Sri Sai Builders",
-    company: "Sri Sai Associates",
-    operatingSince: "2009",
-    logo: require("../../assets/images/agentsdummy.png"),
-  },
-  // Add more agents as needed
 ];
 
 export default function PreferredAgents() {
   const navigation = useNavigation();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) =>
+        prevIndex === agents.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        x: currentIndex * 250,
+        animated: true,
+      });
+    }
+  }, [currentIndex]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -61,24 +79,23 @@ export default function PreferredAgents() {
           onPress={() => navigation.navigate("AgentsPage" as never)}
         >
           <Text style={styles.seeAll}>
-            See all{" "}
-            <Svg width={25} height={25} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M9 18l6-6-6-6"
-                stroke={"red"}
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
+            <Text>See all </Text>
+            <FontAwesome5
+              name={"chevron-right"}
+              size={16}
+              color="#f00"
+              style={{ strokeWidth: 0 }}
+            />
           </Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        scrollEventThrottle={16}
       >
         {agents.map((agent) => (
           <View key={agent.id} style={styles.card}>
@@ -137,11 +154,12 @@ const styles = StyleSheet.create({
   seeAll: {
     fontSize: 16,
     color: "#FF4444",
+    fontWeight: 600,
     marginTop: 5,
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent:"center"
+    justifyContent: "center",
   },
   scrollContent: {
     paddingRight: 16,

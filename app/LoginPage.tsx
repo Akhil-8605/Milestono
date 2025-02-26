@@ -40,7 +40,9 @@ export default function LoginScreen() {
             <Text style={styles.logo}>MILESTONO</Text>
 
             <View style={styles.welcomeContainer}>
-              <Text style={styles.welcomeText}>Welcome to the MILESTONO,</Text>
+              <Text style={styles.welcomeText}>
+                Welcome to the MILESTONO,
+              </Text>
               <Text style={styles.subText}>
                 We're thrilled to have you back!
               </Text>
@@ -80,7 +82,9 @@ export default function LoginScreen() {
 
               <TouchableOpacity
                 style={styles.forgotPassword}
-                onPress={() => navigation.navigate("ForgotPasswordPage" as never)}
+                onPress={() =>
+                  navigation.navigate("ForgotPasswordPage" as never)
+                }
               >
                 <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
               </TouchableOpacity>
@@ -162,7 +166,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 60,
     paddingBottom: 40,
-    maxWidth: 440,
     alignSelf: "center",
     width: "100%",
     justifyContent: "center",
@@ -194,8 +197,10 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: "100%",
+    alignItems: "center",
   },
   input: {
+    width: width * 0.8,
     height: 56,
     backgroundColor: "white",
     borderRadius: 9,
@@ -209,6 +214,7 @@ const styles = StyleSheet.create({
   passwordContainer: {
     position: "relative",
     marginBottom: 16,
+    width: width * 0.8,
   },
   passwordInput: {
     marginBottom: 0,
@@ -224,7 +230,6 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     marginBottom: 24,
     marginTop: 8,
-    color: "#fff",
   },
   forgotPasswordText: {
     color: "#fff",
@@ -234,7 +239,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     marginBottom: 24,
-    paddingRight: 20,
+    width: width * 0.8,
   },
   checkbox: {
     width: 18,
@@ -261,6 +266,7 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   loginButton: {
+    width: width * 0.8,
     height: 56,
     backgroundColor: "#1a237e",
     borderRadius: 9,
@@ -290,6 +296,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   googleButton: {
+    width: width * 0.8,
     height: 56,
     backgroundColor: "white",
     borderRadius: 9,

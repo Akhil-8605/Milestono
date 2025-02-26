@@ -4,16 +4,15 @@ import {
   View,
   Text,
   ImageBackground,
-  TextInput,
   TouchableOpacity,
   Dimensions,
   StatusBar,
-  ScrollView,
-  Image,
   Animated,
+  Pressable,
 } from "react-native";
 import Svg, { G, Path } from "react-native-svg";
 import { useNavigation } from "expo-router";
+import MenuModal from "../components/HeroModel";
 
 const cities = [
   "Pune",
@@ -33,7 +32,7 @@ const cities = [
 
 const HeroSection = () => {
   const navigation = useNavigation();
-
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [index, setIndex] = useState(0);
   const translateY = useRef(new Animated.Value(0)).current;
 
@@ -73,7 +72,10 @@ const HeroSection = () => {
           <View style={stylesHero.buyButton}>
             <Text style={stylesHero.buyLink}>Buy in Nashik</Text>
           </View>
-          <TouchableOpacity style={stylesHero.menuButton}>
+          <TouchableOpacity
+            style={stylesHero.menuButton}
+            onPress={() => setIsMenuVisible(true)}
+          >
             <Svg width="35" height="35" viewBox="0 0 24 24" fill="white">
               <Path
                 fillRule="evenodd"
@@ -99,12 +101,15 @@ const HeroSection = () => {
               <TouchableOpacity style={stylesHero.activeTab}>
                 <Text style={stylesHero.activeTabText}>Real Estate</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={stylesHero.inactiveTab}>
+              <TouchableOpacity
+                style={stylesHero.inactiveTab}
+                onPress={() => navigation.navigate("SignupPage" as never)}
+              >
                 <Text style={stylesHero.inactiveTabText}>Services</Text>
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
+            <Pressable
               style={stylesHero.searchContainer}
               onPress={() => navigation.navigate("SearchPage" as never)}
             >
@@ -133,13 +138,19 @@ const HeroSection = () => {
               <View style={stylesHero.searchButton}>
                 <Text style={stylesHero.searchButtonText}>Search</Text>
               </View>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </ImageBackground>
+
+      <MenuModal
+        isVisible={isMenuVisible}
+        onClose={() => setIsMenuVisible(false)}
+      />
     </View>
   );
 };
+
 const { width, height } = Dimensions.get("window");
 const stylesHero = StyleSheet.create({
   container: {
@@ -147,7 +158,7 @@ const stylesHero = StyleSheet.create({
   },
   backgroundImage: {
     width: "100%",
-    height: height * 0.6,
+    height: 450,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -169,7 +180,7 @@ const stylesHero = StyleSheet.create({
   },
   buyButton: {
     position: "absolute",
-    left: 205,
+    left: 200,
     top: 25,
   },
   buyLink: {

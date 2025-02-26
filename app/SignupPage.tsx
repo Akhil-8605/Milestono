@@ -8,12 +8,12 @@ import {
   ImageBackground,
   KeyboardAvoidingView,
   Image,
+  Dimensions,
   Platform,
+  ScrollView
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
-
-import { ScrollView } from "react-native-gesture-handler";
 
 export default function SignupScreen() {
   const [fullName, setFullName] = useState("");
@@ -184,6 +184,7 @@ export default function SignupScreen() {
     </ImageBackground>
   );
 }
+const { width, height } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   // Reuse all the same styles from LoginScreen
@@ -234,8 +235,10 @@ const styles = StyleSheet.create({
     },
     formContainer: {
       width: "100%",
+      alignItems: "center",
     },
     input: {
+      width: width*0.8,
       height: 56,
       backgroundColor: "white",
       borderRadius: 9,
@@ -249,6 +252,7 @@ const styles = StyleSheet.create({
     verifyContainer: {
       flexDirection: "row",
       marginBottom: 10,
+      width: width*0.8,
     },
     verifyInput: {
       flex: 1,
@@ -270,6 +274,7 @@ const styles = StyleSheet.create({
     passwordContainer: {
       position: "relative",
       marginBottom: 16,
+      width: width*0.8,
     },
     passwordInput: {
       marginBottom: 0,
@@ -285,6 +290,7 @@ const styles = StyleSheet.create({
       flexDirection: "row",
       alignItems: "flex-start",
       marginBottom: 24,
+      width: width*0.8,
       paddingRight: 20,
     },
     checkbox: {
@@ -312,6 +318,7 @@ const styles = StyleSheet.create({
       textDecorationLine: "underline",
     },
     signupButton: {
+      width: width*0.8,
       height: 56,
       backgroundColor: "#1a237e",
       borderRadius: 9,
@@ -338,6 +345,7 @@ const styles = StyleSheet.create({
       flexDirection: "row",
       alignItems: "center",
       marginBottom: 24,
+      width: width*0.8,
     },
     dividerLine: {
       flex: 1,
@@ -351,6 +359,7 @@ const styles = StyleSheet.create({
       fontWeight: "500",
     },
     googleButton: {
+      width: width*0.8,
       height: 56,
       backgroundColor: "white",
       borderRadius: 9,

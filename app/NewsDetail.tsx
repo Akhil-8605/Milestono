@@ -9,28 +9,32 @@ import {
   Linking,
   ScrollView,
 } from "react-native";
-import { useRoute, RouteProp } from "@react-navigation/native";
 import { FontAwesome } from "@expo/vector-icons";
-import { useNavigation } from "expo-router";
-import { tags } from "react-native-svg/lib/typescript/xmlTags";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
-type RouteParams = {
-  params: {
-    article: {
-      title: string;
-      date: string;
-      description: string;
-      image: any;
-      tags: string[];
-    };
-  };
+export type Article = {
+  title: string;
+  date: string;
+  description: string;
+  image: any;
+  tags: string[];
 };
 
 export default function NewsDetail() {
-  const navigation = useNavigation();
+  const router = useRouter();
+  const { article: articleParam } = useLocalSearchParams() as { article: string };
 
-  const route = useRoute<RouteProp<RouteParams>>();
-  const { article } = route.params;
+  let article: Article;
+  try {
+    article = JSON.parse(articleParam);
+  } catch (error) {
+    console.error("Error parsing article data", error);
+    return (
+      <View style={styles.container}>
+        <Text>Error loading article details.</Text>
+      </View>
+    );
+  }
 
   const shareToTwitter = async () => {
     const url = "YOUR_ARTICLE_URL";
@@ -48,9 +52,7 @@ export default function NewsDetail() {
     const url = "YOUR_ARTICLE_URL";
     try {
       await Linking.openURL(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-          url
-        )}`
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
       );
     } catch (error) {
       console.error(error);
@@ -61,9 +63,7 @@ export default function NewsDetail() {
     const url = "YOUR_ARTICLE_URL";
     try {
       await Linking.openURL(
-        `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-          url
-        )}`
+        `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
       );
     } catch (error) {
       console.error(error);
@@ -73,9 +73,19 @@ export default function NewsDetail() {
   const copyLink = async () => {
     const url = "YOUR_ARTICLE_URL";
     try {
-      await Share.share({
-        message: url,
-      });
+      await Share.share({ message: url });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const shareToWhatsApp = async () => {
+    const url = "YOUR_ARTICLE_URL";
+    const message = `${article.title}\n\n${url}`;
+    try {
+      await Linking.openURL(
+        `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`
+      );
     } catch (error) {
       console.error(error);
     }
@@ -94,29 +104,31 @@ export default function NewsDetail() {
     <ScrollView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>{article.title}</Text>
-        <Text style={styles.tags}>
+        <View style={styles.tagsContainer}>
           {article.tags.map((tag, index) => (
-            <Text key={index} style={styles.tag}>#{tag}</Text>
+            <Text key={index} style={styles.tag}>
+              #{tag}
+            </Text>
           ))}
-        </Text>
+        </View>
         <View style={styles.metaContainer}>
           <Text style={styles.date}>
             {formatDate(article.date || new Date().toString())}
           </Text>
           <View style={styles.socialIcons}>
-            <TouchableOpacity style={[styles.socialButton]}>
+            <TouchableOpacity style={styles.socialButton} onPress={shareToTwitter}>
               <FontAwesome name="twitter" size={18} color="#1DA1F2" />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.socialButton]}>
-              <FontAwesome name="whatsapp" size={18} color="#1DA1F2" />
+            <TouchableOpacity style={styles.socialButton} onPress={shareToWhatsApp}>
+              <FontAwesome name="whatsapp" size={18} color="#25D366" />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.socialButton]}>
+            <TouchableOpacity style={styles.socialButton} onPress={shareToFacebook}>
               <FontAwesome name="facebook" size={18} color="#4267B2" />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.socialButton]}>
+            <TouchableOpacity style={styles.socialButton} onPress={shareToLinkedIn}>
               <FontAwesome name="linkedin" size={18} color="#0077B5" />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.socialButton]}>
+            <TouchableOpacity style={styles.socialButton} onPress={copyLink}>
               <FontAwesome name="link" size={18} color="#666" />
             </TouchableOpacity>
           </View>
@@ -125,9 +137,7 @@ export default function NewsDetail() {
         <Image source={article.image} style={styles.image} resizeMode="cover" />
         <TouchableOpacity
           style={styles.seeMoreButton}
-          onPress={() => {
-            navigation.navigate("NewsArticalsPage" as never);
-          }}
+          onPress={() => router.push("/NewsArticalsPage")}
         >
           <Text style={styles.seeMoreButtonText}>See More</Text>
         </TouchableOpacity>
@@ -150,7 +160,9 @@ const styles = StyleSheet.create({
     color: "#242a80",
     marginBottom: 10,
   },
-  tags: {
+  tagsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginTop: 10,
     marginBottom: 25,
   },
@@ -161,6 +173,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f1f1",
     padding: 5,
     borderRadius: 19,
+    marginBottom: 5,
   },
   metaContainer: {
     flexDirection: "row",
@@ -197,15 +210,6 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 20,
   },
-  linkedinButton: {
-    backgroundColor: "#0077B5",
-  },
-  twitterButton: {
-    backgroundColor: "#1DA1F2",
-  },
-  facebookButton: {
-    backgroundColor: "#4267B2",
-  },
   image: {
     width: "100%",
     height: 250,
@@ -213,9 +217,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "lightgrey",
     marginBottom: 20,
-  },
-  linkButton: {
-    backgroundColor: "#666",
   },
   seeMoreButton: {
     backgroundColor: "#242a80",

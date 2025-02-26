@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { BlurView } from "expo-blur";
 
-const CARD_WIDTH = Dimensions.get("window").width * 0.75;
+const CARD_WIDTH = Dimensions.get("window").width * 0.65;
 
 export default function PropertyForSection() {
   const [modalVisible, setModalVisible] = useState(false);

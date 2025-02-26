@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  StatusBar
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "expo-router";
@@ -19,8 +20,10 @@ import MultiSlider from "@ptomasroos/react-native-multi-slider";
 const { width } = Dimensions.get("window");
 
 const PropertySearchAndFilter = () => {
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   // --- Step 1: Basic states for Category, Search, etc. ---
-  const [selectedType, setSelectedType] = useState("Commercial");
+  const [selectedType, setSelectedType] = useState("Sell");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -41,8 +44,9 @@ const PropertySearchAndFilter = () => {
     []
   );
   // Construction status
-  const [selectedConstructionStatus, setSelectedConstructionStatus] =
-    useState<string[]>([]);
+  const [selectedConstructionStatus, setSelectedConstructionStatus] = useState<
+    string[]
+  >([]);
   // Posted by
   const [selectedPostedBy, setSelectedPostedBy] = useState<string[]>([]);
   // Amenities
@@ -241,6 +245,34 @@ const PropertySearchAndFilter = () => {
         </View>
       </View>
 
+      {/* Category */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Category</Text>
+        <View style={styles.bedroomsContainer}>
+          {["Commercial", "Residential"].map((bedroom) => (
+            <TouchableOpacity
+              key={bedroom}
+              style={[
+                styles.bedroomChip,
+                selectedBedrooms.includes(bedroom) && styles.selectedChip,
+              ]}
+              onPress={() =>
+                toggleItem(bedroom, selectedBedrooms, setSelectedBedrooms)
+              }
+            >
+              <Text
+                style={[
+                  styles.bedroomText,
+                  selectedBedrooms.includes(bedroom) && styles.selectedChipText,
+                ]}
+              >
+                {bedroom}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
       {/* Bedrooms */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Bedrooms</Text>
@@ -392,7 +424,11 @@ const PropertySearchAndFilter = () => {
                 selectedPropertyTypes.includes(type) && styles.selectedChip,
               ]}
               onPress={() =>
-                toggleItem(type, selectedPropertyTypes, setSelectedPropertyTypes)
+                toggleItem(
+                  type,
+                  selectedPropertyTypes,
+                  setSelectedPropertyTypes
+                )
               }
             >
               <Text
@@ -461,8 +497,7 @@ const PropertySearchAndFilter = () => {
               <Text
                 style={[
                   styles.bedroomText,
-                  selectedPostedBy.includes(option) &&
-                    styles.selectedChipText,
+                  selectedPostedBy.includes(option) && styles.selectedChipText,
                 ]}
               >
                 {option}
@@ -506,7 +541,12 @@ const PropertySearchAndFilter = () => {
         <TouchableOpacity style={styles.clearButton} onPress={clearAll}>
           <Text style={styles.clearButtonText}>Clear All</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.seeAllButton} onPress={()=>{navigation.navigate("PropertiesPage" as never)}}>
+        <TouchableOpacity
+          style={styles.seeAllButton}
+          onPress={() => {
+            navigation.navigate("PropertiesPage" as never);
+          }}
+        >
           <Text style={styles.seeAllButtonText}>See all properties</Text>
         </TouchableOpacity>
       </View>
@@ -517,10 +557,10 @@ const PropertySearchAndFilter = () => {
   const navigation = useNavigation();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
       {/* Category (Commercial / Residential) */}
       <View style={styles.typeContainer}>
-        {["Commercial", "Residential"].map((type) => (
+        {["Sell", "Rent", "PG"].map((type) => (
           <TouchableOpacity
             key={type}
             style={[

@@ -10,14 +10,12 @@ import {
   Pressable,
   Dimensions,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { tags } from "react-native-svg/lib/typescript/xmlTags";
+import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 const cardWidth = width - 32; // Accounting for container padding
 const ITEMS_PER_PAGE_OPTIONS = [4, 10, 20, 25, "All"];
 
-// Updated mock data with a date field for each article
 const mockArticles = [
   {
     id: 1,
@@ -35,37 +33,36 @@ const mockArticles = [
       "Exploring the latest opportunities in commercial real estate sectors, from office spaces to retail properties and industrial warehouses.",
     image: require("../assets/images/dummyImg.webp"),
     date: "2025-02-15",
-    tags: ["Real Estate", "2025", "Sustainable Housing"],
-  },
-  {
-    id: 1,
-    title: "Outlook of Real Estate in 2025",
-    description: "Real estate 2025 outlook: Here's what to expect.",
-    image: require("../assets/images/dummyImg.webp"), 
-    date: "2025-02-15",
-    tags: ["Real Estate", "2025", "Sustainable Housing"],
-    // Ensure the image exists
-  },
-  {
-    id: 2,
-    title: "Shriram Properties plans to double holdings",
-    description: "Real estate giant expands investment portfolio.",
-    image: require("../assets/images/dummyImg.webp"),
-    tags: ["Real Estate", "2025", "Sustainable Housing"],
-    date: "2025-02-15",
+    tags: ["Real Estate", "2025", "Commercial"],
   },
   {
     id: 3,
-    title: "kjadbfjk akjsbjksd",
+    title: "Outlook of Real Estate in 2025",
+    description: "Real estate 2025 outlook: Here's what to expect.",
+    image: require("../assets/images/dummyImg.webp"),
+    date: "2025-02-15",
+    tags: ["Real Estate", "2025", "Market"],
+  },
+  {
+    id: 4,
+    title: "Shriram Properties plans to double holdings",
+    description: "Real estate giant expands investment portfolio.",
+    image: require("../assets/images/dummyImg.webp"),
+    date: "2025-02-15",
+    tags: ["Real Estate", "Investment", "Portfolio"],
+  },
+  {
+    id: 5,
+    title: "Sustainable Homes Revolution",
     description: "How sustainable homes are shaping the market.",
     image: require("../assets/images/dummyImg.webp"),
-    tags: ["Real Estate", "2025", "Sustainable Housing"],
     date: "2025-02-15",
+    tags: ["Real Estate", "Sustainability", "Innovation"],
   },
-  // Add more articles as needed
+  // More articles can be added here
 ];
 
-type Article = {
+export type Article = {
   id: number;
   title: string;
   description: string;
@@ -74,32 +71,32 @@ type Article = {
   tags: string[];
 };
 
-const ArticleCard = ({
-  article,
-  navigation,
-}: {
-  article: Article;
-  navigation: any;
-}) => (
-  <View style={styles.card}>
-    <Image source={article.image} style={styles.image} />
-    <View style={styles.cardContent}>
-      <Text style={styles.title}>{article.title}</Text>
-      <Text style={styles.description} numberOfLines={2}>
-        {article.description}
-      </Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("NewsDetail", { article })}
-      >
-        <Text style={styles.buttonText}>Read More</Text>
-      </TouchableOpacity>
+const ArticleCard = ({ article }: { article: Article }) => {
+  const router = useRouter();
+  return (
+    <View style={styles.card}>
+      <Image source={article.image} style={styles.image} />
+      <View style={styles.cardContent}>
+        <Text style={styles.title}>{article.title}</Text>
+        <Text style={styles.description} numberOfLines={2}>
+          {article.description}
+        </Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() =>
+            router.push(
+              `/NewsDetail?article=${encodeURIComponent(JSON.stringify(article))}`
+            )
+          }
+        >
+          <Text style={styles.buttonText}>Read More</Text>
+        </TouchableOpacity>
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 export default function NewsAndArticles() {
-  const navigation = useNavigation();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<string | number>(4);
   const [showModal, setShowModal] = useState(false);
@@ -121,7 +118,7 @@ export default function NewsAndArticles() {
     for (let i = 1; i <= totalPages; i++) {
       buttons.push(
         <TouchableOpacity
-          key={i}
+          key={i.toString()}
           style={[
             styles.pageButton,
             currentPage === i && styles.activePageButton,
@@ -145,7 +142,7 @@ export default function NewsAndArticles() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>All Real Estate News & Article</Text>
+        <Text style={styles.headerTitle}>All Real Estate News & Articles</Text>
         <TouchableOpacity
           style={styles.dropdown}
           onPress={() => setShowModal(true)}
@@ -156,20 +153,15 @@ export default function NewsAndArticles() {
 
       <FlatList
         data={getCurrentData()}
-        renderItem={({ item }) => (
-          <ArticleCard article={item} navigation={navigation} />
-        )}
-        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => <ArticleCard article={item} />}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
       />
 
       <View style={styles.pagination}>
         <TouchableOpacity
-          style={[
-            styles.pageButton,
-            currentPage === 1 && styles.disabledButton,
-          ]}
+          style={[styles.pageButton, currentPage === 1 && styles.disabledButton]}
           disabled={currentPage === 1}
           onPress={() => setCurrentPage((prev) => prev - 1)}
         >

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import FilterDesign from "./components/FilterDesign"; // Adjust the path as needed
+import { useNavigation } from "expo-router";
 
 const dummyImg = require("../assets/images/dummyImg.webp");
 
@@ -63,45 +64,54 @@ interface Property {
   image: any;
 }
 
-const PropertyCard = ({ property }: { property: Property }) => (
-  <View style={styles.card}>
-    <View style={styles.imageContainer}>
-      <Image source={property.image} style={styles.propertyImage} />
-      <View style={styles.propertyTypeTag}>
-        <Text style={styles.propertyTypeText}>{property.type}</Text>
-      </View>
-    </View>
-    <View style={styles.cardContent}>
-      <Text style={styles.propertyTitle}>{property.title}</Text>
+const PropertyCard = ({ property }: { property: Property }) => {
+  const navigation = useNavigation();
 
-      <View style={styles.featuresRow}>
-        <View style={styles.featureItem}>
-          <Icon name="location-outline" size={16} color="#666" />
-          <Text style={styles.featureText}>{property.location}</Text>
-        </View>
-        <View style={styles.featureItem}>
-          <Icon name="home-outline" size={16} color="#666" />
-          <Text style={styles.featureText}>{property.sqft}</Text>
+  return (
+    <View style={styles.card}>
+      <View style={styles.imageContainer}>
+        <Image source={property.image} style={styles.propertyImage} />
+        <View style={styles.propertyTypeTag}>
+          <Text style={styles.propertyTypeText}>{property.type}</Text>
         </View>
       </View>
+      <View style={styles.cardContent}>
+        <Text style={styles.propertyTitle}>{property.title}</Text>
 
-      <View style={styles.priceContainer}>
-        <Text style={styles.pricePerSqft}>{property.pricePerSqft}</Text>
-        <Text style={styles.price}>{property.price}</Text>
+        <View style={styles.featuresRow}>
+          <View style={styles.featureItem}>
+            <Icon name="location-outline" size={16} color="#666" />
+            <Text style={styles.featureText}>{property.location}</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Icon name="home-outline" size={16} color="#666" />
+            <Text style={styles.featureText}>{property.sqft}</Text>
+          </View>
+        </View>
+
+        <View style={styles.priceContainer}>
+          <Text style={styles.pricePerSqft}>{property.pricePerSqft}</Text>
+          <Text style={styles.price}>{property.price}</Text>
+        </View>
+
+        <View style={styles.depositContainer}>
+          <Text style={styles.depositLabel}>Deposit:</Text>
+          <Text style={styles.depositAmount}>{property.deposit}</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.viewButton}
+          onPress={() => {
+            navigation.navigate("PropertyDetailsPage" as never);
+          }}
+        >
+          <Icon name="eye-outline" size={20} color="#fff" />
+          <Text style={styles.viewButtonText}>View Details</Text>
+        </TouchableOpacity>
       </View>
-
-      <View style={styles.depositContainer}>
-        <Text style={styles.depositLabel}>Deposit:</Text>
-        <Text style={styles.depositAmount}>{property.deposit}</Text>
-      </View>
-
-      <TouchableOpacity style={styles.viewButton}>
-        <Icon name="eye-outline" size={20} color="#fff" />
-        <Text style={styles.viewButtonText}>View Details</Text>
-      </TouchableOpacity>
     </View>
-  </View>
-);
+  );
+};
 
 const PropertyListingScreen = () => {
   // Search & header state
@@ -137,11 +147,15 @@ const PropertyListingScreen = () => {
 
   // Property Types
   const propertyTypeOptions = ["Residential", "Commercial", "Industrial"];
-  const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
+  const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>(
+    []
+  );
 
   // Construction Status
   const constructionStatusOptions = ["Under Construction", "Ready to Move"];
-  const [selectedConstructionStatus, setSelectedConstructionStatus] = useState<string[]>([]);
+  const [selectedConstructionStatus, setSelectedConstructionStatus] = useState<
+    string[]
+  >([]);
 
   // Posted By
   const postedByOptions = ["Owner", "Agent"];
