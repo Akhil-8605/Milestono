@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import Swiper from "react-native-swiper";
 const SplashScreen = () => {
   const navigation = useNavigation();
   const screenWidth = Dimensions.get("window").width;
+  const swiperRef = useRef<Swiper>(null);
 
   const handleNext = (swiper: any) => {
     if (swiper && swiper.scrollBy) {
@@ -28,7 +29,7 @@ const SplashScreen = () => {
   };
 
   const handleSkip = () => {
-    navigation.navigate("Main");
+    navigation.navigate("Main" as never);
   };
 
   return (
@@ -36,8 +37,7 @@ const SplashScreen = () => {
       {/* Navigation Controls */}
       <View style={styles.navControls}>
         <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => handlePrev(this.swiper?.current ?? null)}
+          onPress={() => handlePrev(swiperRef.current)}
         >
           <AntDesign name="arrowleft" size={24} color="#999" />
         </TouchableOpacity>
@@ -49,8 +49,7 @@ const SplashScreen = () => {
       <Swiper
         loop={false}
         dotStyle={styles.dot}
-        activeDotStyle={styles.activeDot}
-        ref={(swiper) => (this.swiper = swiper)}
+        ref={swiperRef}
       >
         {/* Slide 1 */}
         <View style={styles.slide}>
@@ -73,8 +72,7 @@ const SplashScreen = () => {
             Lorem ipsum dolor sit amet consectetur adipiscing
           </Text>
           <TouchableOpacity
-            style={styles.navigatorButton}
-            onPress={() => handleNext(this.swiper)}
+            onPress={() => handleNext(swiperRef.current)}
           >
             <AntDesign name="arrowright" size={24} color="white" />
           </TouchableOpacity>
@@ -102,7 +100,7 @@ const SplashScreen = () => {
           </Text>
           <TouchableOpacity
             style={styles.navigatorButton}
-            onPress={() => handleNext(this.swiper)}
+            onPress={() => handleNext(swiperRef.current)}
           >
             <AntDesign name="arrowright" size={24} color="white" />
           </TouchableOpacity>
