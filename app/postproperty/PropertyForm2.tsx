@@ -9,7 +9,6 @@ import {
   Alert,
   Platform,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
 
 interface Form2Props {
   formData: any;
@@ -139,7 +138,6 @@ const Form2: React.FC<Form2Props> = ({
     </TouchableOpacity>
   );
 
-  // Dummy for web usage (since react-native-maps won't work well on web):
   const LocationPickerComponent = ({ onLocationSelect, style }: any) => {
     return (
       <View style={[style, styles.webMapFallback]}>
