@@ -10,6 +10,7 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  StatusBar,
 } from "react-native";
 import { useNavigation } from "expo-router";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
@@ -83,8 +84,10 @@ const FiltersPage = () => {
     setSelectedAmenities([]);
   };
 
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container,{marginTop: statusBarHeight}]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}

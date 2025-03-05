@@ -12,6 +12,7 @@ import {
   Animated,
   Dimensions,
   Modal,
+  StatusBar,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -36,7 +37,7 @@ const PROPERTY_IMAGES = [
   "https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6",
 ];
 
-const PropertyListing = () => {
+export default function PropertyListing() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const imageScrollRef = useRef<ScrollView>(null);
@@ -78,8 +79,10 @@ const PropertyListing = () => {
 
   const [heartClicked, sethearClicked] = useState(false);
 
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
       <Animated.ScrollView
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -205,7 +208,7 @@ const PropertyListing = () => {
       </Modal>
     </SafeAreaView>
   );
-};
+}
 
 const PriceSection = () => (
   <View style={styles.priceSection}>
@@ -715,5 +718,3 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
 });
-
-export default PropertyListing;

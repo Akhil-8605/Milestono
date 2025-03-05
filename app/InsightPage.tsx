@@ -83,10 +83,10 @@ export default function RealEstateApp() {
     }).start();
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a237e" />
+  const statusBarHeight = StatusBar.currentHeight || 0;
 
+  return (
+    <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
       <View style={styles.header}></View>
 
       <View style={styles.tabWrapper}>

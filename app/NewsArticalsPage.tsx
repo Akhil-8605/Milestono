@@ -9,6 +9,7 @@ import {
   Modal,
   Pressable,
   Dimensions,
+  StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -96,6 +97,8 @@ const ArticleCard = ({ article }: { article: Article }) => {
   );
 };
 
+const statusBarHeight = StatusBar.currentHeight || 0;
+
 export default function NewsAndArticles() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<string | number>(4);
@@ -139,8 +142,10 @@ export default function NewsAndArticles() {
     return buttons;
   };
 
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { marginTop: statusBarHeight }]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>All Real Estate News & Articles</Text>
         <TouchableOpacity
@@ -161,7 +166,10 @@ export default function NewsAndArticles() {
 
       <View style={styles.pagination}>
         <TouchableOpacity
-          style={[styles.pageButton, currentPage === 1 && styles.disabledButton]}
+          style={[
+            styles.pageButton,
+            currentPage === 1 && styles.disabledButton,
+          ]}
           disabled={currentPage === 1}
           onPress={() => setCurrentPage((prev) => prev - 1)}
         >

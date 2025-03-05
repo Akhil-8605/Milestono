@@ -9,6 +9,7 @@ import {
   Image,
   SafeAreaView,
   Modal,
+  StatusBar
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import FilterDesign from "./components/FilterDesign"; // Adjust the path as needed
@@ -179,8 +180,10 @@ const PropertyListingScreen = () => {
     setSelectedAmenities([]);
   };
 
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container,{marginTop: statusBarHeight}]}>
       <View style={styles.searchContainer}>
         <View style={styles.searchRow}>
           <View style={styles.inputContainer}>

@@ -9,6 +9,7 @@ import {
   Modal,
   Pressable,
   Dimensions,
+  StatusBar
 } from "react-native";
 
 const ITEMS_PER_PAGE_OPTIONS: (number | "All")[] = [4, 10, 20, 25, "All"];
@@ -155,8 +156,10 @@ const FeedbackPage = () => {
     return buttons;
   };
 
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container,{marginTop: statusBarHeight}]}>
       <View style={styles.header}>
         <Text style={styles.title}>Feedbacks</Text>
         <TouchableOpacity

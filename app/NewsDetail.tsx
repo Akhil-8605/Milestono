@@ -8,6 +8,7 @@ import {
   Share,
   Linking,
   ScrollView,
+  StatusBar
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -22,7 +23,9 @@ export type Article = {
 
 export default function NewsDetail() {
   const router = useRouter();
-  const { article: articleParam } = useLocalSearchParams() as { article: string };
+  const { article: articleParam } = useLocalSearchParams() as {
+    article: string;
+  };
 
   let article: Article;
   try {
@@ -100,8 +103,10 @@ export default function NewsDetail() {
     });
   };
 
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container,{marginTop: statusBarHeight}]}>
       <View style={styles.content}>
         <Text style={styles.title}>{article.title}</Text>
         <View style={styles.tagsContainer}>
@@ -116,16 +121,28 @@ export default function NewsDetail() {
             {formatDate(article.date || new Date().toString())}
           </Text>
           <View style={styles.socialIcons}>
-            <TouchableOpacity style={styles.socialButton} onPress={shareToTwitter}>
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={shareToTwitter}
+            >
               <FontAwesome name="twitter" size={18} color="#1DA1F2" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} onPress={shareToWhatsApp}>
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={shareToWhatsApp}
+            >
               <FontAwesome name="whatsapp" size={18} color="#25D366" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} onPress={shareToFacebook}>
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={shareToFacebook}
+            >
               <FontAwesome name="facebook" size={18} color="#4267B2" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} onPress={shareToLinkedIn}>
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={shareToLinkedIn}
+            >
               <FontAwesome name="linkedin" size={18} color="#0077B5" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.socialButton} onPress={copyLink}>

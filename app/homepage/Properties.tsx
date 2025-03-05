@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "expo-router";
 
-const CARD_WIDTH = Dimensions.get("window").width * 0.75;
+const CARD_WIDTH = Dimensions.get("window").width * 0.65;
 
 export default function NewLaunchProperties() {
   const properties = [
@@ -104,6 +104,39 @@ export default function NewLaunchProperties() {
           </View>
         ))}
       </ScrollView>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContainer}
+      >
+        {properties.map((property) => (
+          <View key={property.id} style={styles.card}>
+            <Image
+              source={property.image}
+              style={styles.propertyImage}
+              resizeMode="contain"
+            />
+            <View style={styles.cardContent}>
+              <Text style={styles.propertyName}>{property.name}</Text>
+              <Text style={styles.locationText}>
+                Location: {property.location}
+              </Text>
+              <View style={styles.priceContainer}>
+                <Text style={styles.priceText}>Rs {property.price}</Text>
+                <Text style={styles.typeText}>| {property.type}</Text>
+              </View>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.saveButton}>
+                  <Text style={styles.saveButtonText}>Save Property</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.viewButton} onPress={()=>{navigation.navigate("PropertyDetailsPage" as never)}}>
+                  <Text style={styles.viewButtonText}>View Details</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -130,7 +163,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   card: {
-    width: CARD_WIDTH,
+    width: 300,
     backgroundColor: "white",
     borderRadius: 8,
     marginRight: 16,
@@ -147,7 +180,7 @@ const styles = StyleSheet.create({
   },
   propertyImage: {
     width: "100%",
-    height: 200,
+    height: 120,
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     backgroundColor: "#f5f5f5",

@@ -13,10 +13,11 @@ import {
   ImageBackground,
   FlatList,
   Easing,
+  StatusBar,
   Pressable,
 } from "react-native";
 import { BlurView } from "expo-blur";
-import { StatusBar } from "expo-status-bar";
+// import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { MotiView } from "moti";
 import * as Animatable from "react-native-animatable";
@@ -254,7 +255,13 @@ export default function App() {
     }, 1500);
   };
 
-  const renderProjectCard = ({ item, index }: { item: typeof residentialProjects[0], index: number }) => {
+  const renderProjectCard = ({
+    item,
+    index,
+  }: {
+    item: (typeof residentialProjects)[0];
+    index: number;
+  }) => {
     return (
       <Animatable.View
         animation="fadeInUp"
@@ -641,9 +648,10 @@ export default function App() {
     );
   };
 
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
+    <View style={[styles.container, {marginTop: statusBarHeight}]}>
 
       <Animated.ScrollView
         ref={scrollViewRef}
@@ -1016,7 +1024,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.2)",
-    tintColor: "#fff"
+    tintColor: "#fff",
   },
   textArea: {
     height: 100,

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, StatusBar } from "react-native";
 import Form1 from "./postproperty/PropertyForm1";
 import Form2 from "./postproperty/PropertyForm2";
 import Form3 from "./postproperty/PropertyForm3";
@@ -26,8 +26,10 @@ const PostProperty = () => {
     setFormData({ ...formData, ...data });
   };
 
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container,{marginTop: statusBarHeight}]}>
       {currentStep === 1 && (
         <Form1
           formData={formData}

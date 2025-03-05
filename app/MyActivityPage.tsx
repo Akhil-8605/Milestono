@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   FlatList,
   Dimensions,
+  StatusBar,
 } from "react-native";
 
 const { width } = Dimensions.get("window");
@@ -261,7 +262,9 @@ export default function PropertyActivities() {
       case "viewed":
         return (
           <View style={styles.sectionContainer}>
-            <Text style={{fontSize: 28,fontWeight: 700,color: "#333333"}}>Viewed Properties</Text>
+            <Text style={{ fontSize: 28, fontWeight: 700, color: "#333333" }}>
+              Viewed Properties
+            </Text>
             <Text style={styles.sectionSubtitle}>
               Contact now to close the deal
             </Text>
@@ -319,8 +322,10 @@ export default function PropertyActivities() {
     }
   };
 
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container,{marginTop: statusBarHeight}]}>
       <View style={styles.tabContainer}>
         <ScrollView
           horizontal
@@ -397,7 +402,7 @@ const styles = StyleSheet.create({
   sectionSubtitle: {
     fontSize: 15,
     color: "#666",
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 16,
   },
   // Viewed Property Card Styles
