@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -18,6 +18,11 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 
+// Import our two separate sections
+import UserFeedbackSection from "./propertydetails/UserFeedbackSection";
+import RecommendedProjectsSection from "./propertydetails/NewProjectsSection";
+
+// Device width
 const { width } = Dimensions.get("window");
 
 // Enhanced color palette
@@ -31,6 +36,7 @@ const COLORS = {
   accent: "#EF4444",
 };
 
+// Property images (for the main listing)
 const PROPERTY_IMAGES = [
   "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2",
   "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
@@ -44,6 +50,14 @@ export default function PropertyListing() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  // Inquiry modal state
+  const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
+
+  const [heartClicked, sethearClicked] = useState(false);
+
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
+  // Auto-slide header images
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveImageIndex((prevIndex) => {
@@ -77,10 +91,6 @@ export default function PropertyListing() {
     extrapolate: "clamp",
   });
 
-  const [heartClicked, sethearClicked] = useState(false);
-
-  const statusBarHeight = StatusBar.currentHeight || 0;
-
   return (
     <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
       <Animated.ScrollView
@@ -90,7 +100,10 @@ export default function PropertyListing() {
         )}
         scrollEventThrottle={16}
         showsHorizontalScrollIndicator={false}
+        // Added extra bottom padding so content doesn't hide behind the fixed bottom bar
+        contentContainerStyle={{ paddingBottom: 160 }}
       >
+        {/* Header with Auto-Scrolling Images */}
         <Animated.View
           style={[
             styles.header,
@@ -140,11 +153,13 @@ export default function PropertyListing() {
               ))}
             </View>
           </Animated.View>
+
+          {/* Title & Heart/Share Icons */}
           <LinearGradient
             colors={["transparent", "rgba(0,0,0,0.8)"]}
             style={styles.headerOverlay}
           >
-            <Text style={styles.title}>Luxurious 1RK Flat</Text>
+            <Text style={styles.title}>2 Guntha Residential Land</Text>
             <View style={styles.headerButtons}>
               <TouchableOpacity style={styles.headerButton}>
                 <Icon
@@ -154,10 +169,8 @@ export default function PropertyListing() {
                 />
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.headerButton, ""]}
-                onPress={() => {
-                  sethearClicked(!heartClicked);
-                }}
+                style={styles.headerButton}
+                onPress={() => sethearClicked(!heartClicked)}
               >
                 {heartClicked ? (
                   <Icon name="heart" size={22} color={"red"} />
@@ -173,17 +186,53 @@ export default function PropertyListing() {
           </LinearGradient>
         </Animated.View>
 
+        {/* Main Content */}
         <View style={styles.content}>
           <PriceSection />
           <QuickInfoSection scrollY={scrollY} />
           <LocationCard />
-          <ContactSection />
+          <ContactSection onInquiryPress={() => setInquiryModalVisible(true)} />
           <AmenitiesSection scrollY={scrollY} />
           <FurnitureSection scrollY={scrollY} />
           <ViewerCount count={15} />
+
+          {/* Feedback Section */}
+          <UserFeedbackSection />
+
+          {/* Recommended Projects Section */}
+          <RecommendedProjectsSection />
         </View>
       </Animated.ScrollView>
 
+      {/* Fixed Bottom Bar */}
+      <View style={styles.bottomBar}>
+        {/* Pink info area */}
+        <View style={styles.bottomBarInfoContainer}>
+          <Text style={styles.bottomBarInfoText}>
+            15 people viewed this property today
+          </Text>
+        </View>
+        {/* Buttons row */}
+        <View style={styles.bottomBarButtonsContainer}>
+          <TouchableOpacity
+            style={[styles.bottomBarButton, styles.whatsAppButton]}
+            onPress={() => setInquiryModalVisible(true)}
+          >
+            <Icon name="phone" size={22} color={COLORS.background} />
+            <Text style={styles.bottomBarButtonText}>Call Now</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.bottomBarButton, styles.viewNumberButton]}
+            onPress={() => setInquiryModalVisible(true)}
+          >
+            <Icon name="information" size={22} color={COLORS.background} />
+            <Text style={styles.buttonText}>Inquiry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Fullscreen Image Modal */}
       <Modal
         visible={modalVisible}
         transparent={true}
@@ -206,20 +255,66 @@ export default function PropertyListing() {
           )}
         </BlurView>
       </Modal>
+
+      {/* Inquiry Modal */}
+      <Modal
+        visible={inquiryModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setInquiryModalVisible(false)}
+      >
+        <View style={styles.inquiryModalOverlay}>
+          <View style={styles.inquiryModalContainer}>
+            {/* Close Button at top-right */}
+            <TouchableOpacity
+              style={styles.inquiryModalCloseButton}
+              onPress={() => setInquiryModalVisible(false)}
+            >
+              <Icon name="close" size={30} color={"#232761"} />
+            </TouchableOpacity>
+
+            <Text style={styles.inquiryModalTitle}>
+              You are requesting to view advertiser details
+            </Text>
+
+            <View style={styles.inquiryModalDetails}>
+              <Text style={styles.inquiryModalLabel}>POSTED BY OWNER:</Text>
+              <Text style={styles.inquiryModalValue}>
+                +91 988** **** | i********@gmail.com
+              </Text>
+              <Text style={styles.inquiryModalValue}>VISHAL KATE</Text>
+
+              <View style={styles.divider} />
+
+              <Text style={styles.inquiryModalLabel}>
+                POSTED ON 17th DEC, 2024
+              </Text>
+              <Text style={styles.inquiryModalValue}>
+                ₹ 15 Lac | Phule Nagar Akkuj
+              </Text>
+              <Text style={styles.inquiryModalValue}>
+                2 Guntha | Residential Land
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
+/* PRICE SECTION */
 const PriceSection = () => (
   <View style={styles.priceSection}>
     <View style={styles.priceContainer}>
       <Text style={styles.priceLabel}>Price</Text>
-      <Text style={styles.priceValue}>₹ 30,00,000</Text>
-      <Text style={styles.pricePerSqFt}>₹ 3,000/sq.ft</Text>
+      <Text style={styles.priceValue}>₹ 15,00,000</Text>
+      <Text style={styles.pricePerSqFt}>Approx. ₹ 750/sq.ft</Text>
     </View>
   </View>
 );
 
+/* QUICK INFO SECTION */
 const QuickInfoSection = ({ scrollY }: { scrollY: Animated.Value }) => {
   const renderDetail = (icon: string, label: string, value: string) => (
     <Animated.View
@@ -237,6 +332,7 @@ const QuickInfoSection = ({ scrollY }: { scrollY: Animated.Value }) => {
           ],
         },
       ]}
+      key={label}
     >
       <View style={styles.detailContent}>
         <Icon
@@ -251,14 +347,18 @@ const QuickInfoSection = ({ scrollY }: { scrollY: Animated.Value }) => {
     </Animated.View>
   );
 
+  const infoData = [
+    { icon: "ruler-square", label: "Plot Area", value: "2 Guntha" },
+    { icon: "home", label: "Type", value: "Residential Land" },
+    { icon: "check-circle", label: "Status", value: "For Sale" },
+    { icon: "briefcase", label: "Brokerage", value: "No Brokerage" },
+    { icon: "calendar", label: "Posted On", value: "17th Dec, 2024" },
+    { icon: "map-marker", label: "Location", value: "Phule Nagar Akkuj" },
+  ];
+
   return (
     <View style={styles.quickInfoContainer}>
-      {renderDetail("bed", "Bedrooms", "1RK")}
-      {renderDetail("ruler-square", "Area", "1000 sq.ft")}
-      {renderDetail("balcony", "Balconies", "2")}
-      {renderDetail("shower", "Bathrooms", "1")}
-      {renderDetail("check-circle", "Status", "For Sale")}
-      {renderDetail("briefcase", "Brokerage", "No Brokerage")}
+      {infoData.map((item) => renderDetail(item.icon, item.label, item.value))}
     </View>
   );
 };
@@ -270,30 +370,32 @@ const LocationCard = () => (
         <Icon name="map-marker" size={24} color={COLORS.primary} />
         <Text style={styles.locationTitle}>Location</Text>
       </View>
-      <Text style={styles.locationText}>Airport 1RK Flat Solapur</Text>
+      <Text style={styles.locationText}>Phule Nagar Akkuj</Text>
       <Text style={styles.locationSubtext}>View on map</Text>
     </View>
   </TouchableOpacity>
 );
 
-const ContactSection = () => (
+/* CONTACT SECTION */
+const ContactSection = ({ onInquiryPress }: { onInquiryPress: () => void }) => (
   <View style={styles.contactSection}>
     <View style={styles.contactContent}>
       <Text style={styles.contactTitle}>Contact Owner</Text>
       <View style={styles.contactButtons}>
-        <TouchableOpacity style={styles.callButton}>
+        <TouchableOpacity style={styles.callButton} onPress={onInquiryPress}>
           <Icon name="phone" size={22} color={COLORS.background} />
           <Text style={styles.buttonText}>Call Now</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.whatsappButton}>
-          <Icon name="whatsapp" size={22} color={COLORS.background} />
-          <Text style={styles.buttonText}>WhatsApp</Text>
+        <TouchableOpacity style={styles.callButton} onPress={onInquiryPress}>
+          <Icon name="information" size={22} color={COLORS.background} />
+          <Text style={styles.buttonText}>Inquiry</Text>
         </TouchableOpacity>
       </View>
     </View>
   </View>
 );
 
+/* AMENITIES SECTION */
 const AmenitiesSection = ({ scrollY }: { scrollY: Animated.Value }) => {
   const amenities = [
     { icon: "car", label: "Car Parking" },
@@ -348,6 +450,7 @@ const AmenitiesSection = ({ scrollY }: { scrollY: Animated.Value }) => {
   );
 };
 
+/* FURNITURE SECTION */
 const FurnitureSection = ({ scrollY }: { scrollY: Animated.Value }) => {
   const furnitureItems = [
     { icon: "bed-king", label: "King Size Bed" },
@@ -399,6 +502,7 @@ const FurnitureSection = ({ scrollY }: { scrollY: Animated.Value }) => {
   );
 };
 
+/* VIEWER COUNT */
 const ViewerCount = ({ count }: { count: number }) => (
   <View style={styles.viewerSection}>
     <Icon name="eye" size={18} color={COLORS.primary} />
@@ -475,7 +579,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   content: {
-    paddingBottom: 80,
+    // Space for content sections
   },
   priceSection: {
     margin: 16,
@@ -534,11 +638,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textLight,
     marginBottom: 4,
+    textAlign: "center",
   },
   detailValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: COLORS.text,
+    textAlign: "center",
   },
   locationCard: {
     margin: 16,
@@ -605,16 +711,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginRight: 8,
-  },
-  whatsappButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#25D366",
-    padding: 12,
-    borderRadius: 8,
-    marginLeft: 8,
   },
   buttonText: {
     color: COLORS.background,
@@ -702,6 +798,7 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginLeft: 8,
   },
+  /* Fullscreen Image Modal */
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -716,5 +813,106 @@ const styles = StyleSheet.create({
     top: 40,
     right: 20,
     zIndex: 2,
+  },
+  /* Inquiry Modal */
+  inquiryModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  inquiryModalContainer: {
+    width: "90%",
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  inquiryModalCloseButton: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
+  },
+  inquiryModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 20,
+    color: COLORS.text,
+  },
+  inquiryModalDetails: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  inquiryModalLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.textLight,
+    marginTop: 10,
+  },
+  inquiryModalValue: {
+    fontSize: 14,
+    color: COLORS.text,
+    marginTop: 4,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#DDD",
+    marginVertical: 16,
+  },
+  /* Bottom Bar */
+  bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 9999,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+  },
+  bottomBarInfoContainer: {
+    backgroundColor: "#FFE5EA",
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  bottomBarInfoText: {
+    fontSize: 14,
+    color: COLORS.text,
+  },
+  bottomBarButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 8,
+    paddingHorizontal: 30,
+  },
+  bottomBarButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#232761",
+    padding: 12,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  whatsAppButton: {
+    backgroundColor: "#1E3A8A",
+  },
+  viewNumberButton: {
+    backgroundColor: "#1E3A8A",
+  },
+  bottomBarButtonText: {
+    color: "#fff",
+    marginLeft: 6,
+    fontWeight: "600",
   },
 });

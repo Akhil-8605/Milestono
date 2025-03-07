@@ -24,10 +24,9 @@ import CitiesSection from "./homepage/CitiesSection";
 import OptimizeSection from "./homepage/OptimizeSection";
 import RealEstateTabs from "./homepage/RealestateSection";
 import NewsArticlesSection from "./homepage/NewsArticalsSection";
-import UserFeedbackSection from "./homepage/UserFeedbackSection";
 import AboutMilestono from "./homepage/AboutMilestono";
-import MenuDrawer from "./components/MenuDrawer";
 import Footer from "./components/Footer"
+import ReviewSection from "./components/ReviewSection"
 export default function homepage() {
   const [menuOpen, setMenuOpen] = useState(true);
 
@@ -51,7 +50,7 @@ export default function homepage() {
       <RealEstateTabs />
       <NewsArticlesSection />
       <AboutMilestono />
-      <UserFeedbackSection />
+      <ReviewSection/>
     </ScrollView>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -14,17 +14,16 @@ import {
   StatusBar,
   Platform,
   Linking,
-  ImageBackground,
   ScrollView,
 } from "react-native";
 import {
   Feather,
   MaterialIcons,
-  FontAwesome5,
   AntDesign,
   Ionicons,
 } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 
 const mockAgents = [
   {
@@ -78,6 +77,32 @@ const mockAgents = [
         propertyimage: require("../assets/images/dummyImg.webp"),
         price: 250000,
         bhk: "Shop",
+      },
+    ],
+    project: [
+      {
+        id: "proj-1",
+        name: "Green Valley",
+        location: "Bangalore",
+        status: "Under Construction",
+        image: require("../assets/images/newproject2.png"),
+        description:
+          "Eco-friendly residential complex with sustainable features and green spaces throughout the property.",
+        price: "₹ 85L - 1.5Cr",
+        possession: "December 2025",
+        rating: 4.5,
+      },
+      {
+        id: "proj-2",
+        name: "Riverside Residences",
+        location: "Pune",
+        status: "Under Construction",
+        image: require("../assets/images/newproject4.png"),
+        description:
+          "Elegant apartments along the riverside with beautiful views and tranquil environment.",
+        price: "₹ 65L - 1.1Cr",
+        possession: "June 2025",
+        rating: 4.6,
       },
     ],
   },
@@ -134,6 +159,32 @@ const mockAgents = [
         bhk: "Shop",
       },
     ],
+    project: [
+      {
+        id: "proj-3",
+        name: "Serene Meadows",
+        location: "Chennai",
+        status: "Under Construction",
+        image: require("../assets/images/newproject2.png"),
+        description:
+          "Peaceful residential community surrounded by nature yet close to urban amenities.",
+        price: "₹ 60L - 95L",
+        possession: "March 2026",
+        rating: 4.4,
+      },
+      {
+        id: "proj-4",
+        name: "Industrial Park",
+        location: "Pune",
+        status: "Under Construction",
+        image: require("../assets/images/newproject1.png"),
+        description:
+          "Industrial spaces with robust infrastructure for manufacturing and warehousing.",
+        price: "₹ 1Cr - 2.2Cr",
+        possession: "December 2025",
+        rating: 4.5,
+      },
+    ],
   },
   {
     id: 3,
@@ -186,6 +237,32 @@ const mockAgents = [
         propertyimage: require("../assets/images/dummyImg.webp"),
         price: 250000,
         bhk: "Shop",
+      },
+    ],
+    project: [
+      {
+        id: "proj-5",
+        name: "Retail Plaza",
+        location: "Delhi",
+        status: "Under Construction",
+        image: require("../assets/images/newproject3.png"),
+        description:
+          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
+        price: "₹ 1.2Cr - 2.5Cr",
+        possession: "September 2025",
+        rating: 4.6,
+      },
+      {
+        id: "proj-6",
+        name: "Green Valley",
+        location: "Bangalore",
+        status: "Under Construction",
+        image: require("../assets/images/newproject2.png"),
+        description:
+          "Eco-friendly residential complex with sustainable features and green spaces throughout the property.",
+        price: "₹ 85L - 1.5Cr",
+        possession: "December 2025",
+        rating: 4.5,
       },
     ],
   },
@@ -242,6 +319,32 @@ const mockAgents = [
         bhk: "Shop",
       },
     ],
+    project: [
+      {
+        id: "proj-7",
+        name: "Riverside Residences",
+        location: "Pune",
+        status: "Under Construction",
+        image: require("../assets/images/newproject4.png"),
+        description:
+          "Elegant apartments along the riverside with beautiful views and tranquil environment.",
+        price: "₹ 65L - 1.1Cr",
+        possession: "June 2025",
+        rating: 4.6,
+      },
+      {
+        id: "proj-8",
+        name: "Serene Meadows",
+        location: "Chennai",
+        status: "Under Construction",
+        image: require("../assets/images/newproject2.png"),
+        description:
+          "Peaceful residential community surrounded by nature yet close to urban amenities.",
+        price: "₹ 60L - 95L",
+        possession: "March 2026",
+        rating: 4.4,
+      },
+    ],
   },
   {
     id: 5,
@@ -294,6 +397,32 @@ const mockAgents = [
         propertyimage: require("../assets/images/dummyImg.webp"),
         price: 250000,
         bhk: "Shop",
+      },
+    ],
+    project: [
+      {
+        id: "proj-9",
+        name: "Retail Plaza",
+        location: "Delhi",
+        status: "Under Construction",
+        image: require("../assets/images/newproject3.png"),
+        description:
+          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
+        price: "₹ 1.2Cr - 2.5Cr",
+        possession: "September 2025",
+        rating: 4.6,
+      },
+      {
+        id: "proj-10",
+        name: "Industrial Park",
+        location: "Pune",
+        status: "Under Construction",
+        image: require("../assets/images/newproject1.png"),
+        description:
+          "Industrial spaces with robust infrastructure for manufacturing and warehousing.",
+        price: "₹ 1Cr - 2.2Cr",
+        possession: "December 2025",
+        rating: 4.5,
       },
     ],
   },
@@ -350,6 +479,32 @@ const mockAgents = [
         bhk: "Shop",
       },
     ],
+    project: [
+      {
+        id: "proj-11",
+        name: "Green Valley",
+        location: "Bangalore",
+        status: "Under Construction",
+        image: require("../assets/images/newproject2.png"),
+        description:
+          "Eco-friendly residential complex with sustainable features and green spaces throughout the property.",
+        price: "₹ 85L - 1.5Cr",
+        possession: "December 2025",
+        rating: 4.5,
+      },
+      {
+        id: "proj-12",
+        name: "Retail Plaza",
+        location: "Delhi",
+        status: "Under Construction",
+        image: require("../assets/images/newproject3.png"),
+        description:
+          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
+        price: "₹ 1.2Cr - 2.5Cr",
+        possession: "September 2025",
+        rating: 4.6,
+      },
+    ],
   },
   {
     id: 7,
@@ -402,6 +557,32 @@ const mockAgents = [
         propertyimage: require("../assets/images/dummyImg.webp"),
         price: 250000,
         bhk: "Shop",
+      },
+    ],
+    project: [
+      {
+        id: "proj-13",
+        name: "Serene Meadows",
+        location: "Chennai",
+        status: "Under Construction",
+        image: require("../assets/images/newproject2.png"),
+        description:
+          "Peaceful residential community surrounded by nature yet close to urban amenities.",
+        price: "₹ 60L - 95L",
+        possession: "March 2026",
+        rating: 4.4,
+      },
+      {
+        id: "proj-14",
+        name: "Industrial Park",
+        location: "Pune",
+        status: "Under Construction",
+        image: require("../assets/images/newproject1.png"),
+        description:
+          "Industrial spaces with robust infrastructure for manufacturing and warehousing.",
+        price: "₹ 1Cr - 2.2Cr",
+        possession: "December 2025",
+        rating: 4.5,
       },
     ],
   },
@@ -458,6 +639,32 @@ const mockAgents = [
         bhk: "Shop",
       },
     ],
+    project: [
+      {
+        id: "proj-15",
+        name: "Retail Plaza",
+        location: "Delhi",
+        status: "Under Construction",
+        image: require("../assets/images/newproject3.png"),
+        description:
+          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
+        price: "₹ 1.2Cr - 2.5Cr",
+        possession: "September 2025",
+        rating: 4.6,
+      },
+      {
+        id: "proj-16",
+        name: "Green Valley",
+        location: "Bangalore",
+        status: "Under Construction",
+        image: require("../assets/images/newproject2.png"),
+        description:
+          "Eco-friendly residential complex with sustainable features and green spaces throughout the property.",
+        price: "₹ 85L - 1.5Cr",
+        possession: "December 2025",
+        rating: 4.5,
+      },
+    ],
   },
   {
     id: 9,
@@ -510,6 +717,32 @@ const mockAgents = [
         propertyimage: require("../assets/images/dummyImg.webp"),
         price: 250000,
         bhk: "Shop",
+      },
+    ],
+    project: [
+      {
+        id: "proj-17",
+        name: "Serene Meadows",
+        location: "Chennai",
+        status: "Under Construction",
+        image: require("../assets/images/newproject2.png"),
+        description:
+          "Peaceful residential community surrounded by nature yet close to urban amenities.",
+        price: "₹ 60L - 95L",
+        possession: "March 2026",
+        rating: 4.4,
+      },
+      {
+        id: "proj-18",
+        name: "Industrial Park",
+        location: "Pune",
+        status: "Under Construction",
+        image: require("../assets/images/newproject1.png"),
+        description:
+          "Industrial spaces with robust infrastructure for manufacturing and warehousing.",
+        price: "₹ 1Cr - 2.2Cr",
+        possession: "December 2025",
+        rating: 4.5,
       },
     ],
   },
@@ -566,550 +799,36 @@ const mockAgents = [
         bhk: "Shop",
       },
     ],
-  },
-  {
-    id: 11,
-    name: "Agent 11",
-    fullName: "Olivia Garcia",
-    company: "Prestige Homes",
-    operatingSince: 2020,
-    address: "1244 Main St, New York",
-    phone: "(510) 555-1010",
-    email: "agent11@luxuryhomes.com",
-    image: "https://randomuser.me/api/portraits/women/11.jpg",
-    rating: 4,
-    propertiesSold: 40,
-    specialization: "Luxury Homes",
-    featured: false,
-    verified: false,
-    experience: 13,
-    awards: 1,
-    residentialProperties: [
+    project: [
       {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
+        id: "proj-19",
+        name: "Retail Plaza",
+        location: "Delhi",
+        status: "Under Construction",
+        image: require("../assets/images/newproject3.png"),
+        description:
+          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
+        price: "₹ 1.2Cr - 2.5Cr",
+        possession: "September 2025",
+        rating: 4.6,
       },
       {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-  },
-  {
-    id: 12,
-    name: "Agent 12",
-    fullName: "William Davis",
-    company: "Cornerstone Realty",
-    operatingSince: 2021,
-    address: "1245 Broadway Ave, Los Angeles",
-    phone: "(511) 555-1011",
-    email: "agent12@urbanproperty.com",
-    image: "https://randomuser.me/api/portraits/men/12.jpg",
-    rating: 5,
-    propertiesSold: 43,
-    specialization: "Commercial",
-    featured: false,
-    verified: false,
-    experience: 14,
-    awards: 2,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-  },
-  {
-    id: 13,
-    name: "Agent 13",
-    fullName: "Emma Wilson",
-    company: "Blue Ocean Properties",
-    operatingSince: 2010,
-    address: "1246 Park Rd, Chicago",
-    phone: "(512) 555-1012",
-    email: "agent13@coastalestates.com",
-    image: "https://randomuser.me/api/portraits/women/13.jpg",
-    rating: 3,
-    propertiesSold: 46,
-    specialization: "Residential",
-    featured: false,
-    verified: true,
-    experience: 15,
-    awards: 3,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-  },
-  {
-    id: 14,
-    name: "Agent 14",
-    fullName: "Alexander Lopez",
-    company: "Summit Real Estate",
-    operatingSince: 2011,
-    address: "1247 Ocean Blvd, Miami",
-    phone: "(513) 555-1013",
-    email: "agent14@metropolitan.com",
-    image: "https://randomuser.me/api/portraits/men/14.jpg",
-    rating: 4,
-    propertiesSold: 49,
-    specialization: "Vacation Rentals",
-    featured: false,
-    verified: false,
-    experience: 16,
-    awards: 4,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-  },
-  {
-    id: 15,
-    name: "Agent 15",
-    fullName: "Ava Thompson",
-    company: "Diamond Estates",
-    operatingSince: 2012,
-    address: "1248 Highland Dr, Seattle",
-    phone: "(514) 555-1014",
-    email: "agent15@premier.com",
-    image: "https://randomuser.me/api/portraits/women/15.jpg",
-    rating: 5,
-    propertiesSold: 52,
-    specialization: "New Developments",
-    featured: true,
-    verified: false,
-    experience: 17,
-    awards: 5,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-  },
-  {
-    id: 16,
-    name: "Agent 16",
-    fullName: "Benjamin Moore",
-    company: "Cityscape Realtors",
-    operatingSince: 2013,
-    address: "1249 Main St, Boston",
-    phone: "(515) 555-1015",
-    email: "agent16@luxuryhomes.com",
-    image: "https://randomuser.me/api/portraits/men/16.jpg",
-    rating: 3,
-    propertiesSold: 55,
-    specialization: "Luxury Homes",
-    featured: false,
-    verified: true,
-    experience: 3,
-    awards: 1,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-  },
-  {
-    id: 17,
-    name: "Agent 17",
-    fullName: "Mia Jackson",
-    company: "Evergreen Properties",
-    operatingSince: 2014,
-    address: "1250 Broadway Ave, Austin",
-    phone: "(516) 555-1016",
-    email: "agent17@urbanproperty.com",
-    image: "https://randomuser.me/api/portraits/women/17.jpg",
-    rating: 4,
-    propertiesSold: 58,
-    specialization: "Commercial",
-    featured: false,
-    verified: false,
-    experience: 4,
-    awards: 2,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-  },
-  {
-    id: 18,
-    name: "Agent 18",
-    fullName: "Ethan White",
-    company: "Platinum Realty Group",
-    operatingSince: 2015,
-    address: "1251 Park Rd, Denver",
-    phone: "(517) 555-1017",
-    email: "agent18@coastalestates.com",
-    image: "https://randomuser.me/api/portraits/men/18.jpg",
-    rating: 5,
-    propertiesSold: 61,
-    specialization: "Residential",
-    featured: false,
-    verified: false,
-    experience: 5,
-    awards: 3,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-  },
-  {
-    id: 19,
-    name: "Agent 19",
-    fullName: "Isabella Harris",
-    company: "Sapphire Estates",
-    operatingSince: 2016,
-    address: "1252 Ocean Blvd, San Francisco",
-    phone: "(518) 555-1018",
-    email: "agent19@metropolitan.com",
-    image: "https://randomuser.me/api/portraits/women/19.jpg",
-    rating: 3,
-    propertiesSold: 64,
-    specialization: "Vacation Rentals",
-    featured: false,
-    verified: true,
-    experience: 6,
-    awards: 4,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-  },
-  {
-    id: 20,
-    name: "Agent 20",
-    fullName: "Matthew Clark",
-    company: "Majestic Homes",
-    operatingSince: 2017,
-    address: "1253 Highland Dr, Atlanta",
-    phone: "(519) 555-1019",
-    email: "agent20@premier.com",
-    image: "https://randomuser.me/api/portraits/men/20.jpg",
-    rating: 4,
-    propertiesSold: 67,
-    specialization: "New Developments",
-    featured: false,
-    verified: false,
-    experience: 7,
-    awards: 5,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
+        id: "proj-20",
+        name: "Riverside Residences",
+        location: "Pune",
+        status: "Under Construction",
+        image: require("../assets/images/newproject4.png"),
+        description:
+          "Elegant apartments along the riverside with beautiful views and tranquil environment.",
+        price: "₹ 65L - 1.1Cr",
+        possession: "June 2025",
+        rating: 4.6,
       },
     ],
   },
 ];
 
-// ----------------------- Property Card Component ----------------------- //
+
 const PropertyCard = ({ property }) => {
   const navigation = useNavigation();
   return (
@@ -1124,19 +843,75 @@ const PropertyCard = ({ property }) => {
         <Text style={styles.locationText}>Location: {property.location}</Text>
         <View style={styles.priceContainer}>
           <Text style={styles.priceText}>Rs {property.price}</Text>
-          <Text style={styles.typeText}>| {property.type}</Text>
+          <Text style={styles.typeText}>| {property.bhk}</Text>
         </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.saveButton}>
             <Text style={styles.saveButtonText}>Save Property</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.viewButton}
+            style={styles.viewButtonAgent}
             onPress={() => {
               navigation.navigate("PropertyDetailsPage" as never);
             }}
           >
-            <Text style={styles.viewButtonText}>View Details</Text>
+            <Text style={styles.viewButtonTextAgent}>View Details</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const ProjectCard = ({ project, onViewDetails, onInquiry }) => {
+  return (
+    <View key={project.id} style={styles.projectCard}>
+      <View style={styles.projectImageContainer}>
+        <Image source={project.image} style={styles.projectImage} />
+        <LinearGradient
+          colors={["rgba(0,0,0,0)", "transparent"]}
+          style={styles.imageGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 0.6 }}
+        />
+        {project.status && (
+          <View style={styles.projectBadge}>
+            <Text style={styles.projectBadgeText}>{project.status}</Text>
+          </View>
+        )}
+        {project.rating && (
+          <View style={styles.ratingBadge}>
+            <Text style={styles.ratingText}>★ {project.rating}</Text>
+          </View>
+        )}
+      </View>
+      <View style={styles.projectInfo}>
+        <Text style={styles.projectTitle}>{project.name}</Text>
+        <View style={styles.locationContainer}>
+          <Text style={styles.projectLocation}>📍 {project.location}</Text>
+          {project.price && (
+            <Text style={styles.projectPrice}>{project.price}</Text>
+          )}
+        </View>
+        {project.possession && (
+          <Text style={styles.projectPossession}>
+            🗓️ Possession: {project.possession}
+          </Text>
+        )}
+        <View style={styles.projectButtons}>
+          <TouchableOpacity
+            style={styles.viewButton}
+            onPress={onViewDetails}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>View Details</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.inquiryButton}
+            onPress={onInquiry}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>Inquiry</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -1152,17 +927,21 @@ export default function AgentsPage() {
   const [searchBy, setSearchBy] = useState("name");
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-
-  const [selectedTab, setSelectedTab] = useState("residential"); // <-- NEW state for tabs
+  const [selectedTab, setSelectedTab] = useState("residential");
+  const [projectModalVisible, setProjectModalVisible] = useState(false);
+  const [selectedProjectForModal, setSelectedProjectForModal] = useState(null);
+  const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
 
   const agentsPerPage = 10;
   const totalPages = Math.ceil(filteredAgents.length / agentsPerPage);
 
-  // Animation values
+  const featuredProperties = agents
+    .slice(0, 3)
+    .flatMap((agent) => agent.residentialProperties);
+
   const scrollY = useRef(new Animated.Value(0)).current;
   const modalAnimation = useRef(new Animated.Value(0)).current;
 
-  // ----------------------- Filtering Logic ----------------------- //
   const filterAgents = () => {
     if (!searchQuery.trim()) {
       setFilteredAgents(agents);
@@ -1194,7 +973,6 @@ export default function AgentsPage() {
     return filteredAgents.slice(startIndex, endIndex);
   };
 
-  // ----------------------- Modal Logic ----------------------- //
   const handleContactPress = (agent) => {
     setSelectedAgent(agent);
     setModalVisible(true);
@@ -1213,7 +991,7 @@ export default function AgentsPage() {
     }).start(() => {
       setModalVisible(false);
       setSelectedAgent(null);
-      setSelectedTab("residential"); // Reset tab on close if desired
+      setSelectedTab("residential");
     });
   };
 
@@ -1225,31 +1003,21 @@ export default function AgentsPage() {
     Linking.openURL(`mailto:${email}`);
   };
 
-  // ----------------------- Render Card ----------------------- //
   const renderAgentCard = ({ item, index }) => {
     const inputRange = [(index - 1) * 350, index * 350, (index + 1) * 350];
-
     const scale = scrollY.interpolate({
       inputRange,
       outputRange: [0.97, 1, 0.97],
       extrapolate: "clamp",
     });
-
     const opacity = scrollY.interpolate({
       inputRange,
       outputRange: [0.85, 1, 0.85],
       extrapolate: "clamp",
     });
-
     return (
       <Animated.View
-        style={[
-          styles.cardContainer,
-          {
-            transform: [{ scale }],
-            opacity,
-          },
-        ]}
+        style={[styles.cardContainer, { transform: [{ scale }], opacity }]}
       >
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -1271,7 +1039,6 @@ export default function AgentsPage() {
               </View>
             )}
           </View>
-
           <View style={styles.cardBody}>
             <View style={styles.cardBodyTop}>
               <View>
@@ -1293,27 +1060,25 @@ export default function AgentsPage() {
                       style={{ marginRight: 2 }}
                     />
                   ))}
-                <Text style={styles.ratingText}>
+                <Text style={styles.ratingTextAgent}>
                   ({item.rating.toFixed(1)})
                 </Text>
               </View>
             </View>
-
             <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{item.propertiesSold}</Text>
-                <Text style={styles.statLabel}>Sold</Text>
+              <View style={styles.agentStatBox}>
+                <Text style={styles.agentStatValue}>{item.propertiesSold}</Text>
+                <Text style={styles.agentStatLabel}>Properties Sold</Text>
               </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{item.experience}</Text>
-                <Text style={styles.statLabel}>Years</Text>
+              <View style={styles.agentStatBox}>
+                <Text style={styles.agentStatValue}>{item.experience}</Text>
+                <Text style={styles.agentStatLabel}>Years Experience</Text>
               </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{item.awards}</Text>
-                <Text style={styles.statLabel}>Awards</Text>
+              <View style={styles.agentStatBox}>
+                <Text style={styles.agentStatValue}>{item.awards}</Text>
+                <Text style={styles.agentStatLabel}>Awards</Text>
               </View>
             </View>
-
             <View style={styles.infoSection}>
               <View style={styles.infoRow}>
                 <Feather name="calendar" size={14} color="#666" />
@@ -1328,7 +1093,6 @@ export default function AgentsPage() {
                 </Text>
               </View>
             </View>
-
             <TouchableOpacity
               style={styles.contactButton}
               onPress={() => handleContactPress(item)}
@@ -1342,7 +1106,6 @@ export default function AgentsPage() {
     );
   };
 
-  // ----------------------- Animations for Modal ----------------------- //
   const modalTranslateY = modalAnimation.interpolate({
     inputRange: [0, 1],
     outputRange: [500, 0],
@@ -1351,22 +1114,17 @@ export default function AgentsPage() {
     inputRange: [0, 1],
     outputRange: [0, 0.7],
   });
-
   const statusBarHeight = StatusBar.currentHeight || 0;
 
   return (
     <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-
-      {/* Header */}
       <View style={styles.stickyHeader}>
         <Text style={styles.headerTitle}>Real Estate Agents</Text>
         <Text style={styles.headerSubtitle}>
           Find the perfect agent for your needs
         </Text>
       </View>
-
-      {/* Agents List */}
       <Animated.FlatList
         data={getCurrentPageAgents()}
         renderItem={renderAgentCard}
@@ -1380,7 +1138,6 @@ export default function AgentsPage() {
         scrollEventThrottle={16}
         ListHeaderComponent={() => (
           <>
-            {/* Search */}
             <View style={styles.searchContainer}>
               <View style={styles.searchInputContainer}>
                 <Feather
@@ -1409,8 +1166,6 @@ export default function AgentsPage() {
                   </TouchableOpacity>
                 )}
               </View>
-
-              {/* Filter */}
               <View style={styles.filterContainer}>
                 <Text style={styles.filterLabel}>Search by:</Text>
                 <View style={styles.filterOptions}>
@@ -1433,7 +1188,6 @@ export default function AgentsPage() {
                       Name
                     </Text>
                   </TouchableOpacity>
-
                   <TouchableOpacity
                     style={[
                       styles.filterOption,
@@ -1453,7 +1207,6 @@ export default function AgentsPage() {
                       Company
                     </Text>
                   </TouchableOpacity>
-
                   <TouchableOpacity
                     style={[
                       styles.filterOption,
@@ -1476,8 +1229,6 @@ export default function AgentsPage() {
                 </View>
               </View>
             </View>
-
-            {/* Results Info */}
             <View style={styles.resultsInfo}>
               <Text style={styles.resultsText}>
                 {filteredAgents.length} agents found
@@ -1486,8 +1237,6 @@ export default function AgentsPage() {
           </>
         )}
       />
-
-      {/* Pagination */}
       <View style={styles.stickyFooter}>
         <TouchableOpacity
           style={[
@@ -1503,13 +1252,11 @@ export default function AgentsPage() {
             color={currentPage === 1 ? "#ccc" : "#333"}
           />
         </TouchableOpacity>
-
         <View style={styles.paginationInfo}>
           <Text style={styles.paginationText}>
             Page {currentPage} of {totalPages}
           </Text>
         </View>
-
         <TouchableOpacity
           style={[
             styles.paginationButton,
@@ -1527,8 +1274,6 @@ export default function AgentsPage() {
           />
         </TouchableOpacity>
       </View>
-
-      {/* Contact Modal */}
       <Modal
         visible={modalVisible}
         transparent={true}
@@ -1536,21 +1281,16 @@ export default function AgentsPage() {
         onRequestClose={closeModal}
       >
         <View style={styles.modalContainer}>
-          {/* Backdrop */}
           <Animated.View
             style={[styles.modalBackdrop, { opacity: modalBackdropOpacity }]}
           >
             <TouchableOpacity style={{ flex: 1 }} onPress={closeModal} />
           </Animated.View>
-
-          {/* Modal Content */}
           {selectedAgent && (
             <Animated.View
               style={[
                 styles.modalContent,
-                {
-                  transform: [{ translateY: modalTranslateY }],
-                },
+                { transform: [{ translateY: modalTranslateY }] },
               ]}
             >
               <View style={styles.modalHeader}>
@@ -1563,12 +1303,10 @@ export default function AgentsPage() {
                   <Feather name="x" size={24} color="#333" />
                 </TouchableOpacity>
               </View>
-
               <ScrollView
                 style={styles.modalBody}
                 showsVerticalScrollIndicator={false}
               >
-                {/* Agent Info */}
                 <View style={styles.modalAgentInfo}>
                   <Image
                     source={{ uri: selectedAgent.image }}
@@ -1603,9 +1341,7 @@ export default function AgentsPage() {
                     </View>
                   </View>
                 </View>
-
-                {/* Agent Stats */}
-                <View style={styles.agentStatsRow}>
+                <View style={styles.statsContainer}>
                   <View style={styles.agentStatBox}>
                     <Text style={styles.agentStatValue}>
                       {selectedAgent.propertiesSold}
@@ -1625,8 +1361,6 @@ export default function AgentsPage() {
                     <Text style={styles.agentStatLabel}>Awards</Text>
                   </View>
                 </View>
-
-                {/* About Agent */}
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>About Agent</Text>
                   <Text style={styles.aboutText}>
@@ -1634,15 +1368,12 @@ export default function AgentsPage() {
                     with {selectedAgent.experience} years of experience,
                     specializing in {selectedAgent.specialization}. With a
                     proven track record of {selectedAgent.propertiesSold}{" "}
-                    properties sold, they have established themselves as a
-                    trusted advisor in the real estate market.
+                    properties sold, they are a trusted advisor in the real
+                    estate market.
                   </Text>
                 </View>
-
-                {/* NEW: Properties Section with Tabs */}
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>Properties</Text>
-                  {/* Tabs */}
                   <View style={styles.tabContainer}>
                     <TouchableOpacity
                       style={[
@@ -1661,7 +1392,6 @@ export default function AgentsPage() {
                         Residential
                       </Text>
                     </TouchableOpacity>
-
                     <TouchableOpacity
                       style={[
                         styles.tabButton,
@@ -1680,8 +1410,6 @@ export default function AgentsPage() {
                       </Text>
                     </TouchableOpacity>
                   </View>
-
-                  {/* Property Cards */}
                   {selectedTab === "residential" ? (
                     <ScrollView
                       horizontal
@@ -1692,7 +1420,7 @@ export default function AgentsPage() {
                         <PropertyCard key={property.id} property={property} />
                       ))}
                     </ScrollView>
-                  ) : (
+                  ) : selectedTab === "commercial" ? (
                     <ScrollView
                       horizontal
                       showsHorizontalScrollIndicator={false}
@@ -1702,15 +1430,39 @@ export default function AgentsPage() {
                         <PropertyCard key={property.id} property={property} />
                       ))}
                     </ScrollView>
+                  ) : (
+                    ''
                   )}
                 </View>
 
-                {/* Contact Information */}
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSectionTitle}>
+                    New Projects
+                  </Text>
+                  <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.scrollContainer}
+                    >
+                      {selectedAgent.project.map((proj) => (
+                        <ProjectCard
+                          key={proj.id}
+                          project={proj}
+                          onViewDetails={() => {
+                            setSelectedProjectForModal(proj);
+                            setProjectModalVisible(true);
+                          }}
+                          onInquiry={() => {
+                            setInquiryModalVisible(true);
+                          }}
+                        />
+                      ))}
+                    </ScrollView>
+                </View>
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>
                     Contact Information
                   </Text>
-
                   <View style={styles.contactOptions}>
                     <TouchableOpacity
                       style={styles.contactOption}
@@ -1735,7 +1487,6 @@ export default function AgentsPage() {
                         <Feather name="chevron-right" size={16} color="#666" />
                       </View>
                     </TouchableOpacity>
-
                     <TouchableOpacity
                       style={styles.contactOption}
                       onPress={() => handleEmail(selectedAgent.email)}
@@ -1761,7 +1512,6 @@ export default function AgentsPage() {
                         <Feather name="chevron-right" size={16} color="#666" />
                       </View>
                     </TouchableOpacity>
-
                     <View style={styles.contactOption}>
                       <LinearGradient
                         colors={["#FF9800", "#E65100"]}
@@ -1782,7 +1532,6 @@ export default function AgentsPage() {
                     </View>
                   </View>
                 </View>
-
                 <TouchableOpacity
                   style={styles.scheduleButton}
                   activeOpacity={0.8}
@@ -1801,23 +1550,128 @@ export default function AgentsPage() {
           )}
         </View>
       </Modal>
+      <Modal
+        visible={projectModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setProjectModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.projectModalContainer}>
+            {selectedProjectForModal && (
+              <>
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={() => setProjectModalVisible(false)}
+                >
+                  <Feather name="x" size={24} color="#FFF" />
+                </TouchableOpacity>
+                <Image
+                  source={selectedProjectForModal.image}
+                  style={styles.modalProjectImage}
+                />
+                <ScrollView style={styles.modalScrollView}>
+                  <Text style={styles.modalTitle}>
+                    {selectedProjectForModal.name}
+                  </Text>
+                  <View style={styles.modalInfoRow}>
+                    <Text style={styles.modalLocation}>
+                      📍 {selectedProjectForModal.location}
+                    </Text>
+                    {selectedProjectForModal.rating && (
+                      <Text style={styles.modalRating}>
+                        ★ {selectedProjectForModal.rating}
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={styles.modalStatus}>
+                    {selectedProjectForModal.status}
+                  </Text>
+                  {selectedProjectForModal.price && (
+                    <View style={styles.priceContainerModal}>
+                      <Text style={styles.priceLabel}>Price Range:</Text>
+                      <Text style={styles.priceValue}>
+                        {selectedProjectForModal.price}
+                      </Text>
+                    </View>
+                  )}
+                  {selectedProjectForModal.possession && (
+                    <View style={styles.possessionContainerModal}>
+                      <Text style={styles.possessionLabel}>Possession:</Text>
+                      <Text style={styles.possessionValue}>
+                        {selectedProjectForModal.possession}
+                      </Text>
+                    </View>
+                  )}
+                  <Text style={styles.modalDescription}>
+                    {selectedProjectForModal.description}
+                  </Text>
+                </ScrollView>
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={styles.modalButton}
+                    onPress={() => setProjectModalVisible(false)}
+                  >
+                    <Text style={styles.modalButtonCloseText}>Close</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.modalInquiryButton]}
+                    onPress={() => {
+                      setInquiryModalVisible(true);
+                      setProjectModalVisible(false);
+                    }}
+                  >
+                    <Text style={styles.modalButtonText}>Inquiry</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={inquiryModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setInquiryModalVisible(false)}
+      >
+        <View style={styles.inquiryModalOverlay}>
+          <View style={styles.inquiryModalContainer}>
+            <TouchableOpacity
+              style={styles.inquiryModalCloseButton}
+              onPress={() => setInquiryModalVisible(false)}
+            >
+              <Feather name="x" size={30} color={"#232761"} />
+            </TouchableOpacity>
+            <Text style={styles.inquiryModalTitle}>
+              You are requesting to view advertiser details
+            </Text>
+            <View style={styles.inquiryModalDetails}>
+              <Text style={styles.inquiryModalLabel}>POSTED BY AGENT:</Text>
+              <Text style={styles.inquiryModalValue}>
+                +91 988** **** | i********@gmail.com
+              </Text>
+              <Text style={styles.inquiryModalValue}>VISHAL KATE</Text>
+              <View style={styles.divider} />
+              <Text style={styles.inquiryModalLabel}>
+                POSTED ON 17th DEC, 2024
+              </Text>
+              <Text style={styles.inquiryModalValue}>
+                ₹ 15 Lac | Phule Nagar Akkuj
+              </Text>
+              <Text style={styles.inquiryModalValue}>
+                2 Guntha | Residential Land
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
-// LinearGradient component for React Native
-const LinearGradient = ({ colors, style, children, start, end }) => {
-  const colorStyle = {
-    backgroundColor: colors[0],
-    // In a real app, you would use a real LinearGradient component
-    // This is just a simple implementation for the example
-  };
-
-  return <View style={[style, colorStyle]}>{children}</View>;
-};
-
 const { width } = Dimensions.get("window");
-const cardWidth = width - 40;
+const cardWidth = width * 0.8;
 
 const styles = StyleSheet.create({
   container: {
@@ -2000,7 +1854,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  ratingText: {
+  ratingTextAgent: {
     fontSize: 12,
     color: "#666",
     marginLeft: 4,
@@ -2013,15 +1867,15 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 15,
   },
-  statItem: {
+  agentStatBox: {
     alignItems: "center",
   },
-  statValue: {
+  agentStatValue: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
   },
-  statLabel: {
+  agentStatLabel: {
     fontSize: 12,
     color: "#666",
   },
@@ -2044,7 +1898,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    opacity: 1.1,
   },
   contactButtonText: {
     color: "#fff",
@@ -2118,12 +1971,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: 16,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    letterSpacing: -0.5,
-  },
   closeButton: {
     position: "absolute",
     right: 16,
@@ -2149,11 +1996,6 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     borderWidth: 2,
     borderColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   modalAgentDetails: {
     marginLeft: 15,
@@ -2172,11 +2014,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   modalAgentRating: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 4,
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 4,
   },
   modalRatingText: {
     fontSize: 12,
@@ -2187,27 +2027,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 24,
-  },
-  agentStatBox: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 12,
-    padding: 12,
-    alignItems: "center",
-    marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: "#eee",
-  },
-  agentStatValue: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 4,
-  },
-  agentStatLabel: {
-    fontSize: 12,
-    color: "#666",
-    textAlign: "center",
   },
   modalSection: {
     marginBottom: 24,
@@ -2270,10 +2089,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderRadius: 12,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
     elevation: 5,
   },
   scheduleButtonGradient: {
@@ -2287,7 +2102,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 0.5,
   },
-  // Below are minimal additions for the new property card & tab styles
+  tabContainer: {
+    flexDirection: "row",
+    marginVertical: 10,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 4,
+    marginRight: 5,
+    alignItems: "center",
+  },
+  tabButtonText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  activeTabButton: {
+    backgroundColor: "#232761",
+    borderColor: "#232761",
+  },
+  activeTabButtonText: {
+    color: "#fff",
+  },
   scrollContainer: {
     paddingRight: 20,
     paddingLeft: 2,
@@ -2299,16 +2137,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginRight: 16,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
     borderColor: "#eee",
-    marginHorizontal: "auto",
   },
   propertyImage: {
     width: "100%",
@@ -2330,11 +2164,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     marginBottom: 8,
-  },
-  priceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
   },
   priceText: {
     fontSize: 16,
@@ -2363,40 +2192,322 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
-  viewButton: {
+  viewButtonAgent: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 4,
     backgroundColor: "#2E3192",
   },
-  viewButtonText: {
+  viewButtonTextAgent: {
     color: "white",
     fontSize: 14,
     fontWeight: "500",
   },
-  // Tabs
-  tabContainer: {
-    flexDirection: "row",
-    marginVertical: 10,
+  projectCard: {
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    overflow: "hidden",
+    marginRight: 20,
+    elevation: 5,
   },
-  tabButton: {
+  projectImageContainer: {
+    position: "relative",
+    width: cardWidth,
+    height: 180,
+  },
+  projectImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  imageGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+  },
+  projectBadge: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  projectBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  ratingBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(255, 193, 7, 0.9)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  ratingText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  projectInfo: {
+    padding: 15,
+  },
+  projectTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1a237e",
+    marginBottom: 5,
+  },
+  projectLocation: {
+    fontSize: 14,
+    color: "#757575",
+  },
+  projectPrice: {
+    fontSize: 14,
+    color: "#1a237e",
+    fontWeight: "bold",
+  },
+  projectPossession: {
+    fontSize: 14,
+    color: "#757575",
+    marginBottom: 10,
+  },
+  projectButtons: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  viewButton: {
     flex: 1,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 4,
-    marginRight: 5,
+    backgroundColor: "#1a237e",
+    padding: 12,
+    borderRadius: 10,
     alignItems: "center",
   },
-  tabButtonText: {
-    fontSize: 14,
-    color: "#333",
+  inquiryButton: {
+    flex: 1,
+    backgroundColor: "#4CAF50",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
   },
-  activeTabButton: {
-    backgroundColor: "#232761",
-    borderColor: "#232761",
-  },
-  activeTabButtonText: {
+  buttonText: {
     color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  propertiesSection: {
+    paddingVertical: 20,
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+  },
+  propertiesSectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
+  },
+  propertiesScrollContainer: {
+    paddingRight: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  projectModalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    width: "90%",
+    maxHeight: "80%",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  modalCloseButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    zIndex: 2,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalProjectImage: {
+    width: "100%",
+    height: 200,
+  },
+  modalScrollView: {
+    padding: 20,
+    maxHeight: 350,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1a237e",
+    marginBottom: 10,
+  },
+  modalInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  modalLocation: {
+    fontSize: 16,
+    color: "#757575",
+  },
+  modalRating: {
+    fontSize: 16,
+    color: "#FFC107",
+    fontWeight: "bold",
+  },
+  modalStatus: {
+    fontSize: 16,
+    color: "#4CAF50",
+    marginBottom: 15,
+  },
+  priceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    backgroundColor: "rgba(26, 35, 126, 0.05)",
+    padding: 10,
+    borderRadius: 10,
+  },
+  possessionContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+    backgroundColor: "rgba(76, 175, 80, 0.05)",
+    padding: 10,
+    borderRadius: 10,
+  },
+  priceContainerModal: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(26, 35, 126, 0.05)",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  priceLabel: {
+    fontSize: 14,
+    color: "#757575",
+    marginRight: 5,
+  },
+  priceValue: {
+    fontSize: 16,
+    color: "#1a237e",
+    fontWeight: "bold",
+  },
+  possessionContainerModal: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(76, 175, 80, 0.05)",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  possessionLabel: {
+    fontSize: 14,
+    color: "#757575",
+    marginRight: 5,
+  },
+  possessionValue: {
+    fontSize: 16,
+    color: "#4CAF50",
+    fontWeight: "bold",
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: "#424242",
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+  },
+  modalButton: {
+    flex: 1,
+    padding: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalButtonCloseText: {
+    color: "#232761",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  modalInquiryButton: {
+    backgroundColor: "#1a237e",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  inquiryModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  inquiryModalContainer: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    elevation: 10,
+  },
+  inquiryModalCloseButton: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
+  },
+  inquiryModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 20,
+    color: "#1a237e",
+  },
+  inquiryModalDetails: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  inquiryModalLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#757575",
+    marginTop: 10,
+  },
+  inquiryModalValue: {
+    fontSize: 14,
+    color: "#1a237e",
+    marginTop: 4,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#DDD",
+    marginVertical: 16,
   },
 });

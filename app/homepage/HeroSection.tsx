@@ -103,7 +103,7 @@ const HeroSection = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={stylesHero.inactiveTab}
-                onPress={() => navigation.navigate("SignupPage" as never)}
+                onPress={() => navigation.navigate("PricingPage" as never)}
               >
                 <Text style={stylesHero.inactiveTabText}>Services</Text>
               </TouchableOpacity>

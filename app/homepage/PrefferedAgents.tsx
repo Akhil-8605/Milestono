@@ -1,34 +1,31 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
   View,
   Text,
+  SafeAreaView,
   Image,
   TouchableOpacity,
-  Dimensions,
-  Animated,
-  ScrollView,
   Modal,
+  Animated,
+  Dimensions,
+  StatusBar,
+  Platform,
   Linking,
-  Platform
-} from 'react-native';
-import { useNavigation } from 'expo-router';
-import { Feather, MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
+  ScrollView,
+} from "react-native";
+import {
+  Feather,
+  MaterialIcons,
+  AntDesign,
+  Ionicons,
+} from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "expo-router";
 
-// ----- Stub for LinearGradient (replace with your actual implementation if available) -----
-const LinearGradient = ({ colors, style, children }) => {
-  return (
-    <View style={[style, { backgroundColor: colors[0] }]}>
-      {children}
-    </View>
-  );
-};
-
-// ----- Featured Agents Data (same structure as in AgentsPage) -----
-const featuredAgents = [
+const mockAgents = [
   {
     id: 1,
-    name: "Agent 1",
     fullName: "Sarah Johnson",
     company: "Luxury Homes Realty",
     operatingSince: 2010,
@@ -79,10 +76,35 @@ const featuredAgents = [
         bhk: "Shop",
       },
     ],
+    project: [
+      {
+        id: "proj-1",
+        name: "Green Valley",
+        location: "Bangalore",
+        status: "Under Construction",
+        image: require("../../assets/images/newproject2.png"),
+        description:
+          "Eco-friendly residential complex with sustainable features and green spaces throughout the property.",
+        price: "₹ 85L - 1.5Cr",
+        possession: "December 2025",
+        rating: 4.5,
+      },
+      {
+        id: "proj-2",
+        name: "Riverside Residences",
+        location: "Pune",
+        status: "Under Construction",
+        image: require("../../assets/images/newproject4.png"),
+        description:
+          "Elegant apartments along the riverside with beautiful views and tranquil environment.",
+        price: "₹ 65L - 1.1Cr",
+        possession: "June 2025",
+        rating: 4.6,
+      },
+    ],
   },
   {
     id: 2,
-    name: "Agent 2",
     fullName: "Michael Chen",
     company: "Urban Property Group",
     operatingSince: 2011,
@@ -133,10 +155,35 @@ const featuredAgents = [
         bhk: "Shop",
       },
     ],
+    project: [
+      {
+        id: "proj-3",
+        name: "Serene Meadows",
+        location: "Chennai",
+        status: "Under Construction",
+        image: require("../../assets/images/newproject2.png"),
+        description:
+          "Peaceful residential community surrounded by nature yet close to urban amenities.",
+        price: "₹ 60L - 95L",
+        possession: "March 2026",
+        rating: 4.4,
+      },
+      {
+        id: "proj-4",
+        name: "Industrial Park",
+        location: "Pune",
+        status: "Under Construction",
+        image: require("../../assets/images/newproject1.png"),
+        description:
+          "Industrial spaces with robust infrastructure for manufacturing and warehousing.",
+        price: "₹ 1Cr - 2.2Cr",
+        possession: "December 2025",
+        rating: 4.5,
+      },
+    ],
   },
   {
     id: 3,
-    name: "Agent 3",
     fullName: "Emily Rodriguez",
     company: "Coastal Estates",
     operatingSince: 2012,
@@ -187,10 +234,35 @@ const featuredAgents = [
         bhk: "Shop",
       },
     ],
+    project: [
+      {
+        id: "proj-5",
+        name: "Retail Plaza",
+        location: "Delhi",
+        status: "Under Construction",
+        image: require("../../assets/images/newproject3.png"),
+        description:
+          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
+        price: "₹ 1.2Cr - 2.5Cr",
+        possession: "September 2025",
+        rating: 4.6,
+      },
+      {
+        id: "proj-6",
+        name: "Green Valley",
+        location: "Bangalore",
+        status: "Under Construction",
+        image: require("../../assets/images/newproject2.png"),
+        description:
+          "Eco-friendly residential complex with sustainable features and green spaces throughout the property.",
+        price: "₹ 85L - 1.5Cr",
+        possession: "December 2025",
+        rating: 4.5,
+      },
+    ],
   },
   {
     id: 4,
-    name: "Agent 4",
     fullName: "David Kim",
     company: "Metropolitan Realtors",
     operatingSince: 2013,
@@ -241,10 +313,35 @@ const featuredAgents = [
         bhk: "Shop",
       },
     ],
+    project: [
+      {
+        id: "proj-7",
+        name: "Riverside Residences",
+        location: "Pune",
+        status: "Under Construction",
+        image: require("../../assets/images/newproject4.png"),
+        description:
+          "Elegant apartments along the riverside with beautiful views and tranquil environment.",
+        price: "₹ 65L - 1.1Cr",
+        possession: "June 2025",
+        rating: 4.6,
+      },
+      {
+        id: "proj-8",
+        name: "Serene Meadows",
+        location: "Chennai",
+        status: "Under Construction",
+        image: require("../../assets/images/newproject2.png"),
+        description:
+          "Peaceful residential community surrounded by nature yet close to urban amenities.",
+        price: "₹ 60L - 95L",
+        possession: "March 2026",
+        rating: 4.4,
+      },
+    ],
   },
   {
     id: 5,
-    name: "Agent 5",
     fullName: "Jessica Patel",
     company: "Premier Properties",
     operatingSince: 2014,
@@ -295,45 +392,76 @@ const featuredAgents = [
         bhk: "Shop",
       },
     ],
+    project: [
+      {
+        id: "proj-9",
+        name: "Retail Plaza",
+        location: "Delhi",
+        status: "Under Construction",
+        image: require("../../assets/images/newproject3.png"),
+        description:
+          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
+        price: "₹ 1.2Cr - 2.5Cr",
+        possession: "September 2025",
+        rating: 4.6,
+      },
+      {
+        id: "proj-10",
+        name: "Industrial Park",
+        location: "Pune",
+        status: "Under Construction",
+        image: require("../../assets/images/newproject1.png"),
+        description:
+          "Industrial spaces with robust infrastructure for manufacturing and warehousing.",
+        price: "₹ 1Cr - 2.2Cr",
+        possession: "December 2025",
+        rating: 4.5,
+      },
+    ],
   },
 ];
 
-export default function PreferredAgents() {
-  const navigation = useNavigation();
-  const scrollViewRef = useRef<ScrollView>(null);
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAgent, setSelectedAgent] = useState(null);
+export default function AgentsSection() {
+  const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedTab, setSelectedTab] = useState('residential');
-  const modalAnimation = useRef(new Animated.Value(0)).current;
+  const [projectModalVisible, setProjectModalVisible] = useState(false);
+  const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
+  const [selectedProjectForModal, setSelectedProjectForModal] =
+    useState<any>(null);
+  const [selectedTab, setSelectedTab] = useState("residential");
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  // ----- Auto-scroll every 5 seconds -----
+  const scrollViewRef = useRef<ScrollView>(null);
+  const modalAnimation = useRef(new Animated.Value(0)).current;
+  const { width } = Dimensions.get("window");
+  const cardWidth = width * 0.85;
+
+  // Auto scroll functionality
   useEffect(() => {
     const interval = setInterval(() => {
-      const nextIndex = (currentIndex + 1) % featuredAgents.length;
       if (scrollViewRef.current) {
+        const nextIndex = (activeIndex + 1) % mockAgents.slice(0, 5).length;
         scrollViewRef.current.scrollTo({
-          x: nextIndex * (cardWidth + 16),
+          x: nextIndex * (cardWidth + 20),
           animated: true,
         });
-        setCurrentIndex(nextIndex);
+        setActiveIndex(nextIndex);
       }
     }, 5000);
-    return () => clearInterval(interval);
-  }, [currentIndex]);
 
-  const handleScroll = (event) => {
-    const x = event.nativeEvent.contentOffset.x;
-    const index = Math.round(x / (cardWidth + 16));
-    if (index !== currentIndex) {
-      setCurrentIndex(index);
+    return () => clearInterval(interval);
+  }, [activeIndex, cardWidth]);
+
+  const handleScroll = (event: any) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(contentOffsetX / (cardWidth + 20));
+    if (index !== activeIndex) {
+      setActiveIndex(index);
     }
   };
 
-  const handleContactPress = (agent) => {
+  const handleContactPress = (agent: any) => {
     setSelectedAgent(agent);
-    setSelectedTab('residential'); // Reset to default
     setModalVisible(true);
     Animated.timing(modalAnimation, {
       toValue: 1,
@@ -350,15 +478,15 @@ export default function PreferredAgents() {
     }).start(() => {
       setModalVisible(false);
       setSelectedAgent(null);
-      setSelectedTab('residential');
+      setSelectedTab("residential");
     });
   };
 
-  const handleCall = (phone) => {
+  const handleCall = (phone: string) => {
     Linking.openURL(`tel:${phone}`);
   };
 
-  const handleEmail = (email) => {
+  const handleEmail = (email: string) => {
     Linking.openURL(`mailto:${email}`);
   };
 
@@ -370,190 +498,136 @@ export default function PreferredAgents() {
     inputRange: [0, 1],
     outputRange: [0, 0.7],
   });
+  const statusBarHeight = StatusBar.currentHeight || 0;
 
-  // ----- Helper: Render Property Card -----
-  const renderPropertyCard = (property) => {
+  const renderAgentCard = (agent: any) => {
     return (
-      <View key={property.id} style={styles.propertyCard}>
-        <Image
-          source={property.propertyimage}
-          style={styles.propertyImage}
-          resizeMode="cover"
-        />
-        <View style={styles.propertyDetails}>
-          <Text style={styles.propertyName}>{property.name}</Text>
-          <Text style={styles.propertyLocation}>{property.location}</Text>
-          <View style={styles.priceContainer}>
-            <Text style={styles.priceText}>Rs {property.price}</Text>
-            <Text style={styles.propertyBhk}>| {property.bhk}</Text>
+      <View key={agent.id} style={styles.cardContainer}>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Image
+              source={{ uri: agent.image }}
+              style={styles.agentImage}
+              resizeMode="cover"
+            />
+            {agent.featured && (
+              <View style={styles.featuredBadge}>
+                <AntDesign name="star" size={12} color="#fff" />
+                <Text style={styles.featuredText}>Featured</Text>
+              </View>
+            )}
+            {agent.verified && (
+              <View style={styles.verifiedBadge}>
+                <Ionicons name="checkmark-circle" size={14} color="#fff" />
+                <Text style={styles.verifiedText}>Verified</Text>
+              </View>
+            )}
           </View>
-          <TouchableOpacity style={styles.viewPropertyButton}>
-            <Text style={styles.viewPropertyButtonText}>View Details</Text>
-          </TouchableOpacity>
+          <View style={styles.cardBody}>
+            <View style={styles.cardBodyTop}>
+              <View>
+                <Text style={styles.agentName}>{agent.fullName}</Text>
+                <View style={styles.companyContainer}>
+                  <MaterialIcons name="business" size={14} color="#666" />
+                  <Text style={styles.companyText}>{agent.company}</Text>
+                </View>
+              </View>
+              <View style={styles.ratingContainer}>
+                {Array(5)
+                  .fill(0)
+                  .map((_, i) => (
+                    <AntDesign
+                      key={i}
+                      name={i < Math.floor(agent.rating) ? "star" : "staro"}
+                      size={14}
+                      color="#FFD700"
+                      style={{ marginRight: 2 }}
+                    />
+                  ))}
+                <Text style={styles.ratingTextAgent}>
+                  ({agent.rating.toFixed(1)})
+                </Text>
+              </View>
+            </View>
+            <View style={styles.statsContainer}>
+              <View style={styles.agentStatBox}>
+                <Text style={styles.agentStatValue}>
+                  {agent.propertiesSold}
+                </Text>
+                <Text style={styles.agentStatLabel}>Properties Sold</Text>
+              </View>
+              <View style={styles.agentStatBox}>
+                <Text style={styles.agentStatValue}>{agent.experience}</Text>
+                <Text style={styles.agentStatLabel}>Years Experience</Text>
+              </View>
+              <View style={styles.agentStatBox}>
+                <Text style={styles.agentStatValue}>{agent.awards}</Text>
+                <Text style={styles.agentStatLabel}>Awards</Text>
+              </View>
+            </View>
+            <View style={styles.infoSection}>
+              <View style={styles.infoRow}>
+                <Feather name="calendar" size={14} color="#666" />
+                <Text style={styles.infoText}>
+                  Operating since {agent.operatingSince}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Feather name="map-pin" size={14} color="#666" />
+                <Text style={styles.infoText} numberOfLines={1}>
+                  {agent.address}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.contactButton}
+              onPress={() => handleContactPress(agent)}
+            >
+              <Text style={styles.contactButtonText}>Contact Now</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
   };
 
-  // Determine which properties to display
-  const properties =
-    selectedAgent && selectedTab === 'residential'
-      ? selectedAgent.residentialProperties
-      : selectedAgent && selectedTab === 'commercial'
-      ? selectedAgent.commercialProperties
-      : [];
+  const navigation = useNavigation();
 
   return (
-    <View style={styles.container}>
-      {/* Header with title and See All button */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Top Real Estate Agents</Text>
-        <TouchableOpacity
-          style={styles.seeAllButton}
-          onPress={() => navigation.navigate("AgentsPage" as never)}
-        >
-          <Text style={styles.seeAllText}>See all</Text>
-          <Feather name="chevron-right" size={16} color="#FF385C" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Horizontal ScrollView for agent cards */}
-      <Animated.ScrollView
+    <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
+      <Text style={styles.sectionTitle}>Milestono Preffered Agents</Text>
+      <ScrollView
         ref={scrollViewRef}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        snapToInterval={cardWidth + 16}
-        decelerationRate="fast"
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: true, listener: handleScroll }
-        )}
+        contentContainerStyle={styles.horizontalScroll}
+        onScroll={handleScroll}
         scrollEventThrottle={16}
+        pagingEnabled
+        snapToInterval={cardWidth + 20}
+        decelerationRate="fast"
       >
-        {featuredAgents.map((agent, index) => {
-          const inputRange = [
-            (index - 1) * (cardWidth + 16),
-            index * (cardWidth + 16),
-            (index + 1) * (cardWidth + 16),
-          ];
-          const scale = scrollX.interpolate({
-            inputRange,
-            outputRange: [0.97, 1, 0.97],
-            extrapolate: 'clamp',
-          });
-          const opacity = scrollX.interpolate({
-            inputRange,
-            outputRange: [0.85, 1, 0.85],
-            extrapolate: 'clamp',
-          });
-          return (
-            <Animated.View
-              key={agent.id}
-              style={[styles.cardContainer, { transform: [{ scale }], opacity }]}
-            >
-              <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <Image
-                    source={{ uri: agent.image }}
-                    style={styles.agentImage}
-                    resizeMode="cover"
-                  />
-                  {agent.featured && (
-                    <View style={styles.featuredBadge}>
-                      <AntDesign name="star" size={12} color="#fff" />
-                      <Text style={styles.featuredText}>Featured</Text>
-                    </View>
-                  )}
-                  {agent.verified && (
-                    <View style={styles.verifiedBadge}>
-                      <Ionicons name="checkmark-circle" size={14} color="#fff" />
-                      <Text style={styles.verifiedText}>Verified</Text>
-                    </View>
-                  )}
-                </View>
-                <View style={styles.cardBody}>
-                  <View style={styles.cardBodyTop}>
-                    <View>
-                      <Text style={styles.agentName}>{agent.fullName}</Text>
-                      <View style={styles.companyContainer}>
-                        <MaterialIcons name="business" size={14} color="#666" />
-                        <Text style={styles.companyText}>{agent.company}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.ratingContainer}>
-                      {Array(5)
-                        .fill(0)
-                        .map((_, i) => (
-                          <AntDesign
-                            key={i}
-                            name={i < Math.floor(agent.rating) ? "star" : "staro"}
-                            size={14}
-                            color="#FFD700"
-                            style={{ marginRight: 2 }}
-                          />
-                        ))}
-                      <Text style={styles.ratingText}>
-                        ({agent.rating.toFixed(1)})
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.statsContainer}>
-                    <View style={styles.statItem}>
-                      <Text style={styles.statValue}>{agent.propertiesSold}</Text>
-                      <Text style={styles.statLabel}>Sold</Text>
-                    </View>
-                    <View style={styles.statItem}>
-                      <Text style={styles.statValue}>{agent.experience}</Text>
-                      <Text style={styles.statLabel}>Years</Text>
-                    </View>
-                    <View style={styles.statItem}>
-                      <Text style={styles.statValue}>{agent.awards}</Text>
-                      <Text style={styles.statLabel}>Awards</Text>
-                    </View>
-                  </View>
-                  <View style={styles.infoSection}>
-                    <View style={styles.infoRow}>
-                      <Feather name="calendar" size={14} color="#666" />
-                      <Text style={styles.infoText}>
-                        Operating since {agent.operatingSince}
-                      </Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                      <Feather name="map-pin" size={14} color="#666" />
-                      <Text style={styles.infoText} numberOfLines={1}>
-                        {agent.address}
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.contactButton}
-                    onPress={() => handleContactPress(agent)}
-                    activeOpacity={1}
-                  >
-                    <Text style={styles.contactButtonText}>Contact Now</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Animated.View>
-          );
-        })}
-      </Animated.ScrollView>
-
-      {/* Pagination Dots */}
-      <View style={styles.pagination}>
-        {featuredAgents.map((_, index) => (
+        {mockAgents.slice(0, 5).map((agent) => renderAgentCard(agent))}
+      </ScrollView>
+      
+      {/* Carousel Dots */}
+      <View style={styles.paginationContainer}>
+        {mockAgents.slice(0, 5).map((_, index) => (
           <View
             key={index}
             style={[
               styles.paginationDot,
-              index === currentIndex && styles.paginationDotActive,
+              index === activeIndex && styles.paginationDotActive,
             ]}
           />
         ))}
       </View>
-
-      {/* Modal Overlay */}
+      
+      <TouchableOpacity
+        onPress={() => navigation.navigate("AgentsPage" as never)}
+      >
+        <Text style={styles.seeMoreButtonText}>See More</Text>
+      </TouchableOpacity>
       <Modal
         visible={modalVisible}
         transparent={true}
@@ -568,98 +642,387 @@ export default function PreferredAgents() {
           </Animated.View>
           {selectedAgent && (
             <Animated.View
-              style={[styles.modalContent, { transform: [{ translateY: modalTranslateY }] }]}
+              style={[
+                styles.modalContent,
+                { transform: [{ translateY: modalTranslateY }] },
+              ]}
             >
               <View style={styles.modalHeader}>
                 <View style={styles.modalHeaderLine} />
                 <Text style={styles.modalTitle}>Contact Agent</Text>
-                <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={closeModal}
+                >
                   <Feather name="x" size={24} color="#333" />
                 </TouchableOpacity>
               </View>
-              <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-                {/* Agent Info */}
+              <ScrollView
+                style={styles.modalBody}
+                showsVerticalScrollIndicator={false}
+              >
                 <View style={styles.modalAgentInfo}>
                   <Image
                     source={{ uri: selectedAgent.image }}
                     style={styles.modalAgentImage}
                   />
                   <View style={styles.modalAgentDetails}>
-                    <Text style={styles.modalAgentName}>{selectedAgent.fullName}</Text>
-                    <Text style={styles.modalAgentCompany}>{selectedAgent.company}</Text>
+                    <Text style={styles.modalAgentName}>
+                      {selectedAgent.fullName}
+                    </Text>
+                    <Text style={styles.modalAgentCompany}>
+                      {selectedAgent.company}
+                    </Text>
                     <View style={styles.modalAgentRating}>
                       {Array(5)
                         .fill(0)
                         .map((_, i) => (
                           <AntDesign
                             key={i}
-                            name={i < Math.floor(selectedAgent.rating) ? "star" : "staro"}
+                            name={
+                              i < Math.floor(selectedAgent.rating)
+                                ? "star"
+                                : "staro"
+                            }
                             size={14}
                             color="#FFD700"
                             style={{ marginRight: 2 }}
                           />
                         ))}
+                      <Text style={styles.modalRatingText}>
+                        ({selectedAgent.rating.toFixed(1)})
+                      </Text>
                     </View>
                   </View>
                 </View>
-
-                {/* Agent Stats */}
-                <View style={styles.agentStatsRow}>
+                <View style={styles.statsContainer}>
                   <View style={styles.agentStatBox}>
-                    <Text style={styles.agentStatValue}>{selectedAgent.propertiesSold}</Text>
+                    <Text style={styles.agentStatValue}>
+                      {selectedAgent.propertiesSold}
+                    </Text>
                     <Text style={styles.agentStatLabel}>Properties Sold</Text>
                   </View>
                   <View style={styles.agentStatBox}>
-                    <Text style={styles.agentStatValue}>{selectedAgent.experience}</Text>
+                    <Text style={styles.agentStatValue}>
+                      {selectedAgent.experience}
+                    </Text>
                     <Text style={styles.agentStatLabel}>Years Experience</Text>
                   </View>
                   <View style={styles.agentStatBox}>
-                    <Text style={styles.agentStatValue}>{selectedAgent.awards}</Text>
+                    <Text style={styles.agentStatValue}>
+                      {selectedAgent.awards}
+                    </Text>
                     <Text style={styles.agentStatLabel}>Awards</Text>
                   </View>
                 </View>
-
-                {/* About Agent */}
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>About Agent</Text>
                   <Text style={styles.aboutText}>
-                    {selectedAgent.fullName} is a professional real estate agent specializing in {selectedAgent.specialization}.
+                    {selectedAgent.fullName} is a professional real estate agent
+                    with {selectedAgent.experience} years of experience,
+                    specializing in {selectedAgent.specialization || "N/A"}.
+                    With a proven track record of {selectedAgent.propertiesSold}{" "}
+                    properties sold, they are a trusted advisor in the real
+                    estate market.
                   </Text>
                 </View>
-
-                {/* Tabs for Properties */}
-                <View style={styles.tabContainer}>
-                  <TouchableOpacity
-                    style={[styles.tabButton, selectedTab === 'residential' && styles.activeTabButton]}
-                    onPress={() => setSelectedTab('residential')}
-                  >
-                    <Text style={[styles.tabButtonText, selectedTab === 'residential' && styles.activeTabButtonText]}>
-                      Residential
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.tabButton, selectedTab === 'commercial' && styles.activeTabButton]}
-                    onPress={() => setSelectedTab('commercial')}
-                  >
-                    <Text style={[styles.tabButtonText, selectedTab === 'commercial' && styles.activeTabButtonText]}>
-                      Commercial
-                    </Text>
-                  </TouchableOpacity>
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSectionTitle}>Properties</Text>
+                  <View style={styles.tabContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.tabButton,
+                        selectedTab === "residential" && styles.activeTabButton,
+                      ]}
+                      onPress={() => setSelectedTab("residential")}
+                    >
+                      <Text
+                        style={[
+                          styles.tabButtonText,
+                          selectedTab === "residential" &&
+                            styles.activeTabButtonText,
+                        ]}
+                      >
+                        Residential
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.tabButton,
+                        selectedTab === "commercial" && styles.activeTabButton,
+                      ]}
+                      onPress={() => setSelectedTab("commercial")}
+                    >
+                      <Text
+                        style={[
+                          styles.tabButtonText,
+                          selectedTab === "commercial" &&
+                            styles.activeTabButtonText,
+                        ]}
+                      >
+                        Commercial
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  {selectedTab === "residential" ? (
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.scrollContainer}
+                    >
+                      {(selectedAgent.residentialProperties || []).map(
+                        (property: any) => (
+                          <View key={property.id} style={styles.propertyCard}>
+                            <Image
+                              source={property.propertyimage}
+                              style={styles.propertyImage}
+                              resizeMode="contain"
+                            />
+                            <View style={styles.cardContent}>
+                              <Text style={styles.propertyName}>
+                                {property.name}
+                              </Text>
+                              <Text style={styles.locationText}>
+                                Location: {property.location}
+                              </Text>
+                              <View style={styles.priceContainer}>
+                                <Text style={styles.priceText}>
+                                  Rs {property.price}
+                                </Text>
+                                <Text style={styles.typeText}>
+                                  | {property.bhk}
+                                </Text>
+                              </View>
+                              <View style={styles.buttonContainer}>
+                                <TouchableOpacity style={styles.saveButton}>
+                                  <Text style={styles.saveButtonText}>
+                                    Save Property
+                                  </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  style={styles.viewButtonAgent}
+                                  onPress={() => console.log("View Details")}
+                                >
+                                  <Text style={styles.viewButtonTextAgent}>
+                                    View Details
+                                  </Text>
+                                </TouchableOpacity>
+                              </View>
+                            </View>
+                          </View>
+                        )
+                      )}
+                    </ScrollView>
+                  ) : (
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.scrollContainer}
+                    >
+                      {(selectedAgent.commercialProperties || []).map(
+                        (property: any) => (
+                          <View key={property.id} style={styles.propertyCard}>
+                            <Image
+                              source={property.propertyimage}
+                              style={styles.propertyImage}
+                              resizeMode="contain"
+                            />
+                            <View style={styles.cardContent}>
+                              <Text style={styles.propertyName}>
+                                {property.name}
+                              </Text>
+                              <Text style={styles.locationText}>
+                                Location: {property.location}
+                              </Text>
+                              <View style={styles.priceContainer}>
+                                <Text style={styles.priceText}>
+                                  Rs {property.price}
+                                </Text>
+                                <Text style={styles.typeText}>
+                                  | {property.bhk}
+                                </Text>
+                              </View>
+                              <View style={styles.buttonContainer}>
+                                <TouchableOpacity style={styles.saveButton}>
+                                  <Text style={styles.saveButtonText}>
+                                    Save Property
+                                  </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  style={styles.viewButtonAgent}
+                                  onPress={() => console.log("View Details")}
+                                >
+                                  <Text style={styles.viewButtonTextAgent}>
+                                    View Details
+                                  </Text>
+                                </TouchableOpacity>
+                              </View>
+                            </View>
+                          </View>
+                        )
+                      )}
+                    </ScrollView>
+                  )}
                 </View>
-
-                {/* Horizontal ScrollView for Property Cards */}
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.propertiesScroll}
-                >
-                  {properties.map((property) => renderPropertyCard(property))}
-                </ScrollView>
-
-                {/* Schedule Meeting Button */}
-                <TouchableOpacity style={styles.scheduleButton} activeOpacity={0.8}>
-                  <LinearGradient colors={["#FF385C", "#E31B54"]} style={styles.scheduleButtonGradient}>
-                    <Text style={styles.scheduleButtonText}>Schedule Meeting</Text>
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSectionTitle}>New Projects</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContainer}
+                  >
+                    {(selectedAgent.project || []).map((proj: any) => (
+                      <View key={proj.id} style={styles.projectCard}>
+                        <View style={styles.projectImageContainer}>
+                          <Image
+                            source={proj.image}
+                            style={styles.projectImage}
+                          />
+                          <LinearGradient
+                            colors={["rgba(0,0,0,0)", "transparent"]}
+                            style={styles.imageGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 0, y: 0.6 }}
+                          />
+                          {proj.status && (
+                            <View style={styles.projectBadge}>
+                              <Text style={styles.projectBadgeText}>
+                                {proj.status}
+                              </Text>
+                            </View>
+                          )}
+                          {proj.rating && (
+                            <View style={styles.ratingBadge}>
+                              <Text style={styles.ratingText}>
+                                ★ {proj.rating}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                        <View style={styles.projectInfo}>
+                          <Text style={styles.projectTitle}>{proj.name}</Text>
+                          <View style={styles.locationContainer}>
+                            <Text style={styles.projectLocation}>
+                              📍 {proj.location}
+                            </Text>
+                            {proj.price && (
+                              <Text style={styles.projectPrice}>
+                                {proj.price}
+                              </Text>
+                            )}
+                          </View>
+                          {proj.possession && (
+                            <Text style={styles.projectPossession}>
+                              🗓️ Possession: {proj.possession}
+                            </Text>
+                          )}
+                          <View style={styles.projectButtons}>
+                            <TouchableOpacity
+                              style={styles.viewButton}
+                              onPress={() => {
+                                setSelectedProjectForModal(proj);
+                                setProjectModalVisible(true);
+                              }}
+                            >
+                              <Text style={styles.buttonText}>
+                                View Details
+                              </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.inquiryButton}
+                              onPress={() => {
+                                setInquiryModalVisible(true);
+                              }}
+                            >
+                              <Text style={styles.buttonText}>Inquiry</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    ))}
+                  </ScrollView>
+                </View>
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSectionTitle}>
+                    Contact Information
+                  </Text>
+                  <View style={styles.contactOptions}>
+                    <TouchableOpacity
+                      style={styles.contactOption}
+                      onPress={() => handleCall(selectedAgent.phone)}
+                    >
+                      <LinearGradient
+                        colors={["#4CAF50", "#2E7D32"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.contactOptionIcon}
+                      >
+                        <Feather name="phone" size={20} color="#fff" />
+                      </LinearGradient>
+                      <View style={styles.contactOptionDetails}>
+                        <Text style={styles.contactOptionLabel}>Phone</Text>
+                        <Text style={styles.contactOptionValue}>
+                          {selectedAgent.phone}
+                        </Text>
+                      </View>
+                      <View style={styles.contactOptionAction}>
+                        <Text style={styles.contactOptionActionText}>Call</Text>
+                        <Feather name="chevron-right" size={16} color="#666" />
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.contactOption}
+                      onPress={() => handleEmail(selectedAgent.email)}
+                    >
+                      <LinearGradient
+                        colors={["#2196F3", "#0D47A1"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.contactOptionIcon}
+                      >
+                        <Feather name="mail" size={20} color="#fff" />
+                      </LinearGradient>
+                      <View style={styles.contactOptionDetails}>
+                        <Text style={styles.contactOptionLabel}>Email</Text>
+                        <Text style={styles.contactOptionValue}>
+                          {selectedAgent.email}
+                        </Text>
+                      </View>
+                      <View style={styles.contactOptionAction}>
+                        <Text style={styles.contactOptionActionText}>
+                          Email
+                        </Text>
+                        <Feather name="chevron-right" size={16} color="#666" />
+                      </View>
+                    </TouchableOpacity>
+                    <View style={styles.contactOption}>
+                      <LinearGradient
+                        colors={["#FF9800", "#E65100"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.contactOptionIcon}
+                      >
+                        <Feather name="map-pin" size={20} color="#fff" />
+                      </LinearGradient>
+                      <View style={styles.contactOptionDetails}>
+                        <Text style={styles.contactOptionLabel}>
+                          Office Address
+                        </Text>
+                        <Text style={styles.contactOptionValue}>
+                          {selectedAgent.address}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+                <TouchableOpacity style={styles.scheduleButton}>
+                  <LinearGradient
+                    colors={["#232761", "#232761"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.scheduleButtonGradient}
+                  >
+                    <Text style={styles.scheduleButtonText}>Contact Now</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </ScrollView>
@@ -667,384 +1030,998 @@ export default function PreferredAgents() {
           )}
         </View>
       </Modal>
-    </View>
+      <Modal
+        visible={projectModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setProjectModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.projectModalContainer}>
+            {selectedProjectForModal && (
+              <>
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={() => setProjectModalVisible(false)}
+                >
+                  <Feather name="x" size={24} color="#FFF" />
+                </TouchableOpacity>
+                <Image
+                  source={selectedProjectForModal.image}
+                  style={styles.modalProjectImage}
+                />
+                <ScrollView style={styles.modalScrollView}>
+                  <Text style={styles.modalTitle}>
+                    {selectedProjectForModal.name}
+                  </Text>
+                  <View style={styles.modalInfoRow}>
+                    <Text style={styles.modalLocation}>
+                      📍 {selectedProjectForModal.location}
+                    </Text>
+                    {selectedProjectForModal.rating && (
+                      <Text style={styles.modalRating}>
+                        ★ {selectedProjectForModal.rating}
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={styles.modalStatus}>
+                    {selectedProjectForModal.status}
+                  </Text>
+                  {selectedProjectForModal.price && (
+                    <View style={styles.priceContainerModal}>
+                      <Text style={styles.priceLabel}>Price Range:</Text>
+                      <Text style={styles.priceValue}>
+                        {selectedProjectForModal.price}
+                      </Text>
+                    </View>
+                  )}
+                  {selectedProjectForModal.possession && (
+                    <View style={styles.possessionContainerModal}>
+                      <Text style={styles.possessionLabel}>Possession:</Text>
+                      <Text style={styles.possessionValue}>
+                        {selectedProjectForModal.possession}
+                      </Text>
+                    </View>
+                  )}
+                  <Text style={styles.modalDescription}>
+                    {selectedProjectForModal.description}
+                  </Text>
+                </ScrollView>
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={styles.modalButton}
+                    onPress={() => setProjectModalVisible(false)}
+                  >
+                    <Text style={styles.modalButtonCloseText}>Close</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.modalInquiryButton]}
+                    onPress={() => {
+                      setInquiryModalVisible(true);
+                      setProjectModalVisible(false);
+                    }}
+                  >
+                    <Text style={styles.modalButtonText}>Inquiry</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={inquiryModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setInquiryModalVisible(false)}
+      >
+        <View style={styles.inquiryModalOverlay}>
+          <View style={styles.inquiryModalContainer}>
+            <TouchableOpacity
+              style={styles.inquiryModalCloseButton}
+              onPress={() => setInquiryModalVisible(false)}
+            >
+              <Feather name="x" size={30} color={"#232761"} />
+            </TouchableOpacity>
+            <Text style={styles.inquiryModalTitle}>
+              You are requesting to view advertiser details
+            </Text>
+            <View style={styles.inquiryModalDetails}>
+              <Text style={styles.inquiryModalLabel}>POSTED BY AGENT:</Text>
+              <Text style={styles.inquiryModalValue}>
+                +91 988** **** | i********@gmail.com
+              </Text>
+              <Text style={styles.inquiryModalValue}>VISHAL KATE</Text>
+              <View style={styles.divider} />
+              <Text style={styles.inquiryModalLabel}>
+                POSTED ON 17th DEC, 2024
+              </Text>
+              <Text style={styles.inquiryModalValue}>
+                ₹ 15 Lac | Phule Nagar Akkuj
+              </Text>
+              <Text style={styles.inquiryModalValue}>
+                2 Guntha | Residential Land
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
-const { width } = Dimensions.get('window');
-const cardWidth = width * 0.75;
+const { width } = Dimensions.get("window");
+const cardWidth = width * 0.85;
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 20,
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    paddingLeft: 10
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 16,
+  sectionTitle: {
+    fontSize: 32,
+    fontWeight: "700",
+    marginBottom: 20,
+    color: "#333333",
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+  stickyHeader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#fff",
+    paddingTop: Platform.OS === "ios" ? 50 : 20,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    zIndex: 1000,
   },
-  seeAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
   },
-  seeAllText: {
+  headerSubtitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#FF385C',
-    marginRight: 4,
+    color: "#666",
+    marginTop: 4,
   },
-  scrollContent: {
-    paddingLeft: 16,
-    paddingRight: 8,
+  listContainer: {
+    paddingTop: Platform.OS === "ios" ? 110 : 90,
+    paddingBottom: 80,
+  },
+  searchContainer: {
+    padding: 20,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  searchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    height: 50,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
+  },
+  filterContainer: {
+    marginTop: 15,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  filterLabel: {
+    fontSize: 14,
+    color: "#666",
+    marginRight: 10,
+  },
+  filterOptions: {
+    flexDirection: "row",
+  },
+  filterOption: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginRight: 8,
+    backgroundColor: "#f2f2f2",
+  },
+  filterOptionActive: {
+    backgroundColor: "#232761",
+  },
+  filterOptionText: {
+    fontSize: 14,
+    color: "#666",
+  },
+  filterOptionTextActive: {
+    color: "#fff",
+  },
+  resultsInfo: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  resultsText: {
+    fontSize: 14,
+    color: "#666",
+  },
+  horizontalScroll: {
+    paddingRight: 10,
+    marginBottom: 50
+  },
+  seeMoreButtonText: {
+    fontSize: 16,
+    color: "#4A4A9C",
+    fontWeight: "500",
+    marginTop: 16,
+    textAlign: "right",
+    marginRight: 10
   },
   cardContainer: {
-    marginRight: 16,
-  },
-  card: {
     width: cardWidth,
-    backgroundColor: '#fff',
+    marginRight: 20,
+    marginVertical: 10,
     borderRadius: 16,
-    shadowColor: '#000',
+    backgroundColor: "#fff",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
-    overflow: 'hidden',
+  },
+  card: {
+    borderRadius: 16,
+    overflow: "hidden",
   },
   cardHeader: {
-    position: 'relative',
+    position: "relative",
   },
   agentImage: {
-    width: '100%',
-    height: 160,
+    width: "100%",
+    height: 200,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   featuredBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: 10,
     left: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    backgroundColor: "rgba(255, 193, 7, 0.9)",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    flexDirection: "row",
+    alignItems: "center",
   },
   featuredText: {
-    fontSize: 10,
-    color: '#fff',
+    color: "#fff",
+    fontWeight: "bold",
     marginLeft: 4,
+    fontSize: 12,
   },
   verifiedBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: 10,
     right: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(76, 175, 80, 0.9)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    backgroundColor: "rgba(76, 175, 80, 0.9)",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    flexDirection: "row",
+    alignItems: "center",
   },
   verifiedText: {
-    fontSize: 10,
-    color: '#fff',
+    color: "#fff",
+    fontWeight: "bold",
     marginLeft: 4,
+    fontSize: 12,
   },
   cardBody: {
-    padding: 16,
+    padding: 15,
   },
   cardBodyTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 10,
   },
   agentName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 4,
   },
   companyContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
+    flexDirection: "row",
+    alignItems: "center",
   },
   companyText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginLeft: 6,
   },
   ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
-  ratingText: {
+  ratingTextAgent: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     marginLeft: 4,
   },
   statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#f8f9fa',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    backgroundColor: "#f8f9fa",
     borderRadius: 10,
     padding: 10,
-    marginBottom: 12,
+    marginBottom: 15,
   },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
+  agentStatBox: {
+    alignItems: "center",
   },
-  statValue: {
+  agentStatValue: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
-  statLabel: {
+  agentStatLabel: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
   },
   infoSection: {
-    marginBottom: 12,
+    marginBottom: 15,
   },
   infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
   },
   infoText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
+    fontSize: 14,
+    color: "#666",
+    marginLeft: 8,
   },
   contactButton: {
-    backgroundColor: '#232761',
+    backgroundColor: "#1a1e4d",
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   contactButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
-  pagination: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
+  stickyFooter: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
+  paginationButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#f2f2f2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paginationButtonDisabled: {
+    backgroundColor: "#f8f8f8",
+  },
+  paginationInfo: {
+    alignItems: "center",
+  },
+  paginationText: {
+    fontSize: 14,
+    color: "#666",
+  },
+  // Carousel dots styles
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 10,
   },
   paginationDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#ddd',
+    backgroundColor: "#ccc",
     marginHorizontal: 4,
   },
   paginationDotActive: {
-    backgroundColor: '#232761',
-    width: 16,
+    width: 20,
+    height: 8,
+    backgroundColor: "#232761",
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   modalBackdrop: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 16,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
-    maxHeight: '70%',
+    paddingBottom: Platform.OS === "ios" ? 40 : 24,
+    maxHeight: "85%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    position: "relative",
   },
   modalHeaderLine: {
     width: 40,
     height: 4,
-    backgroundColor: '#ccc',
+    backgroundColor: "#ddd",
     borderRadius: 2,
-    position: 'absolute',
-    top: 8,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  closeButton: {
-    position: 'absolute',
-    right: 16,
-  },
-  modalBody: {
-    paddingHorizontal: 16,
-  },
-  modalAgentInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 16,
   },
+  closeButton: {
+    position: "absolute",
+    right: 16,
+    top: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#f5f5f5",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalBody: {
+    padding: 20,
+  },
+  modalAgentInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
   modalAgentImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   modalAgentDetails: {
-    marginLeft: 12,
+    marginLeft: 15,
+    flex: 1,
   },
   modalAgentName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 2,
+    letterSpacing: -0.5,
   },
   modalAgentCompany: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
+    marginBottom: 4,
   },
   modalAgentRating: {
-    flexDirection: 'row',
-    marginTop: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  modalRatingText: {
+    fontSize: 12,
+    color: "#666",
+    marginLeft: 4,
   },
   agentStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-  },
-  agentStatBox: {
-    alignItems: 'center',
-  },
-  agentStatValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  agentStatLabel: {
-    fontSize: 12,
-    color: '#666',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 24,
   },
   modalSection: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   modalSectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 12,
+    letterSpacing: -0.3,
+  },
+  contactOptions: {
+    marginBottom: 10,
+  },
+  contactOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  contactOptionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 15,
+  },
+  contactOptionDetails: {
+    flex: 1,
+  },
+  contactOptionLabel: {
+    fontSize: 12,
+    color: "#999",
+    marginBottom: 2,
+  },
+  contactOptionValue: {
+    fontSize: 15,
+    color: "#333",
+    fontWeight: "500",
+  },
+  contactOptionAction: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  contactOptionActionText: {
+    fontSize: 14,
+    color: "#3498db",
+    fontWeight: "600",
+    marginRight: 4,
   },
   aboutText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  scheduleButton: {
+    marginTop: 10,
+    borderRadius: 12,
+    overflow: "hidden",
+    elevation: 5,
+  },
+  scheduleButtonGradient: {
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scheduleButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+    letterSpacing: 0.5,
   },
   tabContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
+    flexDirection: "row",
+    marginVertical: 10,
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-    alignItems: 'center',
-  },
-  activeTabButton: {
-    borderBottomColor: '#FF385C',
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 4,
+    marginRight: 5,
+    alignItems: "center",
   },
   tabButtonText: {
     fontSize: 14,
-    color: '#666',
+    color: "#333",
+  },
+  activeTabButton: {
+    backgroundColor: "#232761",
+    borderColor: "#232761",
   },
   activeTabButtonText: {
-    color: '#FF385C',
-    fontWeight: 'bold',
+    color: "#fff",
   },
-  propertiesScroll: {
+  scrollContainer: {
+    paddingRight: 20,
+    paddingLeft: 2,
     paddingVertical: 10,
   },
   propertyCard: {
-    width: width * 0.6,
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    width: 300,
+    backgroundColor: "white",
+    borderRadius: 8,
     marginRight: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: "#eee",
   },
   propertyImage: {
-    width: '100%',
-    height: 100,
+    width: "100%",
+    height: 120,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    backgroundColor: "#f5f5f5",
   },
-  propertyDetails: {
-    padding: 10,
+  cardContent: {
+    padding: 16,
   },
   propertyName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
   },
-  propertyLocation: {
-    fontSize: 12,
-    color: '#666',
-    marginVertical: 4,
+  locationText: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
   },
   priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
   },
   priceText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FF385C',
+    fontSize: 16,
+    fontWeight: "600",
+    color: "green",
   },
-  propertyBhk: {
-    fontSize: 12,
-    color: '#666',
+  typeText: {
+    fontSize: 14,
+    color: "#666",
     marginLeft: 4,
   },
-  viewPropertyButton: {
-    marginTop: 8,
-    backgroundColor: '#232761',
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  saveButton: {
     paddingVertical: 8,
-    borderRadius: 6,
-    alignItems: 'center',
+    paddingHorizontal: 16,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#2E3192",
+    marginRight: 8,
   },
-  viewPropertyButtonText: {
-    color: '#fff',
+  saveButtonText: {
+    color: "#2E3192",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  viewButtonAgent: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 4,
+    backgroundColor: "#2E3192",
+  },
+  viewButtonTextAgent: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  projectCard: {
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    overflow: "hidden",
+    marginRight: 20,
+    elevation: 5,
+  },
+  projectImageContainer: {
+    position: "relative",
+    width: cardWidth,
+    height: 180,
+  },
+  projectImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  imageGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+  },
+  projectBadge: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  projectBadgeText: {
+    color: "#fff",
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
-  scheduleButton: {
-    marginTop: 16,
+  ratingBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(255, 193, 7, 0.9)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
   },
-  scheduleButtonGradient: {
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
+  ratingText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
   },
-  scheduleButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  projectInfo: {
+    padding: 15,
+  },
+  projectTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1a237e",
+    marginBottom: 5,
+  },
+  locationContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 5,
+  },
+  projectLocation: {
+    fontSize: 14,
+    color: "#757575",
+  },
+  projectPrice: {
+    fontSize: 14,
+    color: "#1a237e",
+    fontWeight: "bold",
+  },
+  projectPossession: {
+    fontSize: 14,
+    color: "#757575",
+    marginBottom: 10,
+  },
+  projectButtons: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  viewButton: {
+    flex: 1,
+    backgroundColor: "#1a237e",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  inquiryButton: {
+    flex: 1,
+    backgroundColor: "#4CAF50",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  propertiesSection: {
+    paddingVertical: 20,
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+  },
+  propertiesSectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
+  },
+  propertiesScrollContainer: {
+    paddingRight: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  projectModalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    width: "90%",
+    maxHeight: "80%",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  modalCloseButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    zIndex: 2,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalProjectImage: {
+    width: "100%",
+    height: 200,
+  },
+  modalScrollView: {
+    padding: 20,
+    maxHeight: 350,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1a237e",
+    marginBottom: 10,
+  },
+  modalInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  modalLocation: {
     fontSize: 16,
+    color: "#757575",
+  },
+  modalRating: {
+    fontSize: 16,
+    color: "#FFC107",
+    fontWeight: "bold",
+  },
+  modalStatus: {
+    fontSize: 16,
+    color: "#4CAF50",
+    marginBottom: 15,
+  },
+  priceContainerModal: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(26, 35, 126, 0.05)",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  priceLabel: {
+    fontSize: 14,
+    color: "#757575",
+    marginRight: 5,
+  },
+  priceValue: {
+    fontSize: 16,
+    color: "#1a237e",
+    fontWeight: "bold",
+  },
+  possessionContainerModal: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(76, 175, 80, 0.05)",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  possessionLabel: {
+    fontSize: 14,
+    color: "#757575",
+    marginRight: 5,
+  },
+  possessionValue: {
+    fontSize: 16,
+    color: "#4CAF50",
+    fontWeight: "bold",
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: "#424242",
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+  },
+  modalButton: {
+    flex: 1,
+    padding: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalButtonCloseText: {
+    color: "#232761",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  modalInquiryButton: {
+    backgroundColor: "#1a237e",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  inquiryModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  inquiryModalContainer: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    elevation: 10,
+  },
+  inquiryModalCloseButton: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
+  },
+  inquiryModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 20,
+    color: "#1a237e",
+  },
+  inquiryModalDetails: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  inquiryModalLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#757575",
+    marginTop: 10,
+  },
+  inquiryModalValue: {
+    fontSize: 14,
+    color: "#1a237e",
+    marginTop: 4,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#DDD",
+    marginVertical: 16,
   },
 });

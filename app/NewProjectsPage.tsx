@@ -17,12 +17,18 @@ import {
   Pressable,
 } from "react-native";
 import { BlurView } from "expo-blur";
-// import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { MotiView } from "moti";
 import * as Animatable from "react-native-animatable";
+import Icon from "react-native-vector-icons/MaterialIcons"; // Added Icon import
 
 const { width, height } = Dimensions.get("window");
+
+const COLORS = {
+  cardBackground: "#fff",
+  text: "#1a237e",
+  textLight: "#757575",
+};
 
 const PROJECTS_PER_PAGE = 5;
 
@@ -176,6 +182,7 @@ export default function App() {
   const [selectedProject, setSelectedProject] = useState<
     (typeof residentialProjects)[0] | (typeof commercialProjects)[0] | null
   >(null);
+  const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -317,6 +324,7 @@ export default function App() {
               <TouchableOpacity
                 style={styles.inquiryButton}
                 activeOpacity={0.8}
+                onPress={() => setInquiryModalVisible(true)}
               >
                 <Text style={styles.buttonText}>Inquiry</Text>
               </TouchableOpacity>
@@ -339,7 +347,6 @@ export default function App() {
         delay={300}
         style={styles.pagination}
       >
-        {/* Previous Button */}
         <TouchableOpacity
           style={[styles.disabledPageButton]}
           onPress={() => {
@@ -355,7 +362,6 @@ export default function App() {
           <Text style={[styles.pageButtonText]}>Previous</Text>
         </TouchableOpacity>
 
-        {/* Page Number Buttons */}
         {Array.from({ length: totalPages }).map((_, index) => (
           <TouchableOpacity
             key={index}
@@ -381,7 +387,6 @@ export default function App() {
           </TouchableOpacity>
         ))}
 
-        {/* Next Button */}
         <TouchableOpacity
           style={[styles.disabledPageButton]}
           onPress={() => {
@@ -651,8 +656,7 @@ export default function App() {
   const statusBarHeight = StatusBar.currentHeight || 0;
 
   return (
-    <View style={[styles.container, {marginTop: statusBarHeight}]}>
-
+    <View style={[styles.container, { marginTop: statusBarHeight }]}>
       <Animated.ScrollView
         ref={scrollViewRef}
         style={styles.scrollView}
@@ -682,7 +686,6 @@ export default function App() {
           </Animated.Text>
         </LinearGradient>
 
-        {/* Property Inquiry Form */}
         <ImageBackground
           source={require("../assets/images/newprojectspagebg.png")}
           style={styles.backgroundImage}
@@ -792,7 +795,6 @@ export default function App() {
           </Animated.View>
         </ImageBackground>
 
-        {/* Projects Section */}
         <View style={styles.projectsSection}>
           <Animatable.Text
             animation="fadeIn"
@@ -896,12 +898,6 @@ export default function App() {
                     start={{ x: 0, y: 0 }}
                     end={{ x: 0, y: 0.6 }}
                   />
-                  {/* <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => setSelectedProject(null)}
-                  >
-                    <Text style={styles.closeButtonText}>×</Text>
-                  </TouchableOpacity> */}
                 </View>
 
                 <ScrollView style={styles.modalScrollView}>
@@ -952,6 +948,10 @@ export default function App() {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.modalButton, styles.modalInquiryButton]}
+                    onPress={() => {
+                      setInquiryModalVisible(true);
+                      setSelectedProject(null);
+                    }}
                   >
                     <Text style={styles.modalButtonText}>Inquiry</Text>
                   </TouchableOpacity>
@@ -959,6 +959,49 @@ export default function App() {
               </>
             )}
           </Animatable.View>
+        </View>
+      </Modal>
+
+      {/* Inquiry Modal */}
+      <Modal
+        visible={inquiryModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setInquiryModalVisible(false)}
+      >
+        <View style={styles.inquiryModalOverlay}>
+          <View style={styles.inquiryModalContainer}>
+            <TouchableOpacity
+              style={styles.inquiryModalCloseButton}
+              onPress={() => setInquiryModalVisible(false)}
+            >
+              <Icon name="close" size={30} color={"#232761"} />
+            </TouchableOpacity>
+
+            <Text style={styles.inquiryModalTitle}>
+              You are requesting to view advertiser details
+            </Text>
+
+            <View style={styles.inquiryModalDetails}>
+              <Text style={styles.inquiryModalLabel}>POSTED BY AGENT:</Text>
+              <Text style={styles.inquiryModalValue}>
+                +91 988** **** | i********@gmail.com
+              </Text>
+              <Text style={styles.inquiryModalValue}>VISHAL KATE</Text>
+
+              <View style={styles.divider} />
+
+              <Text style={styles.inquiryModalLabel}>
+                POSTED ON 17th DEC, 2024
+              </Text>
+              <Text style={styles.inquiryModalValue}>
+                ₹ 15 Lac | Phule Nagar Akkuj
+              </Text>
+              <Text style={styles.inquiryModalValue}>
+                2 Guntha | Residential Land
+              </Text>
+            </View>
+          </View>
         </View>
       </Modal>
     </View>
@@ -1166,31 +1209,10 @@ const styles = StyleSheet.create({
     color: "#1a237e",
     fontWeight: "bold",
   },
-  projectStatus: {
-    fontSize: 14,
-    color: "#4CAF50",
-    marginBottom: 5,
-  },
   projectPossession: {
     fontSize: 14,
     color: "#757575",
     marginBottom: 10,
-  },
-  amenitiesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 10,
-    gap: 5,
-  },
-  amenityBadge: {
-    backgroundColor: "rgba(26, 35, 126, 0.1)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 15,
-  },
-  amenityText: {
-    color: "#1a237e",
-    fontSize: 12,
   },
   projectButtons: {
     flexDirection: "row",
@@ -1389,30 +1411,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     lineHeight: 24,
   },
-  modalAmenitiesContainer: {
-    marginBottom: 20,
-  },
-  amenitiesTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1a237e",
-    marginBottom: 10,
-  },
-  modalAmenitiesList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  modalAmenityBadge: {
-    backgroundColor: "rgba(26, 35, 126, 0.1)",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  modalAmenityText: {
-    color: "#1a237e",
-    fontSize: 14,
-  },
   modalButtons: {
     flexDirection: "row",
     borderTopWidth: 1,
@@ -1506,5 +1504,59 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#424242",
     fontWeight: "500",
+  },
+  // Inquiry Modal Styles
+  inquiryModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  inquiryModalContainer: {
+    width: "90%",
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  inquiryModalCloseButton: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
+  },
+  inquiryModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 20,
+    color: COLORS.text,
+  },
+  inquiryModalDetails: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  inquiryModalLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.textLight,
+    marginTop: 10,
+  },
+  inquiryModalValue: {
+    fontSize: 14,
+    color: COLORS.text,
+    marginTop: 4,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#DDD",
+    marginVertical: 16,
   },
 });

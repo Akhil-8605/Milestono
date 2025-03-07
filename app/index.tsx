@@ -14,7 +14,6 @@ export default function Main() {
         style={{ flex: 1, backgroundColor: "#f5f5f5" }}
       >
         <Homepage />
-        <Footer />
       </ScrollView>
       <BottomNavbar />
     </View>

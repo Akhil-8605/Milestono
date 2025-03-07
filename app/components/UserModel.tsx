@@ -14,6 +14,7 @@ import {
 import { FontAwesome5 } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import ToggledMenus from "./ToggleMenus";
+import { useNavigation } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 
@@ -23,6 +24,7 @@ interface UserModalProps {
 }
 
 const UserModal: React.FC<UserModalProps> = ({ visible, onClose }) => {
+  const navigation = useNavigation();
   const [showModal, setShowModal] = useState(visible);
   const slideAnim = useRef(new Animated.Value(width)).current;
 
@@ -70,7 +72,13 @@ const UserModal: React.FC<UserModalProps> = ({ visible, onClose }) => {
             <View style={styles.header}>
               <View style={styles.headerContent}>
                 <Text style={styles.greeting}>Hello User👋</Text>
-                <TouchableOpacity style={styles.loginButton}>
+                <TouchableOpacity
+                  style={styles.loginButton}
+                  onPress={() => {
+                    onClose()
+                    navigation.navigate("LoginPage" as never);
+                  }}
+                >
                   <Text style={styles.loginText}>Login</Text>
                 </TouchableOpacity>
               </View>
