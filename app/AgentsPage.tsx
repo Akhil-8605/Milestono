@@ -828,8 +828,16 @@ const mockAgents = [
   },
 ];
 
+interface Property {
+  id: number;
+  name: string;
+  location: string;
+  propertyimage: any;
+  price: number;
+  bhk: string;
+}
 
-const PropertyCard = ({ property }) => {
+const PropertyCard = ({ property }: { property: Property }) => {
   const navigation = useNavigation();
   return (
     <View key={property.id} style={styles.propertyCard}>
@@ -863,7 +871,27 @@ const PropertyCard = ({ property }) => {
   );
 };
 
-const ProjectCard = ({ project, onViewDetails, onInquiry }) => {
+interface ProjectCardProps {
+  project: {
+    id: string;
+    name: string;
+    location: string;
+    status: string;
+    image: any;
+    description: string;
+    price: string;
+    possession: string;
+    rating: number;
+  };
+  onViewDetails: () => void;
+  onInquiry: () => void;
+}
+
+const ProjectCard: React.FC<ProjectCardProps> = ({
+  project,
+  onViewDetails,
+  onInquiry,
+}) => {
   return (
     <View key={project.id} style={styles.projectCard}>
       <View style={styles.projectImageContainer}>
@@ -925,11 +953,55 @@ export default function AgentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchBy, setSearchBy] = useState("name");
-  const [selectedAgent, setSelectedAgent] = useState(null);
+  interface Agent {
+    id: number;
+    name: string;
+    fullName: string;
+    company: string;
+    operatingSince: number;
+    address: string;
+    phone: string;
+    email: string;
+    image: string;
+    rating: number;
+    propertiesSold: number;
+    specialization: string;
+    featured: boolean;
+    verified: boolean;
+    experience: number;
+    awards: number;
+    residentialProperties: Property[];
+    commercialProperties: Property[];
+    project: {
+      id: string;
+      name: string;
+      location: string;
+      status: string;
+      image: any;
+      description: string;
+      price: string;
+      possession: string;
+      rating: number;
+    }[];
+  }
+  
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedTab, setSelectedTab] = useState("residential");
   const [projectModalVisible, setProjectModalVisible] = useState(false);
-  const [selectedProjectForModal, setSelectedProjectForModal] = useState(null);
+  interface Project {
+    id: string;
+    name: string;
+    location: string;
+    status: string;
+    image: any;
+    description: string;
+    price: string;
+    possession: string;
+    rating: number;
+  }
+  
+  const [selectedProjectForModal, setSelectedProjectForModal] = useState<Project | null>(null);
   const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
 
   const agentsPerPage = 10;
@@ -973,7 +1045,7 @@ export default function AgentsPage() {
     return filteredAgents.slice(startIndex, endIndex);
   };
 
-  const handleContactPress = (agent) => {
+  const handleContactPress = (agent: typeof mockAgents[0]) => {
     setSelectedAgent(agent);
     setModalVisible(true);
     Animated.timing(modalAnimation, {
@@ -995,15 +1067,15 @@ export default function AgentsPage() {
     });
   };
 
-  const handleCall = (phone) => {
+  const handleCall = (phone: string) => {
     Linking.openURL(`tel:${phone}`);
   };
 
-  const handleEmail = (email) => {
+  const handleEmail = (email: string) => {
     Linking.openURL(`mailto:${email}`);
   };
 
-  const renderAgentCard = ({ item, index }) => {
+  const renderAgentCard = ({ item, index }: { item: Agent; index: number }) => {
     const inputRange = [(index - 1) * 350, index * 350, (index + 1) * 350];
     const scale = scrollY.interpolate({
       inputRange,
@@ -1431,33 +1503,31 @@ export default function AgentsPage() {
                       ))}
                     </ScrollView>
                   ) : (
-                    ''
+                    ""
                   )}
                 </View>
 
                 <View style={styles.modalSection}>
-                  <Text style={styles.modalSectionTitle}>
-                    New Projects
-                  </Text>
+                  <Text style={styles.modalSectionTitle}>New Projects</Text>
                   <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={styles.scrollContainer}
-                    >
-                      {selectedAgent.project.map((proj) => (
-                        <ProjectCard
-                          key={proj.id}
-                          project={proj}
-                          onViewDetails={() => {
-                            setSelectedProjectForModal(proj);
-                            setProjectModalVisible(true);
-                          }}
-                          onInquiry={() => {
-                            setInquiryModalVisible(true);
-                          }}
-                        />
-                      ))}
-                    </ScrollView>
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContainer}
+                  >
+                    {selectedAgent.project.map((proj) => (
+                      <ProjectCard
+                        key={proj.id}
+                        project={proj}
+                        onViewDetails={() => {
+                          setSelectedProjectForModal(proj);
+                          setProjectModalVisible(true);
+                        }}
+                        onInquiry={() => {
+                          setInquiryModalVisible(true);
+                        }}
+                      />
+                    ))}
+                  </ScrollView>
                 </View>
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>
@@ -2264,6 +2334,7 @@ const styles = StyleSheet.create({
     color: "#1a237e",
     marginBottom: 5,
   },
+  locationContainer: {},
   projectLocation: {
     fontSize: 14,
     color: "#757575",

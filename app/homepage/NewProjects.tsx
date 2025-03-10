@@ -106,7 +106,17 @@ export default function RecommendedProjectsSection() {
   const projects = combined;
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState<null | {
+    id: string;
+    name: string;
+    location: string;
+    status: string;
+    image: any;
+    description: string;
+    price: string;
+    possession: string;
+    rating: number;
+  }>(null);
   const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -140,7 +150,7 @@ export default function RecommendedProjectsSection() {
   );
 
   // Snap to index
-  const handleMomentumScrollEnd = (event) => {
+  const handleMomentumScrollEnd = (event: { nativeEvent: { contentOffset: { x: number } } }) => {
     const newIndex = Math.round(
       event.nativeEvent.contentOffset.x / (cardWidth + 15)
     );
@@ -148,7 +158,7 @@ export default function RecommendedProjectsSection() {
   };
 
   // Render each card with "View Details" + "Inquiry" button
-  const renderCard = (proj) => (
+  const renderCard = (proj: { id: string; name: string; location: string; status: string; image: any; description: string; price: string; possession: string; rating: number }) => (
     <View key={proj.id} style={[styles.projectCard, { width: cardWidth }]}>
       <View style={styles.projectImageContainer}>
         <Image source={proj.image} style={styles.projectImage} />

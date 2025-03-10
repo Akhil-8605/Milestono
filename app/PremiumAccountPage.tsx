@@ -140,7 +140,7 @@ const PricingPage: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "yearly">(
     "monthly"
   );
-  const [activePlanIndex, setActivePlanIndex] = useState<number>(1); // Default to Silver plan
+  const [activePlanIndex, setActivePlanIndex] = useState<number>(0); // Default to Basic plan
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 

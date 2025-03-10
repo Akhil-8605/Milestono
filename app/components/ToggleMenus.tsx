@@ -72,7 +72,7 @@ const menuItems = {
         icon: "info-circle",
         linkto: "AboutMilestonoPage",
       },
-      { title: "View Properties", icon: "eye", linkto: "ViewPropertiesPage" },
+      { title: "View Properties", icon: "eye", linkto: "SearchPage" },
       { title: "About Us", icon: "user", linkto: "AboutUsPage" },
     ],
   },
@@ -85,9 +85,9 @@ const menuItems = {
         linkto: "PropertyCalculatorPage",
       },
       {
-        title: "Explore our Service",
+        title: "Explore our Projects",
         icon: "search-plus",
-        linkto: "ExploreServicePage",
+        linkto: "NewProjectsPage",
       },
       {
         title: "Register to Property",
@@ -323,6 +323,21 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.menuHeader]}
           activeOpacity={0.7}
+          onPress={() => {onClose(); navigation.navigate("PremiumAccountPage" as never)}}
+        >
+          <View style={styles.menuTitleContainer}>
+            <FontAwesome5
+              name={"gem"}
+              size={18}
+              color="#232761"
+              solid
+            />
+            <Text style={styles.menuTitle}>Premium Account</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.menuHeader]}
+          activeOpacity={0.7}
           onPress={() => {}}
         >
           <View style={styles.menuTitleContainer}>
@@ -348,7 +363,10 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.menuHeader]}
           activeOpacity={0.7}
-          onPress={() => {}}
+          onPress={() => {
+            onClose();
+            navigation.navigate("NewsArticalsPage" as never);
+          }}
         >
           <View style={styles.menuTitleContainer}>
             <FontAwesome5 name={"newspaper"} size={18} color="#232761" solid />

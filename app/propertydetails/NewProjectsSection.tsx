@@ -11,6 +11,8 @@ import {
   Modal,
   Dimensions,
   ScrollView,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import { useNavigation } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -109,7 +111,7 @@ export default function RecommendedProjectsSection() {
   const projects = combined;
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState<typeof residentialProjects[0] | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
 
@@ -142,7 +144,7 @@ export default function RecommendedProjectsSection() {
   );
 
   // Snap to index
-  const handleMomentumScrollEnd = (event) => {
+  const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const newIndex = Math.round(
       event.nativeEvent.contentOffset.x / (cardWidth + 15)
     );
@@ -150,7 +152,7 @@ export default function RecommendedProjectsSection() {
   };
 
   // Render each card with "View Details" + "Inquiry" button
-  const renderCard = (proj) => (
+  const renderCard = (proj: typeof residentialProjects[0]) => (
     <View key={proj.id} style={[styles.projectCard, { width: cardWidth }]}>
       <View style={styles.projectImageContainer}>
         <Image source={proj.image} style={styles.projectImage} />
