@@ -13,7 +13,8 @@ import {
 import { useNavigation } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { Star, ChevronRight } from "react-native-feather";
+import Icon from "react-native-vector-icons/FontAwesome"; 
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 const { width } = Dimensions.get("window");
 const cardWidth = width * 0.85;
@@ -111,15 +112,13 @@ export default function UserFeedbackSection() {
     return (
       <View style={styles.ratingContainer}>
         {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            fill={star <= rating ? "#FFD700" : "none"}
-            stroke={star <= rating ? "#FFD700" : "#D0D0D0"}
-            width={16}
-            height={16}
-            strokeWidth={1.5}
-          />
-        ))}
+        <Icon
+          key={star}
+          name="star"
+          size={16}
+          color={star <= rating ? "#FFD700" : "#D0D0D0"}
+        />
+      ))}
       </View>
     );
   };
@@ -238,11 +237,10 @@ export default function UserFeedbackSection() {
             onPress={() => navigation.navigate("UserFeedbackPage" as never)}
           >
             <Text style={styles.viewAllText}>View all</Text>
-            <ChevronRight
-              width={16}
-              height={16}
+            <MaterialIcons
+              name="chevron-right"
+              size={16}
               color="#4A4A9C"
-              strokeWidth={2}
             />
           </TouchableOpacity>
         </View>

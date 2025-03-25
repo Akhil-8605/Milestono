@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { Star } from "react-native-feather";
+import Icon from "react-native-vector-icons/FontAwesome"; 
 
 type Feedback = {
   id: number;
@@ -252,13 +252,11 @@ const renderRating = (rating: number) => {
   return (
     <View style={styles.ratingContainer}>
       {[1, 2, 3, 4, 5].map((star) => (
-        <Star
+        <Icon
           key={star}
-          fill={star <= rating ? "#FFD700" : "none"}
-          stroke={star <= rating ? "#FFD700" : "#D0D0D0"}
-          width={16}
-          height={16}
-          strokeWidth={1.5}
+          name="star"
+          size={16}
+          color={star <= rating ? "#FFD700" : "#D0D0D0"}
         />
       ))}
     </View>

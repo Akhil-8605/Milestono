@@ -23,7 +23,7 @@ import {
   MaterialCommunityIcons,
   AntDesign,
 } from "@expo/vector-icons";
-import { LineChart } from "react-native-chart-kit";
+import { VictoryChart, VictoryLine, VictoryAxis, VictoryTheme } from "victory-native";
 import { BlurView } from "expo-blur";
 
 const { width, height } = Dimensions.get("window");
@@ -406,6 +406,15 @@ const AccordionItem = ({ item, isActive, onToggle }: { item: any; isActive: bool
     outputRange: [0.1, 0.2],
   });
 
+  const chartData = [
+    { x: "Jan", y: 30 },
+    { x: "Feb", y: 45 },
+    { x: "Mar", y: 28 },
+    { x: "Apr", y: 80 },
+    { x: "May", y: 50 },
+    { x: "Jun", y: 75 },
+  ];
+
   return (
     <Animated.View
       style={[
@@ -737,35 +746,16 @@ const PriceTrendsAccordion = ({ isActive, onToggle }: { isActive: boolean; onTog
           </View>
 
           <View style={styles.chartContainer}>
-            <LineChart
-              data={chartData}
-              width={width - 48}
-              height={220}
-              chartConfig={{
-                backgroundColor: "#ffffff",
-                backgroundGradientFrom: "#ffffff",
-                backgroundGradientTo: "#ffffff",
-                decimalPlaces: 0,
-                color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                style: {
-                  borderRadius: 16,
-                },
-                propsForDots: {
-                  r: "4",
-                  strokeWidth: "2",
-                },
-                propsForBackgroundLines: {
-                  strokeDasharray: "",
-                },
-                propsForLabels: {
-                  fontSize: 11,
-                  fontWeight: "bold",
-                },
-              }}
-              bezier
-              style={styles.chart}
-            />
+            <VictoryChart width={width - 48} theme={VictoryTheme.material}>
+              <VictoryAxis style={{ tickLabels: { fontSize: 11, fontWeight: "bold" } }} />
+              <VictoryAxis dependentAxis />
+              <VictoryLine
+                data={chartData}
+                style={{
+                  data: { stroke: "rgba(52, 152, 219, 1)", strokeWidth: 3 },
+                }}
+              />
+            </VictoryChart>
           </View>
 
           <Text style={[styles.sectionTitle, { marginTop: 20 }]}>

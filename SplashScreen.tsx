@@ -1,5 +1,5 @@
-import React from "react";
-import { useRef } from "react";
+import React, { useState } from "react";
+import { useNavigation } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -8,21 +8,47 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons"; // For arrow icons
-import Swiper from "react-native-swiper";
+import {
+  GestureHandlerRootView,
+  PanGestureHandler,
+} from "react-native-gesture-handler";
+import Animated, { withSpring, useSharedValue, useAnimatedGestureHandler } from "react-native-reanimated";
 
 const SplashScreen = () => {
   const navigation = useNavigation();
   const screenWidth = Dimensions.get("window").width;
-  const swiperRef = useRef(null); // Store Swiper reference
+
+  const [currentIndex, setCurrentIndex] = useState(0); // Track current slide
+
+  const slides = [
+    {
+      image: require("../assets/images/human1.png"),
+      title: "Register Online",
+      description: "Lorem ipsum dolor sit amet consectetur adipiscing",
+    },
+    {
+      image: require("../assets/images/human2.png"),
+      title: "Get Started",
+      description: "Lorem ipsum dolor sit amet consectetur adipiscing",
+    },
+    {
+      image: require("../assets/images/human3.png"),
+      title: "Sit Back & Relax",
+      description: "Lorem ipsum dolor sit amet consectetur adipiscing",
+    },
+  ];
 
   const handleNext = () => {
-    swiperRef?.current?.scrollBy(1, true);
+    if (currentIndex < slides.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
   };
 
   const handlePrev = () => {
-    swiperRef?.current?.scrollBy(-1, true);
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
   };
 
   const handleSkip = () => {
@@ -31,83 +57,72 @@ const SplashScreen = () => {
       routes: [{ name: "Main" }],
     });
   };
+
+  // Gesture handling with PanGestureHandler
+  const translateX = useSharedValue(0);
+
+  const swipeHandler = useAnimatedGestureHandler({
+    onActive: (event) => {
+      translateX.value = event.translationX;
+    },
+    onEnd: (event) => {
+      if (event.translationX > 100) {
+        handleNext(); // Swipe right
+      } else if (event.translationX < -100) {
+        handlePrev(); // Swipe left
+      } else {
+        translateX.value = withSpring(0); // Reset position if swipe is small
+      }
+    },
+  });
+
   return (
-    <View style={styles.container}>
-      {/* Navigation Controls */}
-      <View style={styles.navControls}>
-        <TouchableOpacity style={styles.navButton} onPress={handlePrev}>
-          <AntDesign name="arrowleft" size={24} color="#999" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-          <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Swiper
-        loop={false}
-        dotStyle={styles.dot}
-        activeDotStyle={styles.activeDot}
-        ref={swiperRef}
-      >
-        {/* Slide 1 */}
-        <View style={styles.slide}>
-          <Image
-            source={require("../assets/images/human1.png")} // Image path
-            style={styles.image}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>Register Online</Text>{" "}
-          {/* description title */}
-          <Text style={styles.description}>
-            Lorem ipsum dolor sit amet consectetur adipiscing
-          </Text>{" "}
-          {/* Description text */}
-          <TouchableOpacity style={styles.navigatorButton} onPress={handleNext}>
-            <AntDesign name="arrowright" size={24} color="white" />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        {/* Navigation Controls */}
+        <View style={styles.navControls}>
+          <TouchableOpacity style={styles.navButton} onPress={handlePrev}>
+            <AntDesign name="arrowleft" size={24} color="#999" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+            <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Slide 2 */}
-        <View style={styles.slide}>
-          <Image
-            source={require("../assets/images/human2.png")} // Image path
-            style={styles.image}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>Get Started</Text>{" "}
-          {/* description title */}
-          <Text style={styles.description}>
-            Lorem ipsum dolor sit amet consectetur adipiscing
-            {/* Description text */}
-          </Text>
-          <TouchableOpacity style={styles.navigatorButton} onPress={handleNext}>
-            <AntDesign name="arrowright" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Slide 3 */}
-        <View style={styles.slide}>
-          <Image
-            source={require("../assets/images/human3.png")}
-            // Image path
-            style={styles.image}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>Sit Back & Relax </Text>
-          {/* description title */}
-          <Text style={styles.description}>
-            Lorem ipsum dolor sit amet consectetur adipiscing
-            {/* Description text */}
-          </Text>
-          <TouchableOpacity
-            style={styles.getStartedButton}
-            onPress={handleSkip}
+        {/* Swipeable Slide View */}
+        <PanGestureHandler onGestureEvent={swipeHandler}>
+          <Animated.View
+            style={[
+              styles.swipeContainer,
+              { transform: [{ translateX: translateX.value }] },
+            ]}
           >
-            <Text style={styles.getStartedText}>Get Started</Text>
-          </TouchableOpacity>
-        </View>
-      </Swiper>
-    </View>
+            <View style={styles.slide}>
+              <Image
+                source={slides[currentIndex].image}
+                style={styles.image}
+                resizeMode="contain"
+              />
+              <Text style={styles.title}>{slides[currentIndex].title}</Text>
+              <Text style={styles.description}>{slides[currentIndex].description}</Text>
+
+              {currentIndex < slides.length - 1 ? (
+                <TouchableOpacity style={styles.navigatorButton} onPress={handleNext}>
+                  <AntDesign name="arrowright" size={24} color="white" />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.getStartedButton}
+                  onPress={handleSkip}
+                >
+                  <Text style={styles.getStartedText}>Get Started</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </Animated.View>
+        </PanGestureHandler>
+      </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -137,15 +152,20 @@ const styles = StyleSheet.create({
     color: "#999",
     fontSize: 16,
   },
+  swipeContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   slide: {
     flex: 1,
-    justifyContent: "center", // Center vertically
-    alignItems: "center", // Center horizontally
+    justifyContent: "center",
+    alignItems: "center",
   },
   image: {
     width: Dimensions.get("window").width * 0.66,
     height: Dimensions.get("window").width * 0.66,
-    alignSelf: "center", // Ensures image is centered
+    alignSelf: "center",
     marginTop: 20,
   },
   title: {
@@ -189,20 +209,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
-  },
-  dot: {
-    backgroundColor: "#ccc",
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    margin: 5,
-  },
-  activeDot: {
-    backgroundColor: "#0505f2",
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    margin: 5,
   },
 });
 
