@@ -15,6 +15,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { Star } from "react-native-feather";
+import Header from "./components/Header";
 
 type Feedback = {
   id: number;
@@ -209,8 +210,7 @@ const feedbacks: Feedback[] = [
   },
   {
     id: 19,
-    message:
-      "Impressive customer service and the platform works flawlessly.",
+    message: "Impressive customer service and the platform works flawlessly.",
     user: "Pooja Patel",
     position: "Operations Manager",
     rating: 5,
@@ -361,82 +361,84 @@ const UserFeedbackPage = () => {
   const statusBarHeight = StatusBar.currentHeight || 0;
 
   return (
-    <View style={[styles.container, { marginTop: statusBarHeight }]}>
-      {/* Header with title and items-per-page dropdown */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Client Testimonials</Text>
-        <TouchableOpacity
-          style={styles.dropdown}
-          onPress={() => setShowModal(true)}
+    <View style={{ flex: 1, marginTop: statusBarHeight }}>
+      <Header />
+      <View style={[styles.container]}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Client Feedbacks</Text>
+          <TouchableOpacity
+            style={styles.dropdown}
+            onPress={() => setShowModal(true)}
+          >
+            <Text style={styles.dropdownText}>
+              {itemsPerPage === "All" ? "All" : itemsPerPage}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Feedback Cards List */}
+        <FlatList
+          data={getCurrentData()}
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <CardContent feedback={item} />
+            </View>
+          )}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+
+        {/* Pagination Controls */}
+        <View style={styles.pagination}>
+          <TouchableOpacity
+            style={styles.pageButton}
+            disabled={currentPage === 1}
+            onPress={() => setCurrentPage((prev) => prev - 1)}
+          >
+            <Text style={styles.pageButtonText}>Prev</Text>
+          </TouchableOpacity>
+
+          {renderPaginationButtons()}
+
+          <TouchableOpacity
+            style={styles.pageButton}
+            disabled={currentPage === totalPages}
+            onPress={() => setCurrentPage((prev) => prev + 1)}
+          >
+            <Text style={styles.pageButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Modal for selecting items per page */}
+        <Modal
+          visible={showModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowModal(false)}
         >
-          <Text style={styles.dropdownText}>
-            {itemsPerPage === "All" ? "All" : itemsPerPage}
-          </Text>
-        </TouchableOpacity>
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={() => setShowModal(false)}
+          >
+            <View style={styles.modalContent}>
+              {ITEMS_PER_PAGE_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.toString()}
+                  style={styles.modalItem}
+                  onPress={() => {
+                    setItemsPerPage(option);
+                    setCurrentPage(1);
+                    setShowModal(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{option}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
       </View>
-
-      {/* Feedback Cards List */}
-      <FlatList
-        data={getCurrentData()}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <CardContent feedback={item} />
-          </View>
-        )}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
-
-      {/* Pagination Controls */}
-      <View style={styles.pagination}>
-        <TouchableOpacity
-          style={styles.pageButton}
-          disabled={currentPage === 1}
-          onPress={() => setCurrentPage((prev) => prev - 1)}
-        >
-          <Text style={styles.pageButtonText}>Prev</Text>
-        </TouchableOpacity>
-
-        {renderPaginationButtons()}
-
-        <TouchableOpacity
-          style={styles.pageButton}
-          disabled={currentPage === totalPages}
-          onPress={() => setCurrentPage((prev) => prev + 1)}
-        >
-          <Text style={styles.pageButtonText}>Next</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Modal for selecting items per page */}
-      <Modal
-        visible={showModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowModal(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setShowModal(false)}
-        >
-          <View style={styles.modalContent}>
-            {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.toString()}
-                style={styles.modalItem}
-                onPress={() => {
-                  setItemsPerPage(option);
-                  setCurrentPage(1);
-                  setShowModal(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{option}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Pressable>
-      </Modal>
     </View>
   );
 };
@@ -454,7 +456,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "700",
     color: "#1F2937",
   },

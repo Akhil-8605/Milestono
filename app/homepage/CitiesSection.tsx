@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   heading: {
-    fontSize: 32,
+    fontSize: 25,
     fontWeight: "700",
     marginBottom: 25,
     color: "#333333",
@@ -101,12 +101,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   projectImage: {
-    width: 120,
-    height: 120,
+    width: 75,
+    height: 75,
     borderRadius: 100,
   },
   projectTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
     color: "#1A1A1A",
     textAlign: "center",

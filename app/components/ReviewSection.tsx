@@ -110,7 +110,7 @@ const FeedbackComponent: React.FC = () => {
       <View style={styles.feedbackContainer}>
         <Text style={styles.title}>Are you finding us helpful?</Text>
         <Text style={styles.subtitle}>
-          Your feedback will help us make 99acres the best.
+          Your feedback will help us make Milestono the best.
         </Text>
 
         <View style={styles.optionsContainer}>
@@ -279,21 +279,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "bold",
     color: "#0e2a47",
     textAlign: "center",
     marginBottom: 10,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 12,
     color: "#555",
     textAlign: "center",
     marginBottom: 30,
   },
   optionsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    gap: 25,
     width: "100%",
     marginTop: 10,
   },
@@ -303,7 +304,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
-    width: "47%",
+    width: "35%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -311,12 +312,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   emojiImage: {
-    width: 60,
-    height: 60,
+    width: 40,
+    height: 40,
     marginBottom: 15,
   },
   optionCardText: {
-    fontSize: 18,
+    fontSize: 12,
     fontWeight: "bold",
     color: "#0078d4",
   },

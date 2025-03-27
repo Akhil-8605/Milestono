@@ -984,7 +984,7 @@ export default function AgentsPage() {
       rating: number;
     }[];
   }
-  
+
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedTab, setSelectedTab] = useState("residential");
@@ -1000,8 +1000,9 @@ export default function AgentsPage() {
     possession: string;
     rating: number;
   }
-  
-  const [selectedProjectForModal, setSelectedProjectForModal] = useState<Project | null>(null);
+
+  const [selectedProjectForModal, setSelectedProjectForModal] =
+    useState<Project | null>(null);
   const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
 
   const agentsPerPage = 10;
@@ -1045,7 +1046,7 @@ export default function AgentsPage() {
     return filteredAgents.slice(startIndex, endIndex);
   };
 
-  const handleContactPress = (agent: typeof mockAgents[0]) => {
+  const handleContactPress = (agent: (typeof mockAgents)[0]) => {
     setSelectedAgent(agent);
     setModalVisible(true);
     Animated.timing(modalAnimation, {
@@ -1127,7 +1128,7 @@ export default function AgentsPage() {
                     <AntDesign
                       key={i}
                       name={i < Math.floor(item.rating) ? "star" : "staro"}
-                      size={14}
+                      size={12}
                       color="#FFD700"
                       style={{ marginRight: 2 }}
                     />
@@ -1214,7 +1215,7 @@ export default function AgentsPage() {
               <View style={styles.searchInputContainer}>
                 <Feather
                   name="search"
-                  size={20}
+                  size={14}
                   color="#666"
                   style={styles.searchIcon}
                 />
@@ -1544,7 +1545,7 @@ export default function AgentsPage() {
                         end={{ x: 1, y: 0 }}
                         style={styles.contactOptionIcon}
                       >
-                        <Feather name="phone" size={20} color="#fff" />
+                        <Feather name="phone" size={18} color="#fff" />
                       </LinearGradient>
                       <View style={styles.contactOptionDetails}>
                         <Text style={styles.contactOptionLabel}>Phone</Text>
@@ -1554,7 +1555,7 @@ export default function AgentsPage() {
                       </View>
                       <View style={styles.contactOptionAction}>
                         <Text style={styles.contactOptionActionText}>Call</Text>
-                        <Feather name="chevron-right" size={16} color="#666" />
+                        <Feather name="chevron-right" size={14} color="#666" />
                       </View>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -1567,7 +1568,7 @@ export default function AgentsPage() {
                         end={{ x: 1, y: 0 }}
                         style={styles.contactOptionIcon}
                       >
-                        <Feather name="mail" size={20} color="#fff" />
+                        <Feather name="mail" size={18} color="#fff" />
                       </LinearGradient>
                       <View style={styles.contactOptionDetails}>
                         <Text style={styles.contactOptionLabel}>Email</Text>
@@ -1579,7 +1580,7 @@ export default function AgentsPage() {
                         <Text style={styles.contactOptionActionText}>
                           Email
                         </Text>
-                        <Feather name="chevron-right" size={16} color="#666" />
+                        <Feather name="chevron-right" size={14} color="#666" />
                       </View>
                     </TouchableOpacity>
                     <View style={styles.contactOption}>
@@ -1589,7 +1590,7 @@ export default function AgentsPage() {
                         end={{ x: 1, y: 0 }}
                         style={styles.contactOptionIcon}
                       >
-                        <Feather name="map-pin" size={20} color="#fff" />
+                        <Feather name="map-pin" size={18} color="#fff" />
                       </LinearGradient>
                       <View style={styles.contactOptionDetails}>
                         <Text style={styles.contactOptionLabel}>
@@ -1741,7 +1742,7 @@ export default function AgentsPage() {
 }
 
 const { width } = Dimensions.get("window");
-const cardWidth = width * 0.8;
+const cardWidth = width * 0.75;
 
 const styles = StyleSheet.create({
   container: {
@@ -1762,12 +1763,12 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#333",
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginTop: 4,
   },
@@ -1787,14 +1788,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     borderRadius: 12,
     paddingHorizontal: 15,
-    height: 50,
+    height: 40,
   },
   searchIcon: {
     marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 12,
     color: "#333",
   },
   filterContainer: {
@@ -1803,7 +1804,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   filterLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginRight: 10,
   },
@@ -1821,7 +1822,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#232761",
   },
   filterOptionText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
   },
   filterOptionTextActive: {
@@ -1835,7 +1836,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   resultsText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
   },
   cardContainer: {
@@ -1858,7 +1859,7 @@ const styles = StyleSheet.create({
   },
   agentImage: {
     width: "100%",
-    height: 200,
+    height: 175,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
   },
@@ -1877,7 +1878,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     marginLeft: 4,
-    fontSize: 12,
+    fontSize: 10,
   },
   verifiedBadge: {
     position: "absolute",
@@ -1894,7 +1895,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     marginLeft: 4,
-    fontSize: 12,
+    fontSize: 10,
   },
   cardBody: {
     padding: 15,
@@ -1906,7 +1907,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   agentName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 4,
@@ -1916,7 +1917,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   companyText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginLeft: 6,
   },
@@ -1941,12 +1942,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   agentStatValue: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#333",
   },
   agentStatLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#666",
   },
   infoSection: {
@@ -1958,13 +1959,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   infoText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginLeft: 8,
   },
   contactButton: {
     backgroundColor: "#1a1e4d",
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
@@ -1972,7 +1973,7 @@ const styles = StyleSheet.create({
   contactButtonText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14,
   },
   stickyFooter: {
     position: "absolute",
@@ -2119,8 +2120,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   contactOptionIcon: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
@@ -2130,12 +2131,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contactOptionLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#999",
     marginBottom: 2,
   },
   contactOptionValue: {
-    fontSize: 15,
+    fontSize: 14,
     color: "#333",
     fontWeight: "500",
   },
@@ -2156,20 +2157,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   scheduleButton: {
-    marginTop: 10,
+    marginTop: 0,
     borderRadius: 12,
     overflow: "hidden",
     elevation: 5,
+    marginBottom: 50,
   },
   scheduleButtonGradient: {
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
   },
   scheduleButtonText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14,
     letterSpacing: 0.5,
   },
   tabContainer: {
@@ -2202,7 +2204,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   propertyCard: {
-    width: 300,
+    width: 220,
     backgroundColor: "white",
     borderRadius: 8,
     marginRight: 16,
@@ -2225,23 +2227,23 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   propertyName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "#333",
     marginBottom: 8,
   },
   locationText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginBottom: 8,
   },
   priceText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "600",
     color: "green",
   },
   typeText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginLeft: 4,
   },
@@ -2250,8 +2252,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   saveButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: 4,
     borderWidth: 1,
     borderColor: "#2E3192",
@@ -2259,18 +2261,18 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: "#2E3192",
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: "500",
   },
   viewButtonAgent: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: 4,
     backgroundColor: "#2E3192",
   },
   viewButtonTextAgent: {
     color: "white",
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: "500",
   },
   projectCard: {
@@ -2334,7 +2336,11 @@ const styles = StyleSheet.create({
     color: "#1a237e",
     marginBottom: 5,
   },
-  locationContainer: {},
+  locationContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 5
+  },
   projectLocation: {
     fontSize: 14,
     color: "#757575",
@@ -2356,20 +2362,20 @@ const styles = StyleSheet.create({
   viewButton: {
     flex: 1,
     backgroundColor: "#1a237e",
-    padding: 12,
+    padding: 10,
     borderRadius: 10,
     alignItems: "center",
   },
   inquiryButton: {
     flex: 1,
     backgroundColor: "#4CAF50",
-    padding: 12,
+    padding: 10,
     borderRadius: 10,
     alignItems: "center",
   },
   buttonText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
   },
   propertiesSection: {
@@ -2425,7 +2431,7 @@ const styles = StyleSheet.create({
     maxHeight: 350,
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#1a237e",
     marginBottom: 10,

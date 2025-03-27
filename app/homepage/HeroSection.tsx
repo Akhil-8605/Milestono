@@ -76,7 +76,7 @@ const HeroSection = () => {
             style={stylesHero.menuButton}
             onPress={() => setIsMenuVisible(true)}
           >
-            <Svg width="35" height="35" viewBox="0 0 24 24" fill="white">
+            <Svg width="30" height="30" viewBox="0 0 24 24" fill="white">
               <Path
                 fillRule="evenodd"
                 clipRule="evenodd"
@@ -118,8 +118,8 @@ const HeroSection = () => {
               </Animated.Text>
               <View>
                 <Svg
-                  width="30"
-                  height="30"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="#232761"
                   style={stylesHero.searchIcon}
@@ -158,7 +158,7 @@ const stylesHero = StyleSheet.create({
   },
   backgroundImage: {
     width: "100%",
-    height: 450,
+    height: 300,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -175,17 +175,17 @@ const stylesHero = StyleSheet.create({
   },
   logo: {
     color: "white",
-    fontSize: 38,
+    fontSize: 28,
     fontWeight: "bold",
   },
   buyButton: {
     position: "absolute",
-    left: 200,
+    left: 155,
     top: 25,
   },
   buyLink: {
     color: "white",
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: "500",
   },
   menuButton: {
@@ -195,7 +195,7 @@ const stylesHero = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
   textWrapper: {
     alignItems: "flex-end",
@@ -208,7 +208,7 @@ const stylesHero = StyleSheet.create({
     maxHeight: 175,
   },
   mainTitle: {
-    fontSize: 38,
+    fontSize: 24,
     fontWeight: "600",
   },
   boldText: {
@@ -216,7 +216,7 @@ const stylesHero = StyleSheet.create({
   },
   description: {
     color: "white",
-    fontSize: 16,
+    fontSize: 12,
     textAlign: "left",
     justifyContent: "flex-end",
     fontWeight: "400",
@@ -224,7 +224,7 @@ const stylesHero = StyleSheet.create({
     width: "60%",
   },
   searchWrapper: {
-    width: "90%",
+    width: "80%",
     maxWidth: 480,
   },
   tabContainer: {
@@ -237,27 +237,27 @@ const stylesHero = StyleSheet.create({
   },
   activeTab: {
     backgroundColor: "white",
-    paddingVertical: 10,
-    paddingHorizontal: 32,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
     borderRadius: 6,
   },
   inactiveTab: {
-    paddingVertical: 10,
-    paddingHorizontal: 32,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
   },
   activeTabText: {
     color: "#000",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
   },
   inactiveTabText: {
     color: "white",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
   },
   searchContainer: {
     flexDirection: "row",
-    height: 50,
+    // height: 35,
     backgroundColor: "white",
     borderRadius: 8,
     overflow: "hidden",
@@ -266,7 +266,7 @@ const stylesHero = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 10,
     color: "#333",
     paddingVertical: 10,
   },
@@ -274,8 +274,8 @@ const stylesHero = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#232761", // Dark blue button
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
     borderRadius: 6,
   },
   searchIcon: {
@@ -283,7 +283,7 @@ const stylesHero = StyleSheet.create({
   },
   searchButtonText: {
     color: "white",
-    fontSize: 14,
+    fontSize: 8,
     fontWeight: "bold",
   },
 });

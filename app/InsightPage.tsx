@@ -510,11 +510,11 @@ const TopSearchesAccordion = ({ isActive, onToggle }: AccordionProps) => {
           onPress={onToggle}
         >
           <View style={styles.headerTitleContainer}>
-            <FontAwesome name="search" size={20} color="#ffffff" />
+            <FontAwesome name="search" size={15} color="#ffffff" />
             <Text style={styles.gradientTitle}>Top Searches Area</Text>
           </View>
           <Animated.View style={{ transform: [{ rotateZ }] }}>
-            <Feather name="chevron-down" size={24} color="#ffffff" />
+            <Feather name="chevron-down" size={18} color="#ffffff" />
           </Animated.View>
         </TouchableOpacity>
       </LinearGradientView>
@@ -666,11 +666,11 @@ const PriceTrendsAccordion = ({ isActive, onToggle }: { isActive: boolean; onTog
           onPress={onToggle}
         >
           <View style={styles.headerTitleContainer}>
-            <MaterialIcons name="trending-up" size={24} color="#ffffff" />
+            <MaterialIcons name="trending-up" size={18} color="#ffffff" />
             <Text style={styles.gradientTitle}>Property Price Trends</Text>
           </View>
           <Animated.View style={{ transform: [{ rotateZ }] }}>
-            <Feather name="chevron-down" size={24} color="#ffffff" />
+            <Feather name="chevron-down" size={18} color="#ffffff" />
           </Animated.View>
         </TouchableOpacity>
       </LinearGradientView>
@@ -684,7 +684,7 @@ const PriceTrendsAccordion = ({ isActive, onToggle }: { isActive: boolean; onTog
             <View style={styles.trendsStat}>
               <MaterialCommunityIcons
                 name="home-city"
-                size={24}
+                size={18}
                 color="#3498db"
               />
               <Text style={styles.trendsStatNumber}>+4.8%</Text>
@@ -693,7 +693,7 @@ const PriceTrendsAccordion = ({ isActive, onToggle }: { isActive: boolean; onTog
             <View style={styles.trendsStat}>
               <MaterialCommunityIcons
                 name="timer-sand"
-                size={24}
+                size={18}
                 color="#e74c3c"
               />
               <Text style={styles.trendsStatNumber}>6 Months</Text>
@@ -702,7 +702,7 @@ const PriceTrendsAccordion = ({ isActive, onToggle }: { isActive: boolean; onTog
             <View style={styles.trendsStat}>
               <MaterialCommunityIcons
                 name="chart-line-variant"
-                size={24}
+                size={18}
                 color="#2ecc71"
               />
               <Text style={styles.trendsStatNumber}>+3.2%</Text>
@@ -997,11 +997,11 @@ const PropertyCompareAccordion = ({ isActive, onToggle }: { isActive: boolean; o
           onPress={onToggle}
         >
           <View style={styles.headerTitleContainer}>
-            <Ionicons name="git-compare" size={24} color="#ffffff" />
+            <Ionicons name="git-compare" size={15} color="#ffffff" />
             <Text style={styles.gradientTitle}>Property Compare</Text>
           </View>
           <Animated.View style={{ transform: [{ rotateZ }] }}>
-            <Feather name="chevron-down" size={24} color="#ffffff" />
+            <Feather name="chevron-down" size={18} color="#ffffff" />
           </Animated.View>
         </TouchableOpacity>
       </LinearGradientView>
@@ -1021,7 +1021,7 @@ const PropertyCompareAccordion = ({ isActive, onToggle }: { isActive: boolean; o
 
           <View style={styles.searchContainer}>
             <View style={styles.searchIconContainer}>
-              <Feather name="search" size={20} color="#999" />
+              <Feather name="search" size={15} color="#999" />
             </View>
             <TextInput
               style={styles.searchInput}
@@ -1106,7 +1106,7 @@ const PropertyCompareAccordion = ({ isActive, onToggle }: { isActive: boolean; o
                 </View>
                 {selectedProperties.some((p) => p.id === item.id) && (
                   <View style={styles.selectedBadge}>
-                    <Feather name="check" size={16} color="#ffffff" />
+                    <Feather name="check" size={12} color="#ffffff" />
                   </View>
                 )}
               </TouchableOpacity>
@@ -1161,7 +1161,7 @@ const PropertyCompareAccordion = ({ isActive, onToggle }: { isActive: boolean; o
                   </View>
                   <View style={styles.comparisonProperty}>
                     <Image
-                      source={{ uri: selectedProperties[0].image }}
+                      source={selectedProperties[0].image }
                       style={styles.comparisonPropertyImage}
                     />
                     <Text style={styles.propertyCompareText} numberOfLines={2}>
@@ -1170,7 +1170,7 @@ const PropertyCompareAccordion = ({ isActive, onToggle }: { isActive: boolean; o
                   </View>
                   <View style={styles.comparisonProperty}>
                     <Image
-                      source={{ uri: selectedProperties[1].image }}
+                      source={selectedProperties[1].image }
                       style={styles.comparisonPropertyImage}
                     />
                     <Text style={styles.propertyCompareText} numberOfLines={2}>
@@ -1550,7 +1550,7 @@ const TabDropdown = ({ tab, isActive, onToggle }: TabDropdownProps) => {
         >
           <Text style={styles.gradientTitle}>{tab.title}</Text>
           <Animated.View style={{ transform: [{ rotateZ }] }}>
-            <Feather name="chevron-down" size={24} color="#ffffff" />
+            <Feather name="chevron-down" size={18} color="#ffffff" />
           </Animated.View>
         </TouchableOpacity>
       </LinearGradientView>
@@ -1629,7 +1629,7 @@ export default function RealEstateApp() {
           >
             <FontAwesome
               name="search"
-              size={18}
+              size={14}
               color={
                 activeSpecialSection === "topSearches" ? "#3498db" : "#666"
               }
@@ -1762,13 +1762,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: "#ffffff",
-    fontSize: 28,
+    fontSize: 25,
     fontWeight: "bold",
     textAlign: "center",
   },
   headerSubtitle: {
     color: "rgba(255, 255, 255, 0.9)",
-    fontSize: 16,
+    fontSize: 14,
     marginTop: 5,
     textAlign: "center",
   },
@@ -1810,7 +1810,7 @@ const styles = StyleSheet.create({
   sectionTabText: {
     color: "#666",
     fontWeight: "500",
-    fontSize: 14,
+    fontSize: 12,
     marginLeft: 6,
   },
   activeTabText: {
@@ -1854,7 +1854,7 @@ const styles = StyleSheet.create({
     color: "#3498db",
   },
   gradientTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "700",
     color: "#ffffff",
     marginLeft: 8,
@@ -1898,13 +1898,13 @@ const styles = StyleSheet.create({
 
   // Section title and description
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "700",
     color: "#333",
     marginBottom: 10,
   },
   sectionDescription: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginBottom: 20,
     lineHeight: 20,
@@ -1923,12 +1923,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   searchStatNumber: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "bold",
     color: "#9b59b6",
   },
   searchStatLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#666",
     marginTop: 5,
   },
@@ -1936,8 +1936,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   areaCard: {
-    width: width * 0.8,
-    height: 150,
+    width: width * 0.6,
+    height: 125,
     marginRight: 16,
     borderRadius: 12,
     overflow: "hidden",
@@ -1960,19 +1960,19 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   areaCardTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "bold",
     color: "#fff",
   },
   areaCardSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: "rgba(255, 255, 255, 0.8)",
   },
   areaCardStats: {
     alignItems: "flex-end",
   },
   areaCardSearches: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#fff",
   },
@@ -1982,7 +1982,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   areaCardGrowthText: {
-    fontSize: 14,
+    fontSize: 10,
     marginLeft: 3,
   },
 
@@ -1999,20 +1999,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   trendsStatNumber: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#2ecc71",
     marginTop: 5,
   },
   trendsStatLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#666",
     marginTop: 5,
   },
   cityFilterContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 15,
+    marginBottom: 0,
   },
   cityFilterButton: {
     paddingHorizontal: 15,
@@ -2027,6 +2027,7 @@ const styles = StyleSheet.create({
   cityFilterText: {
     color: "#2ecc71",
     fontWeight: "500",
+    fontSize: 10
   },
   cityFilterTextActive: {
     color: "#fff",
@@ -2092,7 +2093,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   insightsCardCity: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: "#333",
   },
@@ -2102,19 +2103,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   insightsBadgeText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "500",
   },
   insightsCardPrice: {
     marginBottom: 10,
   },
   insightsCardPriceValue: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#2ecc71",
   },
   insightsCardPriceLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#666",
   },
   insightsCardDetails: {
@@ -2129,7 +2130,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   insightsCardDetailLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#666",
   },
   insightsCardDetailValue: {
@@ -2137,7 +2138,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   insightsCardDetailText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "500",
     color: "#333",
   },
@@ -2161,15 +2162,15 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    height: 46,
+    height: 40,
     paddingHorizontal: 8,
-    fontSize: 14,
+    fontSize: 12,
     color: "#333",
   },
   compareButton2: {
     backgroundColor: "#e74c3c",
     paddingHorizontal: 16,
-    height: 46,
+    height: 40,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -2179,7 +2180,7 @@ const styles = StyleSheet.create({
   compareButtonText: {
     color: "#ffffff",
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: 12,
   },
   selectionStatus: {
     flexDirection: "row",
@@ -2188,11 +2189,11 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   selectionText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
   },
   clearSelectionText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#e74c3c",
     fontWeight: "500",
   },
@@ -2252,18 +2253,18 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   propertyName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: "#333",
     marginBottom: 4,
   },
   propertyLocation: {
-    fontSize: 13,
+    fontSize: 10,
     color: "#666",
     marginBottom: 8,
   },
   propertyPrice: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "700",
     color: "#e74c3c",
   },
@@ -2272,8 +2273,8 @@ const styles = StyleSheet.create({
     top: 8,
     left: 8,
     backgroundColor: "#e74c3c",
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
@@ -2495,7 +2496,7 @@ const styles = StyleSheet.create({
   },
   savePropertyButton: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 5,
     marginRight: 5,
     borderRadius: 6,
     alignItems: "center",
@@ -2505,7 +2506,7 @@ const styles = StyleSheet.create({
   },
   viewDetailsButton: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 5,
     marginLeft: 5,
     borderRadius: 6,
     backgroundColor: "#3f51b5",
@@ -2513,12 +2514,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   savePropertyButtonText: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#3f51b5",
     fontWeight: "500",
   },
   viewDetailsButtonText: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#fff",
     fontWeight: "500",
   },
@@ -2528,14 +2529,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#6c5ce7",
   },
   tabContent: {
-    fontSize: 15,
-    lineHeight: 24,
+    fontSize: 12,
+    fontWeight: 600,
     color: "#424242",
     marginBottom: 16,
   },
   tabImage: {
     width: "100%",
-    height: 200,
+    height: 175,
     borderRadius: 16,
     marginTop: 8,
   },

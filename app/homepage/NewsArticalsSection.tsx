@@ -11,14 +11,14 @@ import {
 import { useNavigation } from "expo-router";
 
 const { width } = Dimensions.get("window");
-const cardWidth = width * 0.9; 
+const cardWidth = width * 0.8;
 
 const newsArticles = [
   {
     id: 1,
     title: "Outlook of Real Estate in 2025",
     description: "Real estate 2025 outlook: Here's what to expect.",
-    image: require("../../assets/images/dummyImg.webp"), // Ensure the image exists
+    image: require("../../assets/images/dummyImg.webp"),
   },
   {
     id: 2,
@@ -36,6 +36,7 @@ const newsArticles = [
 
 const NewsArticlesSection = () => {
   const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
       {/* Section Header */}
@@ -44,9 +45,10 @@ const NewsArticlesSection = () => {
         Read what's happening in Real Estate
       </Text>
 
-      {/* Scrollable News Cards */}
+      {/* Vertically Scrollable News Cards */}
       <ScrollView
-        style={styles.scrollView}
+        horizontal
+        style={[styles.scrollView]}
         showsVerticalScrollIndicator={false}
       >
         {newsArticles.map((article) => (
@@ -83,18 +85,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
   },
   heading: {
-    fontSize: 32,
+    fontSize: 25,
     fontWeight: "700",
     color: "#333333",
   },
   subHeading: {
-    fontSize: 15,
+    fontSize: 12,
     color: "#666",
     fontWeight: "500",
     marginBottom: 20,
   },
   scrollView: {
-    maxHeight: 200, // Adjust height as needed
+    padding: 10,
+    paddingLeft: 6,
+    marginLeft: -10,
+    // marginHorizontal: -10
   },
   card: {
     width: cardWidth,
@@ -102,7 +107,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     flexDirection: "row",
     alignItems: "center",
-    // padding: 10,
     marginBottom: 12,
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -111,24 +115,26 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderWidth: 0.5,
     borderColor: "lightgrey",
+    marginRight: 10
   },
   image: {
-    width: 150,
-    height: 150,
+    width: 125,
+    height: 125,
     borderTopLeftRadius: 15,
     borderBottomLeftRadius: 15,
   },
   cardContent: {
     flex: 1,
     paddingLeft: 12,
+    paddingRight: 10,
   },
   title: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#222",
   },
   description: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#666",
     marginVertical: 4,
   },
@@ -144,7 +150,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#242a80",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
   },
   seeMore: {

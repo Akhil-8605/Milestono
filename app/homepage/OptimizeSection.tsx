@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Image,
-  ScrollView,
+  Animated,
 } from "react-native";
 
 const slides = [
@@ -41,6 +41,17 @@ const slides = [
 
 export default function PropertySlider() {
   const [selectedSlide, setSelectedSlide] = useState<number | null>(1);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Reset opacity to 0 and then animate to 1 for a fade-in effect
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  }, [selectedSlide, fadeAnim]);
 
   return (
     <View style={styles.container}>
@@ -64,14 +75,17 @@ export default function PropertySlider() {
                 slide.id === selectedSlide && styles.activeItem,
               ]}
             >
-              <Text style={styles.activeItemBefore}>{slide.id === selectedSlide? '+': '-'}</Text>{" "}{slide.title}
+              <Text style={styles.activeItemBefore}>
+                {slide.id === selectedSlide ? "+" : "-"}
+              </Text>{" "}
+              {slide.title}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {selectedSlide !== null && (
-        <View style={styles.slideContainer}>
+        <Animated.View style={[styles.slideContainer, { opacity: fadeAnim }]}>
           <Text style={styles.description}>
             {slides.find((s) => s.id === selectedSlide)?.description}
           </Text>
@@ -80,7 +94,7 @@ export default function PropertySlider() {
             style={styles.image}
             resizeMode="cover"
           />
-        </View>
+        </Animated.View>
       )}
     </View>
   );
@@ -93,7 +107,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   mainTitle: {
-    fontSize: 25,
+    fontSize: 23,
     fontWeight: "bold",
     color: "#fff",
     marginBottom: 5,
@@ -109,7 +123,7 @@ const styles = StyleSheet.create({
     color: "#666",
     marginVertical: 5,
   },
-  activeItemBefore:{
+  activeItemBefore: {
     fontSize: 20,
   },
   activeItem: {
@@ -118,7 +132,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   slideContainer: {
-    height: 400,
+    height: 450,
   },
   description: {
     fontSize: 18,

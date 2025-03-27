@@ -147,12 +147,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   heading: {
-    fontSize: 32,
+    fontSize: 25,
     fontWeight: "700",
     color: "#333333",
   },
   subheading: {
-    fontSize: 15,
+    fontSize: 12,
     color: "#666",
     fontWeight: '500',
     marginBottom: 20,
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   card: {
-    width: 300,
+    width: 220,
     backgroundColor: "white",
     borderRadius: 8,
     marginRight: 16,
@@ -189,13 +189,13 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   propertyName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "#333",
     marginBottom: 8,
   },
   locationText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginBottom: 8,
   },
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   priceText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "600",
     color: "green",
   },
@@ -216,11 +216,10 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
   },
   saveButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: 4,
     borderWidth: 1,
     borderColor: "#2E3192",
@@ -228,18 +227,18 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: "#2E3192",
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: "500",
   },
   viewButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: 4,
     backgroundColor: "#2E3192",
   },
   viewButtonText: {
     color: "white",
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: "500",
   },
 });

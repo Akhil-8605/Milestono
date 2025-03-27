@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   heading: {
-    fontSize: 32,
+    fontSize: 25,
     fontWeight: "700",
     marginBottom: 20,
     color: "#333333",
@@ -150,6 +150,7 @@ const styles = StyleSheet.create({
   card: {
     width: CARD_WIDTH,
     height: 450,
+    maxHeight: 450,
     paddingBottom: 35,
     backgroundColor: "white",
     borderRadius: 20,
@@ -177,14 +178,14 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "600",
     color: "#333",
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#666",
     lineHeight: 22,
     marginBottom: 20,
@@ -199,7 +200,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "white",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "600",
   },
   modalOverlay: {

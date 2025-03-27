@@ -35,7 +35,6 @@ const residentialProjects = [
     possession: "December 2025",
     rating: 4.5,
   },
-
   {
     id: "4",
     name: "Riverside Residences",
@@ -104,14 +103,14 @@ const commercialProjects = [
 export default function RecommendedProjectsSection() {
   const navigation = useNavigation();
 
-  // Combine residential + commercial
-  const combined = [...residentialProjects, ...commercialProjects];
-  // For demonstration, we’ll use all. If you want random 10, you can shuffle or slice:
-  // const projects = getRandomProjects(combined, 10);
-  const projects = combined;
+  // Combine residential + commercial projects
+  const projects = [...residentialProjects, ...commercialProjects];
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedProject, setSelectedProject] = useState<typeof residentialProjects[0] | null>(null);
+  const [selectedProject, setSelectedProject] = useState<
+    (typeof residentialProjects)[0] | null
+  >(null);
+  const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
 
@@ -144,15 +143,17 @@ export default function RecommendedProjectsSection() {
   );
 
   // Snap to index
-  const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const handleMomentumScrollEnd = (
+    event: NativeSyntheticEvent<NativeScrollEvent>
+  ) => {
     const newIndex = Math.round(
       event.nativeEvent.contentOffset.x / (cardWidth + 15)
     );
     setCurrentIndex(newIndex);
   };
 
-  // Render each card with "View Details" + "Inquiry" button
-  const renderCard = (proj: typeof residentialProjects[0]) => (
+  // Render each card with "View Details" and "Inquiry" button
+  const renderCard = (proj: (typeof residentialProjects)[0]) => (
     <View key={proj.id} style={[styles.projectCard, { width: cardWidth }]}>
       <View style={styles.projectImageContainer}>
         <Image source={proj.image} style={styles.projectImage} />
@@ -199,8 +200,12 @@ export default function RecommendedProjectsSection() {
             <Text style={styles.buttonText}>View Details</Text>
           </TouchableOpacity>
 
-          {/* "Inquiry" button */}
-          <TouchableOpacity style={styles.inquiryButton} activeOpacity={0.8}>
+          {/* "Inquiry" button opens inquiry modal overlay */}
+          <TouchableOpacity
+            style={styles.inquiryButton}
+            activeOpacity={0.8}
+            onPress={() => setInquiryModalVisible(true)}
+          >
             <Text style={styles.buttonText}>Inquiry</Text>
           </TouchableOpacity>
         </View>
@@ -271,7 +276,7 @@ export default function RecommendedProjectsSection() {
         <Text style={styles.seeMore}>See More</Text>
       </TouchableOpacity>
 
-      {/* Overlay Modal for project details */}
+      {/* Modal for project details */}
       <Modal
         visible={!!selectedProject}
         animationType="fade"
@@ -298,7 +303,9 @@ export default function RecommendedProjectsSection() {
 
                 {/* Scrollable Info */}
                 <ScrollView style={styles.modalScrollView}>
-                  <Text style={styles.modalTitle}>{selectedProject.name}</Text>
+                  <Text style={styles.modalTitle}>
+                    {selectedProject.name}
+                  </Text>
                   <View style={styles.modalInfoRow}>
                     <Text style={styles.modalLocation}>
                       📍 {selectedProject.location}
@@ -347,14 +354,55 @@ export default function RecommendedProjectsSection() {
                   >
                     <Text style={styles.modalButtonCloseText}>Close</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.modalInquiryButton]}
-                  >
+                  <TouchableOpacity style={[styles.modalButton, styles.modalInquiryButton]}>
                     <Text style={styles.modalButtonText}>Inquiry</Text>
                   </TouchableOpacity>
                 </View>
               </>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Inquiry Modal Overlay */}
+      <Modal
+        visible={inquiryModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setInquiryModalVisible(false)}
+      >
+        <View style={styles.inquiryModalOverlay}>
+          <View style={styles.inquiryModalContainer}>
+            <TouchableOpacity
+              style={styles.inquiryModalCloseButton}
+              onPress={() => setInquiryModalVisible(false)}
+            >
+              <Icon name="close" size={30} color="#232761" />
+            </TouchableOpacity>
+
+            <Text style={styles.inquiryModalTitle}>
+              You are requesting to view advertiser details
+            </Text>
+
+            <View style={styles.inquiryModalDetails}>
+              <Text style={styles.inquiryModalLabel}>POSTED BY AGENT:</Text>
+              <Text style={styles.inquiryModalValue}>
+                +91 988** **** | i********@gmail.com
+              </Text>
+              <Text style={styles.inquiryModalValue}>VISHAL KATE</Text>
+
+              <View style={styles.divider} />
+
+              <Text style={styles.inquiryModalLabel}>
+                POSTED ON 17th DEC, 2024
+              </Text>
+              <Text style={styles.inquiryModalValue}>
+                ₹ 15 Lac | Phule Nagar Akkuj
+              </Text>
+              <Text style={styles.inquiryModalValue}>
+                2 Guntha | Residential Land
+              </Text>
+            </View>
           </View>
         </View>
       </Modal>
@@ -397,8 +445,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingBottom: 10,
   },
-
-  /* Card Styles from older snippet */
+  /* Card Styles */
   projectCard: {
     backgroundColor: "#fff",
     borderRadius: 15,
@@ -409,7 +456,7 @@ const styles = StyleSheet.create({
   projectImageContainer: {
     position: "relative",
     width: "100%",
-    height: 180,
+    height: 160,
   },
   projectImage: {
     width: "100%",
@@ -434,7 +481,7 @@ const styles = StyleSheet.create({
   },
   projectBadgeText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
   },
   ratingBadge: {
@@ -448,14 +495,14 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
   },
   projectInfo: {
     padding: 15,
   },
   projectTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#1a237e",
     marginBottom: 5,
@@ -466,16 +513,16 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   projectLocation: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#757575",
   },
   projectPrice: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#1a237e",
     fontWeight: "bold",
   },
   projectPossession: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#757575",
     marginBottom: 10,
   },
@@ -486,23 +533,22 @@ const styles = StyleSheet.create({
   viewButton: {
     flex: 1,
     backgroundColor: "#1a237e",
-    padding: 12,
+    padding: 10,
     borderRadius: 10,
     alignItems: "center",
   },
   inquiryButton: {
     flex: 1,
     backgroundColor: "#4CAF50",
-    padding: 12,
+    padding: 10,
     borderRadius: 10,
     alignItems: "center",
   },
   buttonText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
   },
-
   /* Pagination */
   paginationContainer: {
     flexDirection: "row",
@@ -516,7 +562,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#1E3A8A",
     marginHorizontal: 4,
   },
-
   /* "See More" Button */
   seeMore: {
     fontSize: 16,
@@ -525,7 +570,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     textAlign: "right",
   },
-  /* Modal */
+  /* Modal for project details */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.7)",
@@ -651,5 +696,59 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  /* Inquiry Modal Styles */
+  inquiryModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  inquiryModalContainer: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  inquiryModalCloseButton: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
+  },
+  inquiryModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 20,
+    color: "#1a237e",
+  },
+  inquiryModalDetails: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  inquiryModalLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#757575",
+    marginTop: 10,
+  },
+  inquiryModalValue: {
+    fontSize: 14,
+    color: "#1a237e",
+    marginTop: 4,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#DDD",
+    marginVertical: 16,
   },
 });

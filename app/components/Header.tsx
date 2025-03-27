@@ -19,7 +19,7 @@ function Header() {
             <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <Path
                 d="M4 6H20M4 12H20M4 18H20"
-                stroke="#3B82F6"
+                stroke="#FFFFFF"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -44,7 +44,7 @@ const styles = {
     justifyContent: "space-between" as "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#232761",
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -60,7 +60,7 @@ const styles = {
     color: "#3B82F6",
   },
   headerTitlePurple: {
-    color: "#232761",
+    color: "#FFFFFF",
   },
   headerActions: {
     flexDirection: "row" as "row",
@@ -73,7 +73,6 @@ const styles = {
     borderRadius: 20,
     justifyContent: "center" as "center",
     alignItems: "center" as FlexAlignType,
-    backgroundColor: "rgba(59, 130, 246, 0.1)",
   },
   scrollView: {
     flex: 1,

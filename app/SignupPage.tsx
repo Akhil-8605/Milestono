@@ -10,7 +10,7 @@ import {
   Image,
   Dimensions,
   Platform,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
       alignSelf: "center",
     },
     logo: {
-      fontSize: 38,
+      fontSize: 30,
       fontWeight: "800",
       color: "#1a237e",
       marginBottom: 32,
@@ -222,14 +222,14 @@ const styles = StyleSheet.create({
       textAlign: "center",
     },
     welcomeText: {
-      fontSize: 20,
+      fontSize: 18,
       color: "#333",
       marginBottom: 6,
       fontWeight: "500",
       textAlign: "center",
     },
     subText: {
-      fontSize: 16,
+      fontSize: 14,
       color: "#666",
       textAlign: "center",
     },
@@ -238,12 +238,12 @@ const styles = StyleSheet.create({
       alignItems: "center",
     },
     input: {
-      width: width*0.8,
-      height: 56,
+      width: width * 0.8,
+      height: 45,
       backgroundColor: "white",
       borderRadius: 9,
       paddingHorizontal: 24,
-      fontSize: 16,
+      fontSize: 14,
       marginBottom: 16,
       borderWidth: 1,
       borderColor: "#E0E0E0",
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     verifyContainer: {
       flexDirection: "row",
       marginBottom: 10,
-      width: width*0.8,
+      width: width * 0.8,
     },
     verifyInput: {
       flex: 1,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     },
     verifyButton: {
       width: 80,
-      height: 56,
+      height: 45,
       backgroundColor: "#1a237e",
       borderRadius: 9,
       alignItems: "center",
@@ -268,13 +268,13 @@ const styles = StyleSheet.create({
     },
     verifyButtonText: {
       color: "white",
-      fontSize: 14,
+      fontSize: 12,
       fontWeight: "600",
     },
     passwordContainer: {
       position: "relative",
       marginBottom: 16,
-      width: width*0.8,
+      width: width * 0.8,
     },
     passwordInput: {
       marginBottom: 0,
@@ -283,19 +283,19 @@ const styles = StyleSheet.create({
     eyeIcon: {
       position: "absolute",
       right: 20,
-      top: 17,
+      top: 10,
       padding: 4,
     },
     termsContainer: {
       flexDirection: "row",
       alignItems: "flex-start",
       marginBottom: 24,
-      width: width*0.8,
+      width: width * 0.8,
       paddingRight: 20,
     },
     checkbox: {
-      width: 18,
-      height: 18,
+      width: 15,
+      height: 15,
       borderWidth: 2,
       borderColor: "#fff",
       borderRadius: 4,
@@ -309,8 +309,8 @@ const styles = StyleSheet.create({
     },
     termsText: {
       flex: 1,
-      color: "#fff",
-      fontSize: 14,
+      color: "#666",
+      fontSize: 12,
       lineHeight: 22,
     },
     linkText: {
@@ -318,8 +318,8 @@ const styles = StyleSheet.create({
       textDecorationLine: "underline",
     },
     signupButton: {
-      width: width*0.8,
-      height: 56,
+      width: width * 0.8,
+      height: 45,
       backgroundColor: "#1a237e",
       borderRadius: 9,
       alignItems: "center",
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     },
     signupButtonText: {
       color: "white",
-      fontSize: 16,
+      fontSize: 14,
       fontWeight: "600",
     },
     loginPrompt: {
@@ -339,13 +339,13 @@ const styles = StyleSheet.create({
     },
     loginText: {
       color: "#666",
-      fontSize: 15,
+      fontSize: 14,
     },
     divider: {
       flexDirection: "row",
       alignItems: "center",
       marginBottom: 24,
-      width: width*0.8,
+      width: width * 0.8,
     },
     dividerLine: {
       flex: 1,
@@ -359,8 +359,8 @@ const styles = StyleSheet.create({
       fontWeight: "500",
     },
     googleButton: {
-      width: width*0.8,
-      height: 56,
+      width: width * 0.8,
+      height: 45,
       backgroundColor: "white",
       borderRadius: 9,
       flexDirection: "row",
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     },
     googleButtonText: {
       color: "#333",
-      fontSize: 16,
+      fontSize: 14,
       fontWeight: "500",
     },
   }),

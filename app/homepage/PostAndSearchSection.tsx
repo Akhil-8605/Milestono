@@ -59,13 +59,15 @@ export default function PropertySearch() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "transparent",
-    padding: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 0,
   },
   headerContainer: {
     marginBottom: 8,
   },
   headerText: {
-    fontSize: 18,
+    fontSize: 15,
     color: "#333",
     fontWeight: "500",
     textAlign: "center",
@@ -86,7 +88,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     padding: 16,
     borderRadius: 12,
-    width: 150,
+    width: 120,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -97,8 +99,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   iconContainer: {
-    width: 70,
-    height: 70,
+    width: 50,
+    height: 50,
     borderRadius: 50,
     backgroundColor: "#E8E8FF",
     justifyContent: "center",
@@ -106,7 +108,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cardText: {
-    fontSize: 18,
+    fontSize: 12,
     color: "#333",
     fontWeight: "500",
   },

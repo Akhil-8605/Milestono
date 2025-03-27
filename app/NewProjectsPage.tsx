@@ -236,7 +236,7 @@ export default function App() {
 
   useEffect(() => {
     Animated.spring(tabIndicatorPosition, {
-      toValue: activeTab === "residential" ? 0 : 225,
+      toValue: activeTab === "residential" ? 0 : 175,
       useNativeDriver: true,
       friction: 8,
       tension: 50,
@@ -1014,14 +1014,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   marqueeContainer: {
-    height: 40,
+    height: 35,
     overflow: "hidden",
     justifyContent: "center",
   },
   marqueeText: {
     width: 1000,
     color: "#fff",
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "bold",
     paddingVertical: 8,
   },
@@ -1029,7 +1029,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backgroundImage: {
-    height: 700,
+    height: 600,
   },
   formWrapper: {
     margin: 20,
@@ -1049,7 +1049,7 @@ const styles = StyleSheet.create({
     borderColor: "#fff",
   },
   formTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#fff",
     marginBottom: 20,
@@ -1061,10 +1061,10 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: "rgba(255, 255, 255, 0.15)",
     borderRadius: 10,
-    padding: 15,
+    padding: 12,
     marginBottom: 15,
     color: "#fff",
-    fontSize: 16,
+    fontSize: 12,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.2)",
     tintColor: "#fff",
@@ -1075,7 +1075,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: "#1a237e",
-    padding: 15,
+    padding: 12,
     borderRadius: 10,
     alignItems: "center",
     shadowColor: "#000",
@@ -1086,14 +1086,14 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "bold",
   },
   projectsSection: {
     padding: 20,
   },
   sectionTitle: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#1a237e",
     textAlign: "center",
@@ -1113,7 +1113,7 @@ const styles = StyleSheet.create({
   },
   tabIndicator: {
     position: "absolute",
-    width: 225,
+    width: 175,
     height: "100%",
     backgroundColor: "rgba(26, 35, 126, 0.1)",
     borderRadius: 10,
@@ -1125,7 +1125,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   tabText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#757575",
     fontWeight: "500",
   },
@@ -1148,7 +1148,7 @@ const styles = StyleSheet.create({
   },
   projectImage: {
     width: "100%",
-    height: 200,
+    height: 175,
   },
   imageGradient: {
     position: "absolute",
@@ -1168,7 +1168,7 @@ const styles = StyleSheet.create({
   },
   projectBadgeText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
   },
   ratingBadge: {
@@ -1182,14 +1182,14 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
   },
   projectInfo: {
     padding: 15,
   },
   projectTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#1a237e",
     marginBottom: 5,
@@ -1201,16 +1201,16 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   projectLocation: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#757575",
   },
   projectPrice: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#1a237e",
     fontWeight: "bold",
   },
   projectPossession: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#757575",
     marginBottom: 10,
   },
@@ -1222,7 +1222,7 @@ const styles = StyleSheet.create({
   viewButton: {
     flex: 1,
     backgroundColor: "#1a237e",
-    padding: 12,
+    padding: 10,
     borderRadius: 10,
     alignItems: "center",
     shadowColor: "#000",
@@ -1234,7 +1234,7 @@ const styles = StyleSheet.create({
   inquiryButton: {
     flex: 1,
     backgroundColor: "#4CAF50",
-    padding: 12,
+    padding: 10,
     borderRadius: 10,
     alignItems: "center",
     shadowColor: "#000",
@@ -1245,7 +1245,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
   },
   pagination: {
@@ -1344,7 +1344,7 @@ const styles = StyleSheet.create({
     maxHeight: 350,
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#1a237e",
     marginBottom: 10,
@@ -1356,16 +1356,16 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   modalLocation: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#757575",
   },
   modalRating: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#FFC107",
     fontWeight: "bold",
   },
   modalStatus: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#4CAF50",
     marginBottom: 15,
   },
@@ -1378,12 +1378,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   priceLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#757575",
     marginRight: 5,
   },
   priceValue: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#1a237e",
     fontWeight: "bold",
   },
@@ -1396,17 +1396,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   possessionLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#757575",
     marginRight: 5,
   },
   possessionValue: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#4CAF50",
     fontWeight: "bold",
   },
   modalDescription: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#424242",
     marginBottom: 20,
     lineHeight: 24,
@@ -1424,7 +1424,7 @@ const styles = StyleSheet.create({
   },
   modalButtonCloseText: {
     color: "#232761",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
   },
   modalInquiryButton: {
@@ -1432,7 +1432,7 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
   },
   famousPlacesContainer: {
@@ -1450,7 +1450,7 @@ const styles = StyleSheet.create({
     padding: 30,
   },
   famousPlacesTitle: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#1a237e",
     textAlign: "center",
@@ -1460,7 +1460,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   famousPlacesSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#757575",
     textAlign: "center",
     marginBottom: 30,
@@ -1480,7 +1480,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stateName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#1a237e",
     marginBottom: 15,
@@ -1501,7 +1501,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cityText: {
-    fontSize: 15,
+    fontSize: 12,
     color: "#424242",
     fontWeight: "500",
   },

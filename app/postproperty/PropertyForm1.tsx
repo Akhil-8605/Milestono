@@ -455,11 +455,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#666",
     marginBottom: 24,
   },
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     marginBottom: 8,
     fontWeight: "500",
   },
@@ -476,14 +476,14 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 8,
     padding: 12,
-    fontSize: 16,
+    fontSize: 12,
   },
   inputError: {
     borderColor: "#ff0000",
   },
   errorText: {
     color: "#ff0000",
-    fontSize: 14,
+    fontSize: 12,
     marginTop: 4,
   },
 
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "600",
     marginBottom: 16,
   },
@@ -504,8 +504,8 @@ const styles = StyleSheet.create({
 
   /* SELECTION BUTTONS */
   selectionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 9,
     borderWidth: 1,
     borderColor: "#ddd",
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
   },
   selectionText: {
     color: "#333",
-    fontSize: 16,
+    fontSize: 12,
   },
   selectedText: {
     color: "#fff",
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 8,
     padding: 12,
-    fontSize: 16,
+    fontSize: 12,
   },
   addButton: {
     backgroundColor: "#222761",
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "600",
   },
 

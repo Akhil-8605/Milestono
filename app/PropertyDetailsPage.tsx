@@ -164,7 +164,7 @@ export default function PropertyListing() {
               <TouchableOpacity style={styles.headerButton}>
                 <Icon
                   name="share-variant"
-                  size={22}
+                  size={20}
                   color={COLORS.background}
                 />
               </TouchableOpacity>
@@ -173,11 +173,11 @@ export default function PropertyListing() {
                 onPress={() => sethearClicked(!heartClicked)}
               >
                 {heartClicked ? (
-                  <Icon name="heart" size={22} color={"red"} />
+                  <Icon name="heart" size={20} color={"red"} />
                 ) : (
                   <Icon
                     name="heart-outline"
-                    size={22}
+                    size={20}
                     color={COLORS.background}
                   />
                 )}
@@ -367,7 +367,7 @@ const LocationCard = () => (
   <TouchableOpacity style={styles.locationCard}>
     <View style={styles.locationContent}>
       <View style={styles.locationHeader}>
-        <Icon name="map-marker" size={24} color={COLORS.primary} />
+        <Icon name="map-marker" size={18} color={COLORS.primary} />
         <Text style={styles.locationTitle}>Location</Text>
       </View>
       <Text style={styles.locationText}>Phule Nagar Akkuj</Text>
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "700",
     color: COLORS.background,
   },
@@ -596,17 +596,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   priceLabel: {
-    fontSize: 16,
+    fontSize: 12,
     color: COLORS.textLight,
     marginBottom: 4,
   },
   priceValue: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
     color: COLORS.primary,
   },
   pricePerSqFt: {
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.textLight,
     marginTop: 4,
   },
@@ -635,13 +635,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.textLight,
     marginBottom: 4,
     textAlign: "center",
   },
   detailValue: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: COLORS.text,
     textAlign: "center",
@@ -676,7 +676,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   locationSubtext: {
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.secondary,
   },
   contactSection: {
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   contactTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: COLORS.text,
     marginBottom: 16,
@@ -708,13 +708,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
-    padding: 12,
+    padding: 10,
     borderRadius: 8,
     marginRight: 8,
   },
   buttonText: {
     color: COLORS.background,
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "500",
     marginLeft: 8,
   },

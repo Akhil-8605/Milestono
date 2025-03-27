@@ -345,7 +345,12 @@ interface CustomCheckboxProps {
   style?: object;
 }
 
-const CustomCheckbox: React.FC<CustomCheckboxProps> = ({ checked, onPress, label, style = {} }) => {
+const CustomCheckbox: React.FC<CustomCheckboxProps> = ({
+  checked,
+  onPress,
+  label,
+  style = {},
+}) => {
   const scaleAnim = useRef(new Animated.Value(checked ? 1 : 0)).current;
 
   useEffect(() => {
@@ -407,7 +412,11 @@ interface CustomCardProps {
   onPress?: () => void;
 }
 
-const CustomCard: React.FC<CustomCardProps> = ({ children, style = {}, onPress }) => {
+const CustomCard: React.FC<CustomCardProps> = ({
+  children,
+  style = {},
+  onPress,
+}) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
@@ -458,7 +467,15 @@ const CustomCard: React.FC<CustomCardProps> = ({ children, style = {}, onPress }
 };
 
 // Banks Table Component
-const BanksTable = ({ onGetDeal, loanAmount, tenure }: { onGetDeal: (bankName: string) => void, loanAmount: string, tenure: string }) => {
+const BanksTable = ({
+  onGetDeal,
+  loanAmount,
+  tenure,
+}: {
+  onGetDeal: (bankName: string) => void;
+  loanAmount: string;
+  tenure: string;
+}) => {
   const scrollX = useRef(new Animated.Value(0)).current;
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
@@ -517,7 +534,11 @@ const BanksTable = ({ onGetDeal, loanAmount, tenure }: { onGetDeal: (bankName: s
     },
   ];
 
-  function calculateEMI(principal: string, rate: number, years: string): string {
+  function calculateEMI(
+    principal: string,
+    rate: number,
+    years: string
+  ): string {
     if (!principal || !rate || !years) return "₹0";
 
     const p = parseFloat(principal.replace(/,/g, ""));
@@ -553,7 +574,13 @@ const BanksTable = ({ onGetDeal, loanAmount, tenure }: { onGetDeal: (bankName: s
     };
   }, [activeIndex, banks.length]);
 
-  const renderBankCard = ({ item, index }: { item: typeof banks[0]; index: number }) => {
+  const renderBankCard = ({
+    item,
+    index,
+  }: {
+    item: (typeof banks)[0];
+    index: number;
+  }) => {
     const inputRange = [
       (index - 1) * width,
       index * width,
@@ -668,7 +695,11 @@ const BanksTable = ({ onGetDeal, loanAmount, tenure }: { onGetDeal: (bankName: s
     );
   };
 
-  const onScrollToIndexFailed = (info: { index: number; highestMeasuredFrameIndex: number; averageItemLength: number; }) => {
+  const onScrollToIndexFailed = (info: {
+    index: number;
+    highestMeasuredFrameIndex: number;
+    averageItemLength: number;
+  }) => {
     const wait = new Promise((resolve) => setTimeout(resolve, 500));
     wait.then(() => {
       if (flatListRef.current) {
@@ -759,7 +790,7 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onCalculate }) => {
     principal: number;
     interest: number;
   }
-  
+
   const [chartData, setChartData] = useState<ChartData[]>([]);
 
   const [isCalculating, setIsCalculating] = useState(false);
@@ -874,7 +905,11 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onCalculate }) => {
     generateChartData(maxLoan, totalPayableAmount, tenureNum);
   };
 
-  const generateChartData = (principal: number, totalAmount: number, years: number) => {
+  const generateChartData = (
+    principal: number,
+    totalAmount: number,
+    years: number
+  ) => {
     const interestAmount = totalAmount - principal;
     const newChartData = [];
 
@@ -1061,7 +1096,12 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onCalculate }) => {
                 <Path
                   d={createPrincipalPath()}
                   fill="url(#principalGradient)"
-                  opacity={chartAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }) as unknown as number}
+                  opacity={
+                    chartAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 1],
+                    }) as unknown as number
+                  }
                 />
 
                 {/* Total area */}
@@ -1078,10 +1118,12 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onCalculate }) => {
                   strokeWidth="3"
                   fill="none"
                   strokeDasharray={pathLength.current}
-                  strokeDashoffset={animatedPathLength.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [pathLength.current, 0],
-                  }) as unknown as number}
+                  strokeDashoffset={
+                    animatedPathLength.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [pathLength.current, 0],
+                    }) as unknown as number
+                  }
                 />
 
                 {/* Data points */}
@@ -1291,7 +1333,10 @@ const HomeLoanPage = () => {
     });
   };
 
-  const handleCalculatorResults = (results: { loanAmount: string; tenure: string }) => {
+  const handleCalculatorResults = (results: {
+    loanAmount: string;
+    tenure: string;
+  }) => {
     if (results && results.loanAmount) {
       setLoanAmount(results.loanAmount);
     }
@@ -1300,10 +1345,10 @@ const HomeLoanPage = () => {
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+  const statusBarHeight = StatusBar.currentHeight || 0;
 
+  return (
+    <SafeAreaView style={[styles.container, {marginTop: statusBarHeight }]}>
       {/* Header */}
       <Header />
 
@@ -1448,7 +1493,6 @@ const HomeLoanPage = () => {
             </View>
 
             <ScrollView
-              style={styles.modalBody}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.modalBodyContent}
             >

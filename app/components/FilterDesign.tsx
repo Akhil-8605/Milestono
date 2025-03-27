@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "600",
     color: "#333",
   },
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "#444",
     marginBottom: 12,
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     borderColor: "#0066cc",
   },
   optionText: {
-    fontSize: 15,
+    fontSize: 12,
     color: "#555",
   },
   selectedChipText: {
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sliderLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
   },
   sliderContainer: {
@@ -454,13 +454,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   rangeInput: {
-    flex: 1,
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 25,
+    width: 150,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    fontSize: 16,
+    fontSize: 12,
     backgroundColor: "#f9f9f9",
   },
   bottomContainer: {
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#0066cc",
@@ -481,19 +481,19 @@ const styles = StyleSheet.create({
   },
   clearButtonText: {
     color: "#0066cc",
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "600",
   },
   applyButton: {
     flex: 2,
-    paddingVertical: 14,
+    paddingVertical: 10,
     backgroundColor: "#0066cc",
     borderRadius: 25,
     alignItems: "center",
   },
   applyButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "600",
   },
 });

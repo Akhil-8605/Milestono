@@ -239,8 +239,8 @@ export default function UserFeedbackSection() {
           >
             <Text style={styles.viewAllText}>View all</Text>
             <ChevronRight
-              width={16}
-              height={16}
+              width={14}
+              height={14}
               color="#4A4A9C"
               strokeWidth={2}
             />
@@ -445,13 +445,13 @@ const styles = StyleSheet.create({
   },
   headerAccent: {
     width: 4,
-    height: 24,
+    height: 20,
     backgroundColor: "#232761",
     borderRadius: 2,
     marginRight: 12,
   },
   heading: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "700",
     color: "#1F2937",
     letterSpacing: -0.5,
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   viewAllText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "600",
     color: "#4A4A9C",
     marginRight: 4,
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   message: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "400",
     color: "#4B5563",
     lineHeight: 24,
@@ -562,8 +562,8 @@ const styles = StyleSheet.create({
     borderColor: "#4F46E5",
   },
   avatar: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     borderRadius: 25,
   },
   verifiedBadge: {
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
     marginLeft: 15,
   },
   userName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "700",
     color: "#1F2937",
     letterSpacing: -0.3,
@@ -597,12 +597,12 @@ const styles = StyleSheet.create({
     color: "#1F2937",
   },
   userPosition: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#6B7280",
     marginTop: 2,
   },
   date: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#9CA3AF",
     marginTop: 4,
   },

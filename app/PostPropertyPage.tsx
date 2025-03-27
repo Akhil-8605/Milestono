@@ -3,6 +3,7 @@ import { View, StyleSheet, StatusBar } from "react-native";
 import Form1 from "./postproperty/PropertyForm1";
 import Form2 from "./postproperty/PropertyForm2";
 import Form3 from "./postproperty/PropertyForm3";
+import Header from "./components/Header";
 
 const PostProperty = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -30,6 +31,7 @@ const PostProperty = () => {
 
   return (
     <View style={[styles.container,{marginTop: statusBarHeight}]}>
+      <Header/>
       {currentStep === 1 && (
         <Form1
           formData={formData}

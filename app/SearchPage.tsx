@@ -183,9 +183,9 @@ const PropertySearchAndFilter = () => {
 
         {/* Current Location */}
         <TouchableOpacity style={styles.locationButton}>
-          <Icon name="crosshairs-gps" size={20} color="#0066cc" />
+          <Icon name="crosshairs-gps" size={16} color="#0066cc" />
           <Text style={styles.locationText}>Use my Current Location</Text>
-          <Icon name="chevron-right" size={20} color="#666" />
+          <Icon name="chevron-right" size={16} color="#666" />
         </TouchableOpacity>
 
         {/* Popular Cities */}
@@ -203,7 +203,7 @@ const PropertySearchAndFilter = () => {
               >
                 <Icon
                   name={selectedCity === city ? "check" : "plus"}
-                  size={16}
+                  size={14}
                   color={selectedCity === city ? "#fff" : "#0066cc"}
                 />
                 <Text
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
   },
   typeButton: {
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     borderRadius: 20,
     marginRight: 8,
   },
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
   },
   typeText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "500",
   },
   selectedTypeText: {
@@ -639,8 +639,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 9,
-    padding: 12,
-    fontSize: 16,
+    padding: 10,
+    fontSize: 14,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -657,14 +657,14 @@ const styles = StyleSheet.create({
   locationText: {
     flex: 1,
     marginLeft: 12,
-    fontSize: 16,
+    fontSize: 14,
     color: "#0066cc",
   },
   citiesSection: {
     padding: 16,
   },
   citiesTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "600",
     marginBottom: 16,
     color: "#333",
@@ -690,14 +690,14 @@ const styles = StyleSheet.create({
   },
   cityText: {
     marginLeft: 8,
-    fontSize: 14,
+    fontSize: 12,
     color: "#333",
   },
   selectedCityText: {
     color: "#fff",
   },
   nextButtonContainer: {
-    padding: 16,
+    padding: 12,
     borderTopWidth: 1,
     borderTopColor: "#eee",
     backgroundColor: "#fff",
@@ -713,7 +713,7 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
   // Filter View Styles
@@ -739,7 +739,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "600",
     marginBottom: 16,
     color: "#333",
@@ -762,7 +762,7 @@ const styles = StyleSheet.create({
   },
   bedroomText: {
     color: "#333",
-    fontSize: 15,
+    fontSize: 12,
   },
   selectedChipText: {
     color: "#0066cc",
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   rangeText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
   },
   budgetContainer: {
@@ -786,8 +786,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 25,
-    padding: 12,
-    fontSize: 16,
+    padding: 10,
+    paddingHorizontal: 15,
+    fontSize: 12,
   },
   bottomButtons: {
     flexDirection: "row",
@@ -796,23 +797,23 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     flex: 1,
-    padding: 16,
+    padding: 12,
     alignItems: "center",
   },
   clearButtonText: {
     color: "#232761",
-    fontSize: 16,
+    fontSize: 14,
   },
   seeAllButton: {
-    flex: 2,
+    flex: 1.5,
     backgroundColor: "#232761",
-    padding: 16,
+    padding: 12,
     borderRadius: 8,
     alignItems: "center",
   },
   seeAllButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
 });

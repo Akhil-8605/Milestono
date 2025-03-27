@@ -59,12 +59,12 @@ const styles = StyleSheet.create({
   },
   headerText: {
     color: "#6B7280",
-    fontSize: 14,
+    fontSize: 12,
     marginBottom: 16,
     letterSpacing: 0.5,
   },
   title: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: "700",
     color: "#1E1B4B",
     textAlign: "center",
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     lineHeight: 40,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#6B7280",
     textAlign: "center",
     marginBottom: 32,
@@ -87,13 +87,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statNumber: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "700",
     color: "#1E1B4B",
     marginBottom: 4,
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#6B7280",
   },
   button: {

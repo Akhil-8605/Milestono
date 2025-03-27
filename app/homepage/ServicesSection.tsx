@@ -86,13 +86,13 @@ const styles = StyleSheet.create({
     marginBottom: 300,
   },
   brandName: {
-    fontSize: 16,
+    fontSize: 12,
     color: "#666666",
     marginBottom: 0,
     fontWeight: "400",
   },
   heading: {
-    fontSize: 30,
+    fontSize: 25,
     fontWeight: "700",
     color: "#1E1B4B",
     marginBottom: 12,
@@ -137,13 +137,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   serviceTitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#1A1A1A",
     fontWeight: "500",
     marginBottom: 4,
   },
   serviceDescription: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666666",
     lineHeight: 20,
   },

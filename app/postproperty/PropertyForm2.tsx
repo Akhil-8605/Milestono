@@ -456,11 +456,11 @@ const styles = StyleSheet.create({
     paddingBottom: 60, // offset for bottom bar
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#666",
     marginBottom: 24,
   },
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     marginBottom: 16,
   },
@@ -476,8 +476,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+    padding: 10,
+    fontSize: 12,
     marginBottom: 12,
   },
   inputError: {
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: "#ff0000",
-    fontSize: 14,
+    fontSize: 12,
     marginTop: 4,
   },
   mapContainer: {
@@ -520,8 +520,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   RoundedselectionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     borderRadius: 25,
     borderWidth: 1,
     borderColor: "#ddd",
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
   },
   selectionText: {
     color: "#333",
-    fontSize: 16,
+    fontSize: 10,
   },
   selectedText: {
     color: "#ffffff",
@@ -560,8 +560,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   checkboxBox: {
-    width: 20,
-    height: 20,
+    width: 15,
+    height: 15,
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 4,
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
     borderColor: "#0066CC",
   },
   checkboxLabel: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#333",
   },
 
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 8,
     padding: 12,
-    fontSize: 16,
+    fontSize: 14,
     height: 100,
     textAlignVertical: "top",
   },

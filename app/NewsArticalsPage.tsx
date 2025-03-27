@@ -12,6 +12,7 @@ import {
   StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
+import Header from "./components/Header";
 
 const { width } = Dimensions.get("window");
 const cardWidth = width - 32; // Accounting for container padding
@@ -145,92 +146,97 @@ export default function NewsAndArticles() {
   const statusBarHeight = StatusBar.currentHeight || 0;
 
   return (
-    <View style={[styles.container, { marginTop: statusBarHeight }]}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>All Real Estate News & Articles</Text>
-        <TouchableOpacity
-          style={styles.dropdown}
-          onPress={() => setShowModal(true)}
-        >
-          <Text>{itemsPerPage}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={getCurrentData()}
-        renderItem={({ item }) => <ArticleCard article={item} />}
-        keyExtractor={(item, index) => `${item.id}-${index}`}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
-
-      <View style={styles.pagination}>
-        <TouchableOpacity
-          style={[
-            styles.pageButton,
-            currentPage === 1 && styles.disabledButton,
-          ]}
-          disabled={currentPage === 1}
-          onPress={() => setCurrentPage((prev) => prev - 1)}
-        >
-          <Text
-            style={[
-              styles.pageButtonText,
-              currentPage === 1 && styles.disabledButtonText,
-            ]}
-          >
-            Prev
+    <View style={{flex: 1, marginTop: statusBarHeight }}>
+      <Header/>
+      <View style={[styles.container]}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>
+            All Real Estate News & Articles
           </Text>
-        </TouchableOpacity>
-
-        {renderPaginationButtons()}
-
-        <TouchableOpacity
-          style={[
-            styles.pageButton,
-            currentPage === totalPages && styles.disabledButton,
-          ]}
-          disabled={currentPage === totalPages}
-          onPress={() => setCurrentPage((prev) => prev + 1)}
-        >
-          <Text
-            style={[
-              styles.pageButtonText,
-              currentPage === totalPages && styles.disabledButtonText,
-            ]}
+          <TouchableOpacity
+            style={styles.dropdown}
+            onPress={() => setShowModal(true)}
           >
-            Next
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <Text>{itemsPerPage}</Text>
+          </TouchableOpacity>
+        </View>
 
-      <Modal
-        visible={showModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowModal(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setShowModal(false)}
+        <FlatList
+          data={getCurrentData()}
+          renderItem={({ item }) => <ArticleCard article={item} />}
+          keyExtractor={(item, index) => `${item.id}-${index}`}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+
+        <View style={styles.pagination}>
+          <TouchableOpacity
+            style={[
+              styles.pageButton,
+              currentPage === 1 && styles.disabledButton,
+            ]}
+            disabled={currentPage === 1}
+            onPress={() => setCurrentPage((prev) => prev - 1)}
+          >
+            <Text
+              style={[
+                styles.pageButtonText,
+                currentPage === 1 && styles.disabledButtonText,
+              ]}
+            >
+              Prev
+            </Text>
+          </TouchableOpacity>
+
+          {renderPaginationButtons()}
+
+          <TouchableOpacity
+            style={[
+              styles.pageButton,
+              currentPage === totalPages && styles.disabledButton,
+            ]}
+            disabled={currentPage === totalPages}
+            onPress={() => setCurrentPage((prev) => prev + 1)}
+          >
+            <Text
+              style={[
+                styles.pageButtonText,
+                currentPage === totalPages && styles.disabledButtonText,
+              ]}
+            >
+              Next
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <Modal
+          visible={showModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowModal(false)}
         >
-          <View style={styles.modalContent}>
-            {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.toString()}
-                style={styles.modalItem}
-                onPress={() => {
-                  setItemsPerPage(option);
-                  setCurrentPage(1);
-                  setShowModal(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{option}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Pressable>
-      </Modal>
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={() => setShowModal(false)}
+          >
+            <View style={styles.modalContent}>
+              {ITEMS_PER_PAGE_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.toString()}
+                  style={styles.modalItem}
+                  onPress={() => {
+                    setItemsPerPage(option);
+                    setCurrentPage(1);
+                    setShowModal(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{option}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
+      </View>
     </View>
   );
 }
@@ -248,7 +254,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "700",
     color: "#333",
   },
@@ -279,8 +285,8 @@ const styles = StyleSheet.create({
     borderColor: "lightgrey",
   },
   image: {
-    width: 150,
-    height: 150,
+    width: 125,
+    height: 125,
     borderTopLeftRadius: 15,
     borderBottomLeftRadius: 15,
   },
@@ -289,12 +295,12 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
   },
   title: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#222",
   },
   description: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#666",
     marginVertical: 4,
   },
@@ -310,7 +316,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#242a80",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
   },
   pagination: {

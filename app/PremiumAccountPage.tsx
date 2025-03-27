@@ -15,10 +15,12 @@ import {
   NativeSyntheticEvent,
   Modal,
   TouchableWithoutFeedback,
+  Linking,
 } from "react-native";
 import { SvgXml } from "react-native-svg";
 import { BlurView } from "expo-blur";
-
+import Header from "./components/Header";
+import { useRouter } from "expo-router";
 const { width, height } = Dimensions.get("window");
 
 interface Plan {
@@ -285,6 +287,14 @@ const PricingPage: React.FC = () => {
           modalBg: "#f0f9ff",
           modalHeader: "#0284c7",
         };
+    }
+  };
+
+  const TermsPage = async () => {
+    try {
+      await Linking.openURL(`https://milestono.com/terms-condition`);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -672,8 +682,8 @@ const PricingPage: React.FC = () => {
                                 ? shieldSvg
                                 : checkmarkSvg
                           }
-                          width={24}
-                          height={24}
+                          width={20}
+                          height={20}
                           color={colors.accent}
                           style={styles.modalBenefitIcon}
                         />
@@ -723,7 +733,10 @@ const PricingPage: React.FC = () => {
                       </TouchableOpacity>
                     </Animated.View>
 
-                    <TouchableOpacity style={styles.termsButton}>
+                    <TouchableOpacity
+                      style={styles.termsButton}
+                      onPress={() => TermsPage()}
+                    >
                       <Text
                         style={[
                           styles.termsButtonText,
@@ -754,10 +767,12 @@ const PricingPage: React.FC = () => {
     setActivePlanIndex(index);
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+  const statusBarHeight = StatusBar.currentHeight || 0;
+  const router = useRouter();
 
+  return (
+    <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
+      <Header />
       {/* Animated background */}
       <Animated.View
         style={[
@@ -896,7 +911,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "bold",
     color: "#1e293b",
     marginBottom: 8,
@@ -962,16 +977,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   planName: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "bold",
     marginBottom: 2,
   },
   planSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     opacity: 0.8,
   },
   responseText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     marginBottom: 24,
   },
@@ -984,10 +999,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   checkmark: {
-    marginRight: 12,
+    marginRight: 10,
   },
   featureText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#4b5563",
     flex: 1,
     lineHeight: 22,
@@ -1005,14 +1020,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f5f9",
   },
   periodOption: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
     minWidth: 100,
     alignItems: "center",
   },
   periodText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "600",
   },
   savingsText: {
@@ -1030,25 +1045,25 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -16,
     right: "30%",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
     color: "#94a3b8",
     textDecorationLine: "line-through",
   },
   currencySymbol: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: "bold",
     marginBottom: 6,
     color: "#1e293b",
   },
   priceAmount: {
-    fontSize: 42,
+    fontSize: 30,
     fontWeight: "bold",
     color: "#1e293b",
     letterSpacing: -1,
   },
   periodLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
     color: "#64748b",
     marginBottom: 6,
@@ -1062,7 +1077,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   ctaButton: {
-    paddingVertical: 18,
+    paddingVertical: 14,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
@@ -1074,7 +1089,7 @@ const styles = StyleSheet.create({
   },
   ctaButtonText: {
     color: "white",
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "700",
   },
   pagination: {
@@ -1121,7 +1136,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(0, 0, 0, 0.1)",
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "white",
   },
@@ -1145,13 +1160,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   modalSectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#1e293b",
     marginBottom: 12,
   },
   modalDescription: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#4b5563",
     lineHeight: 24,
   },
@@ -1162,7 +1177,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   modalPriceLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: "#1e293b",
     marginBottom: 8,
@@ -1177,9 +1192,9 @@ const styles = StyleSheet.create({
   },
   modalOriginalPrice: {
     position: "absolute",
-    top: -16,
+    top: -10,
     right: "30%",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
     color: "#94a3b8",
     textDecorationLine: "line-through",
@@ -1191,20 +1206,20 @@ const styles = StyleSheet.create({
     color: "#1e293b",
   },
   modalPriceAmount: {
-    fontSize: 42,
+    fontSize: 35,
     fontWeight: "bold",
     color: "#1e293b",
     letterSpacing: -1,
   },
   modalPeriodLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
     color: "#64748b",
     marginBottom: 6,
     marginLeft: 2,
   },
   modalPriceSubtext: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#64748b",
     textAlign: "center",
   },
@@ -1218,13 +1233,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   modalBenefitText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#4b5563",
     flex: 1,
     lineHeight: 24,
   },
   modalBillingText: {
-    fontSize: 15,
+    fontSize: 13,
     color: "#4b5563",
     marginBottom: 8,
     lineHeight: 22,
@@ -1235,7 +1250,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buyNowButton: {
-    paddingVertical: 18,
+    paddingVertical: 15,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
@@ -1249,14 +1264,14 @@ const styles = StyleSheet.create({
   },
   buyNowButtonText: {
     color: "white",
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "700",
   },
   termsButton: {
     paddingVertical: 8,
   },
   termsButtonText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "500",
     textDecorationLine: "underline",
   },

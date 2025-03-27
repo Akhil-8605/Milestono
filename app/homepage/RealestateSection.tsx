@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   tabText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "600",
     color: "#666",
   },
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     width: "100%",
-    height: 250,
+    height: 225,
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
@@ -170,13 +170,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#FFF",
     marginBottom: 10,
   },
   description: {
-    fontSize: 16,
+    fontSize: 14,
     textAlign: "center",
     color: "#FFF",
     paddingHorizontal: 10,

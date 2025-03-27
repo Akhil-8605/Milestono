@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   heading: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: "700",
     color: "#333333",
     marginBottom: 5,
@@ -53,7 +53,8 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   subHeading: {
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: "600",
     color: "#666",
     marginBottom: 15,
   },

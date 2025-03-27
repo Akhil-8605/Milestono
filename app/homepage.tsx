@@ -28,11 +28,6 @@ import AboutMilestono from "./homepage/AboutMilestono";
 import Footer from "./components/Footer"
 import ReviewSection from "./components/ReviewSection"
 export default function homepage() {
-  const [menuOpen, setMenuOpen] = useState(true);
-
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
   return (
     <ScrollView
       style={{ position: "relative", flex: 1, backgroundColor: "#f5f5f5" }}

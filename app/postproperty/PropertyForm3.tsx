@@ -229,11 +229,11 @@ const styles = StyleSheet.create({
     paddingBottom: 60, // offset for bottom bar
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#666",
     marginBottom: 24,
   },
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     marginBottom: 25,
   },
@@ -256,13 +256,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   uploadText: {
-    fontSize: 18,
+    fontSize: 16,
     color: "#242a80",
     fontWeight: "600",
     marginBottom: 8,
   },
   uploadSubtext: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
   },
   photoGrid: {
@@ -289,8 +289,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   selectionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     borderRadius: 9,
     borderWidth: 1,
     borderColor: "#ddd",
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   },
   selectionText: {
     color: "#333",
-    fontSize: 16,
+    fontSize: 12,
   },
   selectedText: {
     color: "#ffffff",

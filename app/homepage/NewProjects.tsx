@@ -17,7 +17,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { LinearGradient } from "expo-linear-gradient";
 
 const { width } = Dimensions.get("window");
-const cardWidth = width * 0.85;
+const cardWidth = width * 0.75;
 
 /* ---------- SAMPLE NEW PROJECT DATA (residential + commercial) ---------- */
 const residentialProjects = [
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   heading: {
-    fontSize: 32,
+    fontSize: 25,
     fontWeight: "700",
     marginBottom: 25,
     color: "#333333",
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   projectImageContainer: {
     position: "relative",
     width: "100%",
-    height: 180,
+    height: 160,
   },
   projectImage: {
     width: "100%",
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
   },
   projectBadgeText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
   },
   ratingBadge: {
@@ -501,14 +501,14 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
   },
   projectInfo: {
     padding: 15,
   },
   projectTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#1a237e",
     marginBottom: 5,
@@ -519,16 +519,16 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   projectLocation: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#757575",
   },
   projectPrice: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#1a237e",
     fontWeight: "bold",
   },
   projectPossession: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#757575",
     marginBottom: 10,
   },
@@ -539,20 +539,20 @@ const styles = StyleSheet.create({
   viewButton: {
     flex: 1,
     backgroundColor: "#1a237e",
-    padding: 12,
+    padding: 10,
     borderRadius: 10,
     alignItems: "center",
   },
   inquiryButton: {
     flex: 1,
     backgroundColor: "#4CAF50",
-    padding: 12,
+    padding: 10,
     borderRadius: 10,
     alignItems: "center",
   },
   buttonText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
   },
   /* Pagination */

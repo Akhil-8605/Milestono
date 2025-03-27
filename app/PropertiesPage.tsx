@@ -106,7 +106,7 @@ const PropertyCard = ({ property }: { property: Property }) => {
             navigation.navigate("PropertyDetailsPage" as never);
           }}
         >
-          <Icon name="eye-outline" size={20} color="#fff" />
+          <Icon name="eye-outline" size={18} color="#fff" />
           <Text style={styles.viewButtonText}>View Details</Text>
         </TouchableOpacity>
       </View>
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   searchContainer: {
-    padding: 12,
+    padding: 8,
     backgroundColor: "#fff",
     elevation: 2,
     shadowColor: "#000",
@@ -295,12 +295,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f5f5f5",
     borderRadius: 8,
-    padding: 8,
+    paddingHorizontal: 8,
   },
   input: {
     flex: 1,
     paddingLeft: 8,
-    fontSize: 16,
+    fontSize: 12,
     color: "#333",
     outlineColor: "#f5f5f5",
     outline: "none",
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
   propertyImage: {
     width: "100%",
-    height: 180,
+    height: 150,
     backgroundColor: "#e0e0e0",
   },
   propertyTypeTag: {
@@ -348,20 +348,20 @@ const styles = StyleSheet.create({
     top: 12,
     left: 12,
     backgroundColor: "#232761",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 4,
   },
   propertyTypeText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "600",
   },
   cardContent: {
     padding: 16,
   },
   propertyTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "#333",
     marginBottom: 12,
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     marginLeft: 4,
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
   },
   priceContainer: {
@@ -387,11 +387,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   pricePerSqft: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
   },
   price: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     color: "#333",
   },
@@ -400,12 +400,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   depositLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginRight: 4,
   },
   depositAmount: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "600",
     color: "#333",
   },
@@ -414,13 +414,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 12,
+    padding: 10,
     borderRadius: 8,
     gap: 8,
   },
   viewButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
   // Modal Styles

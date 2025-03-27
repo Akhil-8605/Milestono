@@ -291,7 +291,7 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.menuHeader]}
           activeOpacity={0.7}
-          onPress={() => {
+          onPress={() => {onClose(); 
             navigation.navigate("FaqsPage" as never);
           }}
         >

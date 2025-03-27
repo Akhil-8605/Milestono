@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 100,
     paddingBottom: 40,
     alignSelf: "center",
     width: "100%",
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   logo: {
-    fontSize: 38,
+    fontSize: 35,
     fontWeight: "800",
     color: "#1a237e",
     marginBottom: 32,
@@ -184,14 +184,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   welcomeText: {
-    fontSize: 20,
+    fontSize: 18,
     color: "#333",
     marginBottom: 6,
     fontWeight: "500",
     textAlign: "center",
   },
   subText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#666",
     textAlign: "center",
   },
@@ -201,11 +201,11 @@ const styles = StyleSheet.create({
   },
   input: {
     width: width * 0.8,
-    height: 56,
+    height: 45,
     backgroundColor: "white",
     borderRadius: 9,
-    paddingHorizontal: 24,
-    fontSize: 16,
+    paddingHorizontal: 20,
+    fontSize: 14,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: "#E0E0E0",
@@ -223,17 +223,17 @@ const styles = StyleSheet.create({
   eyeIcon: {
     position: "absolute",
     right: 20,
-    top: 17,
+    top: 10,
     padding: 4,
   },
   forgotPassword: {
     alignSelf: "flex-end",
-    marginBottom: 24,
+    marginBottom: 18,
     marginTop: 8,
   },
   forgotPasswordText: {
     color: "#fff",
-    fontSize: 15,
+    fontSize: 14,
   },
   termsContainer: {
     flexDirection: "row",
@@ -242,8 +242,8 @@ const styles = StyleSheet.create({
     width: width * 0.8,
   },
   checkbox: {
-    width: 18,
-    height: 18,
+    width: 15,
+    height: 15,
     borderWidth: 2,
     borderColor: "#1a237e",
     borderRadius: 4,
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   termsText: {
     flex: 1,
     color: "#333",
-    fontSize: 14,
+    fontSize: 12,
     lineHeight: 22,
   },
   linkText: {
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     width: width * 0.8,
-    height: 56,
+    height: 45,
     backgroundColor: "#1a237e",
     borderRadius: 9,
     alignItems: "center",
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
   divider: {
@@ -287,17 +287,17 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "#000000",
   },
   dividerText: {
-    color: "#fff",
+    color: "#000000",
     paddingHorizontal: 16,
     fontSize: 14,
     fontWeight: "500",
   },
   googleButton: {
     width: width * 0.8,
-    height: 56,
+    height: 45,
     backgroundColor: "white",
     borderRadius: 9,
     flexDirection: "row",
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     color: "#333",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
   },
   signupContainer: {
@@ -322,11 +322,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   signupText: {
-    color: "#666",
+    color: "#fff",
     fontSize: 15,
   },
   signupTextLink: {
-    color: "#fff",
+    color: "#666",
     textDecorationLine: "underline",
   },
 });

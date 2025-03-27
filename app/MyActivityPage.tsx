@@ -262,7 +262,7 @@ export default function PropertyActivities() {
       case "viewed":
         return (
           <View style={styles.sectionContainer}>
-            <Text style={{ fontSize: 28, fontWeight: 700, color: "#333333" }}>
+            <Text style={{ fontSize: 22, fontWeight: 700, color: "#333333" }}>
               Viewed Properties
             </Text>
             <Text style={styles.sectionSubtitle}>
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#2563eb",
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     fontWeight: "500",
   },
@@ -394,13 +394,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionTitle: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: 700,
     color: "#333333",
     marginBottom: 16,
   },
   sectionSubtitle: {
-    fontSize: 15,
+    fontSize: 12,
     color: "#666",
     fontWeight: "500",
     marginBottom: 16,
@@ -421,20 +421,20 @@ const styles = StyleSheet.create({
   },
   viewedImage: {
     width: "100%",
-    height: 200,
+    height: 120,
     borderBottomWidth: 1,
     borderColor: "lightgrey",
   },
   viewedContent: {
-    padding: 16,
+    padding: 14,
   },
   viewedTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     marginBottom: 4,
   },
   viewedLocation: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
   },
   // Posted Property Card Styles
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   postedImage: {
     width: "100%",
-    height: 200,
+    height: 125,
     borderBottomWidth: 1,
     borderColor: "lightgrey",
   },
@@ -461,12 +461,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   postedTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "600",
     marginBottom: 8,
   },
   postedDescription: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginBottom: 12,
   },
@@ -484,11 +484,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tagText: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#666",
   },
   price: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     marginBottom: 12,
   },
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   },
   shortlistedImage: {
     width: "100%",
-    height: 200,
+    height: 120,
     borderBottomWidth: 1,
     borderColor: "lightgrey",
   },
@@ -516,17 +516,17 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   shortlistedTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     marginBottom: 4,
   },
   shortlistedLocation: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginBottom: 4,
   },
   shortlistedPrice: {
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: "700",
     marginVertical: 8,
   },
@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   contactedImage: {
-    width: 120,
+    width: 125,
     height: "100%",
     borderRadius: 8,
   },
@@ -557,23 +557,23 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   contactedTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     marginBottom: 4,
   },
   contactedLocation: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginBottom: 4,
   },
   contactedStatus: {
     color: "#10b981",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "500",
     marginVertical: 4,
   },
   dateText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
     marginVertical: 4,
   },
@@ -581,27 +581,27 @@ const styles = StyleSheet.create({
   viewButton: {
     backgroundColor: "#232761",
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     borderRadius: 6,
     alignItems: "center",
     flex: 1,
   },
   viewButtonText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "500",
   },
   removeButton: {
     backgroundColor: "#ef4444",
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     borderRadius: 6,
     alignItems: "center",
     flex: 1,
   },
   removeButtonText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "500",
   },
 });
