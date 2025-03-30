@@ -9,9 +9,10 @@ import {
   StatusBar,
   Animated,
   Pressable,
+  Linking
 } from "react-native";
 import Svg, { G, Path } from "react-native-svg";
-import { useNavigation, useRouter } from "expo-router";
+import { useNavigation } from "expo-router";
 import MenuModal from "../components/HeroModel";
 
 const cities = [
@@ -32,7 +33,6 @@ const cities = [
 
 const HeroSection = () => {
   const navigation = useNavigation();
-  const router = useRouter ();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [index, setIndex] = useState(0);
   const translateY = useRef(new Animated.Value(0)).current;
@@ -57,6 +57,14 @@ const HeroSection = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+    const ServiceForm = async () => {
+      try {
+        await Linking.openURL(`https://milestono.com/serviceform`);
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
   return (
     <View style={stylesHero.container}>
@@ -99,47 +107,21 @@ const HeroSection = () => {
 
           <View style={stylesHero.searchWrapper}>
             <View style={stylesHero.tabContainer}>
-              <TouchableOpacity style={stylesHero.activeTab}>
-                <Text style={stylesHero.activeTabText}>Real Estate</Text>
+              <TouchableOpacity style={stylesHero.inactiveTab}
+              onPress={() => navigation.navigate("index" as never)}>
+                <Text style={stylesHero.inactiveTabText}>Real Estate</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={stylesHero.inactiveTab}
-                onPress={() => navigation.navigate("ServicePage" as never)}
+                style={stylesHero.activeTab}
               >
-                <Text style={stylesHero.inactiveTabText}>Services</Text>
+                <Text style={stylesHero.activeTabText}>Services</Text>
               </TouchableOpacity>
             </View>
 
-            <Pressable
-              style={stylesHero.searchContainer}
-              onPress={() => navigation.navigate("SearchPage" as never)}
-            >
-              <Animated.Text style={[stylesHero.searchInput]}>
-                {`Search "${cities[index]}"`}
-              </Animated.Text>
-              <View>
-                <Svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="#232761"
-                  style={stylesHero.searchIcon}
-                >
-                  <G id="SVGRepo_iconCarrier">
-                    <G>
-                      <Path fill="none" d="M0 0h24v24H0z" />
-                      <Path
-                        fillRule="nonzero"
-                        d="M13 1l.001 3.062A8.004 8.004 0 0 1 19.938 11H23v2l-3.062.001a8.004 8.004 0 0 1-6.937 6.937L13 23h-2v-3.062a8.004 8.004 0 0 1-6.938-6.937L1 13v-2h3.062A8.004 8.004 0 0 1 11 4.062V1h2zm-1 5a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm0 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"
-                      />
-                    </G>
-                  </G>
-                </Svg>
-              </View>
-              <View style={stylesHero.searchButton}>
-                <Text style={stylesHero.searchButtonText}>Search</Text>
-              </View>
-            </Pressable>
+            <TouchableOpacity style={[stylesHero.tabContainer,{padding: 8}]}
+            onPress={()=>{ServiceForm()}}>
+              <Text style={stylesHero.ServiceTitle}>Are you an Service Provider? <Text style={{fontWeight: "700"}}>Post your service role here.</Text></Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ImageBackground>
@@ -255,6 +237,9 @@ const stylesHero = StyleSheet.create({
     color: "white",
     fontSize: 12,
     fontWeight: "bold",
+  },
+  ServiceTitle: {
+    color: "white"
   },
   searchContainer: {
     flexDirection: "row",
