@@ -488,13 +488,10 @@ const ServiceMansPage = () => {
     },
   ];
 
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="transparent"
-        translucent
-      />
+    <GestureHandlerRootView style={[styles.container, {marginTop: statusBarHeight}]}>
       <SafeAreaView style={styles.container}>
         {loading && (
           <View style={styles.loadingContainer}>
@@ -695,7 +692,9 @@ const ServiceMansPage = () => {
                       {selectedProvider?.experience}
                     </Text>
                     <View style={styles.profileRatingRow}>
-                      <Text style={{color: "white"}}>{formatRating(selectedProvider?.rating || 0)}</Text>
+                      <Text style={{ color: "white" }}>
+                        {formatRating(selectedProvider?.rating || 0)}
+                      </Text>
                       <Text style={styles.profileRatingText}>
                         Excellent Service
                       </Text>
