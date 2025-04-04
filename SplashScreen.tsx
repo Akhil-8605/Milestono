@@ -1,39 +1,63 @@
-import React from "react";
-import { useRef } from "react";
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
+import React, { useRef, useState } from "react";
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons"; // For arrow icons
-import Swiper from "react-native-swiper";
+import { SwiperFlatList } from "react-native-swiper-flatlist";
 
 const SplashScreen = () => {
   const navigation = useNavigation();
+  const swiperRef = useRef<SwiperFlatList | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const screenWidth = Dimensions.get("window").width;
-  const swiperRef = useRef(null); // Store Swiper reference
+
+  // Slides data
+  const slides = [
+    {
+      key: "slide1",
+      title: "Register Online",
+      text: "Lorem ipsum dolor sit amet consectetur adipiscing",
+      image: require("../assets/images/human1.png"),
+    },
+    {
+      key: "slide2",
+      title: "Get Started",
+      text: "Lorem ipsum dolor sit amet consectetur adipiscing",
+      image: require("../assets/images/human2.png"),
+    },
+    {
+      key: "slide3",
+      title: "Sit Back & Relax",
+      text: "Lorem ipsum dolor sit amet consectetur adipiscing",
+      image: require("../assets/images/human3.png"),
+    },
+  ];
 
   const handleNext = () => {
-    swiperRef?.current?.scrollBy(1, true);
+    if (currentIndex < slides.length - 1) {
+      if (swiperRef.current) {
+        swiperRef.current.scrollToIndex({ index: currentIndex + 1, animated: true });
+      }
+    }
   };
 
   const handlePrev = () => {
-    swiperRef?.current?.scrollBy(-1, true);
+    if (currentIndex > 0) {
+      if (swiperRef.current) {
+        swiperRef.current.scrollToIndex({ index: currentIndex - 1, animated: true });
+      }
+    }
   };
 
   const handleSkip = () => {
     navigation.reset({
       index: 0,
-      routes: [{ name: "Main" }],
+      routes: [{ name: "Main" as never }],
     });
   };
+
   return (
     <View style={styles.container}>
-      {/* Navigation Controls */}
+      {/* Top Navigation Controls */}
       <View style={styles.navControls}>
         <TouchableOpacity style={styles.navButton} onPress={handlePrev}>
           <AntDesign name="arrowleft" size={24} color="#999" />
@@ -43,70 +67,29 @@ const SplashScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <Swiper
-        loop={false}
-        dotStyle={styles.dot}
-        activeDotStyle={styles.activeDot}
+      <SwiperFlatList
         ref={swiperRef}
-      >
-        {/* Slide 1 */}
-        <View style={styles.slide}>
-          <Image
-            source={require("../assets/images/human1.png")} // Image path
-            style={styles.image}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>Register Online</Text>{" "}
-          {/* description title */}
-          <Text style={styles.description}>
-            Lorem ipsum dolor sit amet consectetur adipiscing
-          </Text>{" "}
-          {/* Description text */}
-          <TouchableOpacity style={styles.navigatorButton} onPress={handleNext}>
-            <AntDesign name="arrowright" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Slide 2 */}
-        <View style={styles.slide}>
-          <Image
-            source={require("../assets/images/human2.png")} // Image path
-            style={styles.image}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>Get Started</Text>{" "}
-          {/* description title */}
-          <Text style={styles.description}>
-            Lorem ipsum dolor sit amet consectetur adipiscing
-            {/* Description text */}
-          </Text>
-          <TouchableOpacity style={styles.navigatorButton} onPress={handleNext}>
-            <AntDesign name="arrowright" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Slide 3 */}
-        <View style={styles.slide}>
-          <Image
-            source={require("../assets/images/human3.png")}
-            // Image path
-            style={styles.image}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>Sit Back & Relax </Text>
-          {/* description title */}
-          <Text style={styles.description}>
-            Lorem ipsum dolor sit amet consectetur adipiscing
-            {/* Description text */}
-          </Text>
-          <TouchableOpacity
-            style={styles.getStartedButton}
-            onPress={handleSkip}
-          >
-            <Text style={styles.getStartedText}>Get Started</Text>
-          </TouchableOpacity>
-        </View>
-      </Swiper>
+        index={0}
+        showPagination
+        onChangeIndex={({ index }) => setCurrentIndex(index)}
+        data={slides}
+        renderItem={({ item, index }) => (
+          <View style={styles.slide}>
+            <Image source={item.image} style={styles.image} resizeMode="contain" />
+            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.description}>{item.text}</Text>
+            {index < slides.length - 1 ? (
+              <TouchableOpacity style={styles.navigatorButton} onPress={handleNext}>
+                <AntDesign name="arrowright" size={24} color="white" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.getStartedButton} onPress={handleSkip}>
+                <Text style={styles.getStartedText}>Get Started</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+      />
     </View>
   );
 };
@@ -126,6 +109,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    zIndex: 1,
   },
   navButton: {
     padding: 10,
@@ -138,14 +122,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   slide: {
+    width: Dimensions.get("window").width,
     flex: 1,
-    justifyContent: "center", // Center vertically
-    alignItems: "center", // Center horizontally
+    justifyContent: "center",
+    alignItems: "center",
   },
   image: {
     width: Dimensions.get("window").width * 0.66,
     height: Dimensions.get("window").width * 0.66,
-    alignSelf: "center", // Ensures image is centered
+    alignSelf: "center",
     marginTop: 20,
   },
   title: {
@@ -184,25 +169,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 25,
     marginTop: 20,
+    position: "absolute",
+    right: 30,
+    bottom: 50,
   },
   getStartedText: {
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
-  },
-  dot: {
-    backgroundColor: "#ccc",
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    margin: 5,
-  },
-  activeDot: {
-    backgroundColor: "#0505f2",
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    margin: 5,
   },
 });
 
