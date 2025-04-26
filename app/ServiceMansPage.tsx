@@ -12,7 +12,6 @@ import {
   Linking,
   StatusBar,
   SafeAreaView,
-  FlatList,
   ActivityIndicator,
   ScrollView,
 } from "react-native";
@@ -245,9 +244,11 @@ const ServiceMansPage = () => {
   // showDetailedProfile indicates that the detailed profile view is open
   const [showDetailedProfile, setShowDetailedProfile] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showAllMarkers, setShowAllMarkers] = useState(true);
 
   const mapRef = useRef<MapView>(null);
   const scrollViewRef = useRef<ScrollView>(null);
+  const providersScrollViewRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
 
   // Shared value for bottom sheet translateY
@@ -257,6 +258,7 @@ const ServiceMansPage = () => {
   const filteredProviders = serviceProviders.filter(
     (provider) =>
       provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      provider.price.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
       provider.experience.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -293,22 +295,30 @@ const ServiceMansPage = () => {
   // When a provider is selected from the list, update selection, animate map and collapse sheet.
   const selectProviderFromList = useCallback(
     (provider: any) => {
+      // First set the selected provider and hide other markers
       setSelectedProvider(provider);
-      if (mapRef.current) {
-        mapRef.current.animateToRegion(
-          {
-            latitude: provider.position.latitude,
-            longitude: provider.position.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          },
-          500
-        );
-      }
-      translateY.value = withSpring(SNAP_POINTS.CLOSED, {
-        damping: 20,
-        stiffness: 90,
-      });
+      setShowAllMarkers(false);
+
+      // Small delay to ensure state updates before map animation
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.animateToRegion(
+            {
+              latitude: provider.position.latitude,
+              longitude: provider.position.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            },
+            500
+          );
+        }
+
+        // Collapse the bottom sheet
+        translateY.value = withSpring(SNAP_POINTS.CLOSED, {
+          damping: 20,
+          stiffness: 90,
+        });
+      }, 50);
     },
     [translateY]
   );
@@ -340,6 +350,8 @@ const ServiceMansPage = () => {
       },
       () => {
         runOnJS(setShowDetailedProfile)(false);
+        // Show all markers again when closing profile
+        runOnJS(setShowAllMarkers)(true);
       }
     );
   }, [translateY]);
@@ -353,6 +365,7 @@ const ServiceMansPage = () => {
       });
       if (position === SNAP_POINTS.CLOSED && showDetailedProfile) {
         runOnJS(setShowDetailedProfile)(false);
+        runOnJS(setShowAllMarkers)(true);
       }
     },
     [translateY, showDetailedProfile]
@@ -386,6 +399,7 @@ const ServiceMansPage = () => {
       return SNAP_POINTS.CLOSED;
     }
   }, []);
+
   const panGesture = Gesture.Pan()
     .onStart(() => {
       startY.value = translateY.value;
@@ -490,8 +504,17 @@ const ServiceMansPage = () => {
 
   const statusBarHeight = StatusBar.currentHeight || 0;
 
+  // Determine which providers to show on the map
+  const visibleProviders = showAllMarkers
+    ? serviceProviders
+    : serviceProviders.filter(
+        (provider) => provider.id === selectedProvider?.id
+      );
+
   return (
-    <GestureHandlerRootView style={[styles.container, {marginTop: statusBarHeight}]}>
+    <GestureHandlerRootView
+      style={[styles.container, { marginTop: statusBarHeight }]}
+    >
       <SafeAreaView style={styles.container}>
         {loading && (
           <View style={styles.loadingContainer}>
@@ -509,7 +532,7 @@ const ServiceMansPage = () => {
           showsMyLocationButton={false}
           showsCompass={false}
         >
-          {serviceProviders.map((provider) => (
+          {visibleProviders.map((provider) => (
             <Marker
               key={provider.id}
               coordinate={provider.position}
@@ -572,6 +595,8 @@ const ServiceMansPage = () => {
             onPress={() => {
               if (mapRef.current && userLocation) {
                 mapRef.current.animateToRegion(userLocation, 1000);
+                setShowAllMarkers(true);
+                setSelectedProvider(null);
               }
             }}
           >
@@ -616,13 +641,18 @@ const ServiceMansPage = () => {
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.listTitle}>See Available Service man</Text>
-                <FlatList
-                  data={filteredProviders}
-                  keyExtractor={(item) => item.id}
-                  showsVerticalScrollIndicator={true}
+
+                {/* Scrollable providers list */}
+                <ScrollView
+                  ref={providersScrollViewRef}
+                  style={styles.providersScrollView}
                   contentContainerStyle={styles.providersList}
-                  renderItem={({ item }) => (
+                  showsVerticalScrollIndicator={true}
+                  nestedScrollEnabled={true}
+                >
+                  {filteredProviders.map((item) => (
                     <TouchableOpacity
+                      key={item.id}
                       style={styles.providerItem}
                       onPress={() => selectProviderFromList(item)}
                       activeOpacity={0.7}
@@ -654,12 +684,8 @@ const ServiceMansPage = () => {
                         </Text>
                       </View>
                     </TouchableOpacity>
-                  )}
-                  removeClippedSubviews={true}
-                  maxToRenderPerBatch={10}
-                  windowSize={10}
-                  initialNumToRender={5}
-                />
+                  ))}
+                </ScrollView>
               </View>
             ) : (
               <ScrollView
@@ -992,6 +1018,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "white",
     marginBottom: 20,
+  },
+  providersScrollView: {
+    flex: 1,
+    height: height * 0.6, // Fixed height to ensure scrollability
   },
   providersList: {
     paddingBottom: 20,
