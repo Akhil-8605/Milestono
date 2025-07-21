@@ -9,21 +9,31 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
-  Animated,
   Dimensions,
   Modal,
   StatusBar,
+  Alert,
+  Linking,
+  ActivityIndicator,
+  Clipboard,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
+import { useRoute, useNavigation } from "@react-navigation/native";
+import * as SecureStore from "expo-secure-store";
+import axios from "axios";
 
 // Import our two separate sections
 import UserFeedbackSection from "./propertydetails/UserFeedbackSection";
 import RecommendedProjectsSection from "./propertydetails/NewProjectsSection";
 
+const DummyImage = require("../assets/images/dummyImg.webp");
+
 // Device width
 const { width } = Dimensions.get("window");
+
+const BASE_URL = "http://192.168.164.229:6005";
 
 // Enhanced color palette
 const COLORS = {
@@ -34,28 +44,38 @@ const COLORS = {
   text: "#1F2937",
   textLight: "#6B7280",
   accent: "#EF4444",
+  success: "#10B981",
+  warning: "#F59E0B",
+  facebook: "#1877F2",
+  twitter: "#1DA1F2",
+  whatsapp: "#25D366",
 };
 
-// Property images (for the main listing)
-const PROPERTY_IMAGES = [
-  "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2",
-  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
-  "https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6",
-];
-
 export default function PropertyListing() {
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const route = useRoute();
+  const navigation = useNavigation();
+  const { property } = route.params as { property: any };
+
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const imageScrollRef = useRef<ScrollView>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Inquiry modal state
+  // New state variables for enhanced functionality
+  const [contactViewed, setContactViewed] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [countViewed, setCountViewed] = useState(0);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
   const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
-
-  const [heartClicked, sethearClicked] = useState(false);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
 
   const statusBarHeight = StatusBar.currentHeight || 0;
+
+  // Use property images or fallback to placeholder
+  const PROPERTY_IMAGES = property?.uploadedPhotos?.length > 0
+    ? property.uploadedPhotos
+    : [DummyImage];
 
   // Auto-slide header images
   useEffect(() => {
@@ -71,51 +91,364 @@ export default function PropertyListing() {
     }, 6000);
 
     return () => clearInterval(timer);
+  }, [PROPERTY_IMAGES.length]);
+
+  // Check initial states on component mount
+  useEffect(() => {
+    checkContactViewed();
+    checkSaved();
+    checkCountContactViewed();
+    handleAddToRecent();
   }, []);
 
-  const headerHeight = scrollY.interpolate({
-    inputRange: [0, 350],
-    outputRange: [350, 80],
-    extrapolate: "clamp",
-  });
+  // Get user details when contact is viewed
+  useEffect(() => {
+    if (contactViewed) {
+      getUserDetail();
+    }
+  }, [contactViewed]);
 
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, 350],
-    outputRange: [0, -270],
-    extrapolate: "clamp",
-  });
+  const checkContactViewed = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("jwt");
+      if (token) {
+        const response = await axios.get(
+          `${BASE_URL}/api/contact-viewed/${property._id}`,
+          {
+            headers: { Authorization: token },
+          }
+        );
+        setContactViewed((response.data as { viewed: boolean }).viewed);
+      }
+    } catch (error) {
+      console.error("Error checking contact viewed status:", error);
+    }
+  };
 
-  const imageOpacity = scrollY.interpolate({
-    inputRange: [0, 200],
-    outputRange: [1, 0.2],
-    extrapolate: "clamp",
-  });
+  const checkCountContactViewed = async () => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/count-contact-viewed/${property._id}`
+      );
+      setCountViewed((response.data as { count: number }).count);
+    } catch (error) {
+      console.error("Error fetching view count:", error);
+    }
+  };
+
+  const getUserDetail = async () => {
+    setLoading(true);
+    const token = await SecureStore.getItemAsync("jwt");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await axios.get(`${BASE_URL}/api/userdetail`, {
+        headers: { Authorization: token },
+      });
+      setUser(response.data);
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewPhoneClick = async () => {
+    Alert.alert(
+      "Unlock Contact",
+      "Do you want to unlock the contact?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Yes", onPress: unlockContact }
+      ]
+    );
+  };
+
+  const unlockContact = async () => {
+    const token = await SecureStore.getItemAsync("jwt");
+    if (!token) {
+      Alert.alert(
+        "Login Required",
+        "If you want to unlock, login first.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Login", onPress: () => navigation.navigate("Login" as never) }
+        ]
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/contact-viewed`,
+        { property_id: property._id },
+        { headers: { Authorization: token } }
+      );
+      if ((response.data as { message: string }).message === "Property marked as viewed.") {
+        setContactViewed(true);
+        Alert.alert("Success", "Contact unlocked successfully!");
+      }
+    } catch (error: any) {
+      if (error.response && error.response.status === 403) {
+        Alert.alert(
+          "Upgrade Required",
+          "You have reached the limit. Upgrade to a premium account to view more contacts.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Upgrade", onPress: () => navigation.navigate("Premium" as never) }
+          ]
+        );
+      } else {
+        Alert.alert("Error", "Failed to unlock contact. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewWhatsappClick = async () => {
+    const token = await SecureStore.getItemAsync("jwt");
+    if (!token) {
+      Alert.alert(
+        "Login Required",
+        "If you want to unlock, login first.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Login", onPress: () => navigation.navigate("Login" as never) }
+        ]
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/whatsapp-status/${property._id}`,
+        { headers: { Authorization: token } }
+      );
+      const data = response.data as { contacted: boolean };
+      if (data.contacted) {
+        openWhatsApp();
+      }
+    } catch (error: any) {
+      if (error.response && error.response.status === 403) {
+        Alert.alert(
+          "Upgrade Required",
+          "You have reached the limit. Upgrade to a premium account to view more contacts.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Upgrade", onPress: () => navigation.navigate("Premium" as never) }
+          ]
+        );
+      } else {
+        Alert.alert("Error", "Failed to access WhatsApp. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openWhatsApp = () => {
+    if (!contactViewed) {
+      Alert.alert("Error", "Unlock contact first.");
+      return;
+    }
+    if (!user?.phone) {
+      Alert.alert("Error", "Phone number is not available.");
+      return;
+    }
+    const message = `Hi, I'm interested in the property listed as "${property.heading}" at ${property.landmark}. Can we discuss further?`;
+    const whatsappUrl = `https://wa.me/${user.phone}?text=${encodeURIComponent(message)}`;
+    Linking.openURL(whatsappUrl);
+  };
+
+  const handleSaveClick = async () => {
+    const token = await SecureStore.getItemAsync("jwt");
+    if (!token) {
+      Alert.alert(
+        "Login Required",
+        "If you want to save, login first.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Login", onPress: () => navigation.navigate("Login" as never) }
+        ]
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/save-property`,
+        { property_id: property._id },
+        { headers: { Authorization: token } }
+      );
+      const data = response.data as { message: string };
+      if (data.message === "Property marked as saved.") {
+        setSaved(true);
+        Alert.alert("Success", "Property saved successfully!");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to save property. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnSaveClick = async () => {
+    const token = await SecureStore.getItemAsync("jwt");
+    if (!token) {
+      Alert.alert("Error", "Authentication required.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/unsave-property`,
+        { property_id: property._id },
+        { headers: { Authorization: token } }
+      );
+      const data = response.data as { message: string };
+      if (data.message === "Property removed from saved list.") {
+        setSaved(false);
+        Alert.alert("Success", "Property removed from saved list!");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to unsave property. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkSaved = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("jwt");
+      if (token) {
+        const response = await axios.get(`${BASE_URL}/api/saved/${property._id}`, {
+          headers: { Authorization: token },
+        });
+        setSaved((response.data as { viewed: boolean }).viewed);
+      }
+    } catch (error) {
+      console.error("Error checking saved status:", error);
+    }
+  };
+
+  const handleAddToRecent = async () => {
+    const token = await SecureStore.getItemAsync("jwt");
+    try {
+      await axios.post(
+        `${BASE_URL}/api/mark-view`,
+        { property_id: property._id },
+        { headers: { Authorization: token || "" } }
+      );
+    } catch (error) {
+      console.error("Error marking property as viewed:", error);
+    }
+  };
+
+  const handleInquiryClick = async () => {
+    const token = await SecureStore.getItemAsync("jwt");
+    if (!token) {
+      Alert.alert("Login Required", "User must be logged in to send a property enquiry.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post(
+        `${BASE_URL}/api/property-enquiry`,
+        { property_id: property._id },
+        { headers: { Authorization: token } }
+      );
+      Alert.alert("Success", "Property enquiry submitted to agent successfully.");
+    } catch (error) {
+      Alert.alert("Error", "Error submitting property enquiry. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleShareClick = () => {
+    setShareModalVisible(true);
+  };
+
+  const shareProperty = async (method: string) => {
+    const propertyUrl = `https://milestono.com/details/${property._id}`;
+    const propertyTitle = `${property.heading} at ${property.landmark}`;
+    const message = `Check out this amazing property: ${propertyTitle}`;
+
+    try {
+      switch (method) {
+        case 'facebook':
+          const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(propertyUrl)}`;
+          await Linking.openURL(facebookUrl);
+          break;
+
+        case 'twitter':
+          const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}&url=${encodeURIComponent(propertyUrl)}`;
+          await Linking.openURL(twitterUrl);
+          break;
+
+        case 'whatsapp':
+          const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message + ' ' + propertyUrl)}`;
+          await Linking.openURL(whatsappUrl);
+          break;
+
+        case 'copy':
+          await Clipboard.setString(propertyUrl);
+          Alert.alert("Copied!", "Property link copied to clipboard!");
+          break;
+
+        default:
+          break;
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to share property.");
+    }
+    setShareModalVisible(false);
+  };
+
+  // Format price based on sell type
+  const formatPrice = () => {
+    if (property?.sellType === "Sell") {
+      return `₹ ${property.expectedPrice?.toLocaleString() || "N/A"}`;
+    } else {
+      return `₹ ${property.pricePerMonth?.toLocaleString() || "N/A"}/month`;
+    }
+  };
+
+  // Calculate price per sq ft if area is available
+  const calculatePricePerSqFt = () => {
+    if (property?.sellType === "Sell" && property?.expectedPrice && property?.builtUpArea) {
+      const pricePerSqFt = property.expectedPrice / property.builtUpArea;
+      return `Approx. ₹ ${Math.round(pricePerSqFt)}/sq.ft`;
+    }
+    return "";
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
-      <Animated.ScrollView
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
-        )}
-        scrollEventThrottle={16}
-        showsHorizontalScrollIndicator={false}
-        // Added extra bottom padding so content doesn't hide behind the fixed bottom bar
+      <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 160 }}
       >
-        {/* Header with Auto-Scrolling Images */}
-        <Animated.View
-          style={[
-            styles.header,
-            {
-              height: headerHeight,
-              transform: [{ translateY: headerTranslateY }],
-            },
-          ]}
-        >
-          <Animated.View
-            style={[styles.imageContainer, { opacity: imageOpacity }]}
-          >
+        {/* Header with Auto-Scrolling Images - Fixed Size */}
+        <View style={styles.header}>
+          <View style={styles.imageContainer}>
             <ScrollView
               ref={imageScrollRef}
               horizontal
@@ -128,7 +461,7 @@ export default function PropertyListing() {
                 setActiveImageIndex(newIndex);
               }}
             >
-              {PROPERTY_IMAGES.map((image, index) => (
+              {PROPERTY_IMAGES.map((image: any, index: number) => (
                 <TouchableOpacity
                   key={index}
                   activeOpacity={0.9}
@@ -142,7 +475,7 @@ export default function PropertyListing() {
               ))}
             </ScrollView>
             <View style={styles.imageDots}>
-              {PROPERTY_IMAGES.map((_, index) => (
+              {PROPERTY_IMAGES.map((_: any, index: number) => (
                 <View
                   key={index}
                   style={[
@@ -152,49 +485,50 @@ export default function PropertyListing() {
                 />
               ))}
             </View>
-          </Animated.View>
+          </View>
 
-          {/* Title & Heart/Share Icons */}
+          {/* Title & Action Icons */}
           <LinearGradient
             colors={["transparent", "rgba(0,0,0,0.8)"]}
             style={styles.headerOverlay}
           >
-            <Text style={styles.title}>2 Guntha Residential Land</Text>
+            <Text style={styles.title}>{property?.heading || "Property Details"}</Text>
             <View style={styles.headerButtons}>
-              <TouchableOpacity style={styles.headerButton}>
-                <Icon
-                  name="share-variant"
-                  size={20}
-                  color={COLORS.background}
-                />
+              <TouchableOpacity style={styles.headerButton} onPress={handleShareClick}>
+                <Icon name="share-variant" size={20} color={COLORS.background} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.headerButton}
-                onPress={() => sethearClicked(!heartClicked)}
+                onPress={saved ? handleUnSaveClick : handleSaveClick}
               >
-                {heartClicked ? (
-                  <Icon name="heart" size={20} color={"red"} />
-                ) : (
-                  <Icon
-                    name="heart-outline"
-                    size={20}
-                    color={COLORS.background}
-                  />
-                )}
+                <Icon
+                  name={saved ? "heart" : "heart-outline"}
+                  size={20}
+                  color={saved ? "red" : COLORS.background}
+                />
               </TouchableOpacity>
             </View>
           </LinearGradient>
-        </Animated.View>
+        </View>
 
         {/* Main Content */}
         <View style={styles.content}>
-          <PriceSection />
-          <QuickInfoSection scrollY={scrollY} />
-          <LocationCard />
-          <ContactSection onInquiryPress={() => setInquiryModalVisible(true)} />
-          <AmenitiesSection scrollY={scrollY} />
-          <FurnitureSection scrollY={scrollY} />
-          <ViewerCount count={15} />
+          <PriceSection
+            price={formatPrice()}
+            pricePerSqFt={calculatePricePerSqFt()}
+          />
+          <QuickInfoSection property={property} />
+          <LocationCard property={property} />
+          <ContactSection
+            contactViewed={contactViewed}
+            user={user}
+            onUnlockContact={handleViewPhoneClick}
+            onWhatsAppClick={handleViewWhatsappClick}
+            onInquiryPress={handleInquiryClick}
+          />
+          <AmenitiesSection property={property} />
+          <FurnitureSection property={property} />
+          <ViewerCount count={countViewed} />
 
           {/* Feedback Section */}
           <UserFeedbackSection />
@@ -202,32 +536,30 @@ export default function PropertyListing() {
           {/* Recommended Projects Section */}
           <RecommendedProjectsSection />
         </View>
-      </Animated.ScrollView>
+      </ScrollView>
 
       {/* Fixed Bottom Bar */}
       <View style={styles.bottomBar}>
-        {/* Pink info area */}
         <View style={styles.bottomBarInfoContainer}>
           <Text style={styles.bottomBarInfoText}>
-            15 people viewed this property today
+            {countViewed} people viewed this property today
           </Text>
         </View>
-        {/* Buttons row */}
         <View style={styles.bottomBarButtonsContainer}>
           <TouchableOpacity
-            style={[styles.bottomBarButton, styles.whatsAppButton]}
-            onPress={() => setInquiryModalVisible(true)}
+            style={[styles.bottomBarButton, styles.callButton]}
+            onPress={handleInquiryClick}
           >
             <Icon name="phone" size={22} color={COLORS.background} />
             <Text style={styles.bottomBarButtonText}>Call Now</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.bottomBarButton, styles.viewNumberButton]}
-            onPress={() => setInquiryModalVisible(true)}
+            style={[styles.bottomBarButton, styles.inquiryButton]}
+            onPress={handleInquiryClick}
           >
             <Icon name="information" size={22} color={COLORS.background} />
-            <Text style={styles.buttonText}>Inquiry</Text>
+            <Text style={styles.bottomBarButtonText}>Inquiry</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -256,6 +588,82 @@ export default function PropertyListing() {
         </BlurView>
       </Modal>
 
+      {/* Enhanced Share Modal */}
+      <Modal
+        visible={shareModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShareModalVisible(false)}
+      >
+        <View style={styles.shareModalOverlay}>
+          <TouchableOpacity
+            style={styles.shareModalBackdrop}
+            activeOpacity={1}
+            onPress={() => setShareModalVisible(false)}
+          />
+          <View style={styles.shareModalContainer}>
+            <View style={styles.shareModalHeader}>
+              <Text style={styles.shareModalTitle}>Share Property</Text>
+              <TouchableOpacity
+                style={styles.shareModalCloseButton}
+                onPress={() => setShareModalVisible(false)}
+              >
+                <Icon name="close" size={24} color={COLORS.textLight} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.shareOptionsContainer}>
+              <TouchableOpacity
+                style={styles.shareOption}
+                onPress={() => shareProperty('facebook')}
+              >
+                <View style={[styles.shareIconContainer, { backgroundColor: COLORS.facebook }]}>
+                  <Icon name="facebook" size={28} color="white" />
+                </View>
+                <Text style={styles.shareOptionText}>Facebook</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.shareOption}
+                onPress={() => shareProperty('twitter')}
+              >
+                <View style={[styles.shareIconContainer, { backgroundColor: COLORS.twitter }]}>
+                  <Icon name="twitter" size={28} color="white" />
+                </View>
+                <Text style={styles.shareOptionText}>Twitter</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.shareOption}
+                onPress={() => shareProperty('whatsapp')}
+              >
+                <View style={[styles.shareIconContainer, { backgroundColor: COLORS.whatsapp }]}>
+                  <Icon name="whatsapp" size={28} color="white" />
+                </View>
+                <Text style={styles.shareOptionText}>WhatsApp</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.shareOption}
+                onPress={() => shareProperty('copy')}
+              >
+                <View style={[styles.shareIconContainer, { backgroundColor: COLORS.textLight }]}>
+                  <Icon name="content-copy" size={28} color="white" />
+                </View>
+                <Text style={styles.shareOptionText}>Copy Link</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.shareCancelButton}
+              onPress={() => setShareModalVisible(false)}
+            >
+              <Text style={styles.shareCancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Inquiry Modal */}
       <Modal
         visible={inquiryModalVisible}
@@ -265,7 +673,6 @@ export default function PropertyListing() {
       >
         <View style={styles.inquiryModalOverlay}>
           <View style={styles.inquiryModalContainer}>
-            {/* Close Button at top-right */}
             <TouchableOpacity
               style={styles.inquiryModalCloseButton}
               onPress={() => setInquiryModalVisible(false)}
@@ -280,20 +687,26 @@ export default function PropertyListing() {
             <View style={styles.inquiryModalDetails}>
               <Text style={styles.inquiryModalLabel}>POSTED BY OWNER:</Text>
               <Text style={styles.inquiryModalValue}>
-                +91 988** **** | i********@gmail.com
+                {user?.phone || "+91 988** ****"} | {user?.email || "i********@gmail.com"}
               </Text>
-              <Text style={styles.inquiryModalValue}>VISHAL KATE</Text>
+              <Text style={styles.inquiryModalValue}>
+                {user?.name?.toUpperCase() || "PROPERTY OWNER"}
+              </Text>
 
               <View style={styles.divider} />
 
               <Text style={styles.inquiryModalLabel}>
-                POSTED ON 17th DEC, 2024
+                POSTED ON {property?.createdAt ? new Date(property.createdAt).toLocaleDateString('en-GB', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                }).toUpperCase() : "N/A"}
               </Text>
               <Text style={styles.inquiryModalValue}>
-                ₹ 15 Lac | Phule Nagar Akkuj
+                {formatPrice()} | {property?.landmark || property?.city || "Location"}
               </Text>
               <Text style={styles.inquiryModalValue}>
-                2 Guntha | Residential Land
+                {property?.builtUpArea ? `${property.builtUpArea} sq.ft` : ""} | {property?.propertyType || "Property"}
               </Text>
             </View>
           </View>
@@ -304,36 +717,20 @@ export default function PropertyListing() {
 }
 
 /* PRICE SECTION */
-const PriceSection = () => (
+const PriceSection = ({ price, pricePerSqFt }: { price: string; pricePerSqFt: string }) => (
   <View style={styles.priceSection}>
     <View style={styles.priceContainer}>
       <Text style={styles.priceLabel}>Price</Text>
-      <Text style={styles.priceValue}>₹ 15,00,000</Text>
-      <Text style={styles.pricePerSqFt}>Approx. ₹ 750/sq.ft</Text>
+      <Text style={styles.priceValue}>{price}</Text>
+      {pricePerSqFt && <Text style={styles.pricePerSqFt}>{pricePerSqFt}</Text>}
     </View>
   </View>
 );
 
 /* QUICK INFO SECTION */
-const QuickInfoSection = ({ scrollY }: { scrollY: Animated.Value }) => {
+const QuickInfoSection = ({ property }: { property: any }) => {
   const renderDetail = (icon: string, label: string, value: string) => (
-    <Animated.View
-      style={[
-        styles.detailCard,
-        {
-          transform: [
-            {
-              scale: scrollY.interpolate({
-                inputRange: [0, 200],
-                outputRange: [1, 0.95],
-                extrapolate: "clamp",
-              }),
-            },
-          ],
-        },
-      ]}
-      key={label}
-    >
+    <View style={styles.detailCard} key={label}>
       <View style={styles.detailContent}>
         <Icon
           name={icon}
@@ -344,16 +741,44 @@ const QuickInfoSection = ({ scrollY }: { scrollY: Animated.Value }) => {
         <Text style={styles.detailLabel}>{label}</Text>
         <Text style={styles.detailValue}>{value}</Text>
       </View>
-    </Animated.View>
+    </View>
   );
 
   const infoData = [
-    { icon: "ruler-square", label: "Plot Area", value: "2 Guntha" },
-    { icon: "home", label: "Type", value: "Residential Land" },
-    { icon: "check-circle", label: "Status", value: "For Sale" },
-    { icon: "briefcase", label: "Brokerage", value: "No Brokerage" },
-    { icon: "calendar", label: "Posted On", value: "17th Dec, 2024" },
-    { icon: "map-marker", label: "Location", value: "Phule Nagar Akkuj" },
+    {
+      icon: "ruler-square",
+      label: "Area",
+      value: property?.builtUpArea ? `${property.builtUpArea} sq.ft` : "N/A"
+    },
+    {
+      icon: "home",
+      label: "Type",
+      value: property?.propertyType || "N/A"
+    },
+    {
+      icon: "check-circle",
+      label: "Status",
+      value: property?.sellType === "Sell" ? "For Sale" : "For Rent"
+    },
+    {
+      icon: "briefcase",
+      label: "Brokerage",
+      value: "No Brokerage"
+    },
+    {
+      icon: "calendar",
+      label: "Posted On",
+      value: property?.createdAt ? new Date(property.createdAt).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      }) : "N/A"
+    },
+    {
+      icon: "map-marker",
+      label: "Location",
+      value: `${property?.landmark || ""}, ${property?.city || ""}`.replace(/^,\s*|,\s*$/g, '') || "N/A"
+    },
   ];
 
   return (
@@ -363,32 +788,77 @@ const QuickInfoSection = ({ scrollY }: { scrollY: Animated.Value }) => {
   );
 };
 
-const LocationCard = () => (
+const LocationCard = ({ property }: { property: any }) => (
   <TouchableOpacity style={styles.locationCard}>
     <View style={styles.locationContent}>
       <View style={styles.locationHeader}>
         <Icon name="map-marker" size={18} color={COLORS.primary} />
         <Text style={styles.locationTitle}>Location</Text>
       </View>
-      <Text style={styles.locationText}>Phule Nagar Akkuj</Text>
+      <Text style={styles.locationText}>
+        {`${property?.landmark || ""}, ${property?.city || ""}`.replace(/^,\s*|,\s*$/g, '') || "Location not specified"}
+      </Text>
       <Text style={styles.locationSubtext}>View on map</Text>
     </View>
   </TouchableOpacity>
 );
 
-/* CONTACT SECTION */
-const ContactSection = ({ onInquiryPress }: { onInquiryPress: () => void }) => (
+/* ENHANCED CONTACT SECTION */
+const ContactSection = ({
+  contactViewed,
+  user,
+  onUnlockContact,
+  onWhatsAppClick,
+  onInquiryPress
+}: {
+  contactViewed: boolean;
+  user: any;
+  onUnlockContact: () => void;
+  onWhatsAppClick: () => void;
+  onInquiryPress: () => void;
+}) => (
   <View style={styles.contactSection}>
     <View style={styles.contactContent}>
-      <Text style={styles.contactTitle}>Contact Owner</Text>
+      <Text style={styles.contactTitle}>Owner Contact Details</Text>
+
+      <View style={styles.contactDetails}>
+        <Text style={styles.contactInfo}>
+          <Icon name="email" size={16} color={COLORS.primary} />
+          {" "}{user ? user.email : "XXXXXXXXXX"}
+        </Text>
+        <Text style={styles.contactInfo}>
+          <Icon name="phone" size={16} color={COLORS.primary} />
+          {" "}{user ? user.phone : "XXXXXXXXXX"}
+        </Text>
+      </View>
+
       <View style={styles.contactButtons}>
-        <TouchableOpacity style={styles.callButton} onPress={onInquiryPress}>
-          <Icon name="phone" size={22} color={COLORS.background} />
-          <Text style={styles.buttonText}>Call Now</Text>
+        <TouchableOpacity
+          style={[
+            styles.contactButton,
+            contactViewed ? styles.unlockedButton : styles.lockButton
+          ]}
+          onPress={onUnlockContact}
+          disabled={contactViewed}
+        >
+          <Icon
+            name={contactViewed ? "lock-open" : "lock"}
+            size={18}
+            color={COLORS.background}
+          />
+          <Text style={styles.contactButtonText}>
+            {contactViewed ? "Contact Now" : "Unlock Contact"}
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.callButton} onPress={onInquiryPress}>
-          <Icon name="information" size={22} color={COLORS.background} />
-          <Text style={styles.buttonText}>Inquiry</Text>
+
+        <TouchableOpacity style={styles.contactButton} onPress={onWhatsAppClick}>
+          <Icon name="whatsapp" size={18} color={COLORS.background} />
+          <Text style={styles.contactButtonText}>WhatsApp</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.contactButton} onPress={onInquiryPress}>
+          <Icon name="information" size={18} color={COLORS.background} />
+          <Text style={styles.contactButtonText}>Inquiry</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -396,54 +866,42 @@ const ContactSection = ({ onInquiryPress }: { onInquiryPress: () => void }) => (
 );
 
 /* AMENITIES SECTION */
-const AmenitiesSection = ({ scrollY }: { scrollY: Animated.Value }) => {
-  const amenities = [
-    { icon: "car", label: "Car Parking" },
-    { icon: "cctv", label: "CCTV" },
-    { icon: "shield-check", label: "Security" },
-    { icon: "dumbbell", label: "Gym" },
-    { icon: "home", label: "Club House" },
-    { icon: "water", label: "Water Supply" },
-    { icon: "elevator", label: "Lift" },
-    { icon: "pool", label: "Swimming Pool" },
-  ];
+const AmenitiesSection = ({ property }: { property: any }) => {
+  const amenityIcons: { [key: string]: string } = {
+    "Car Parking": "car",
+    "CCTV": "cctv",
+    "Guard": "shield-check",
+    "Gym": "dumbbell",
+    "Club House": "home",
+    "Water Supply": "water",
+    "Lift": "elevator",
+    "Swimming Pool": "pool",
+  };
 
-  const renderAmenity = (icon: string, label: string, index: number) => (
-    <Animated.View
-      style={[
-        styles.amenityCard,
-        {
-          transform: [
-            {
-              scale: scrollY.interpolate({
-                inputRange: [400, 600],
-                outputRange: [0.9, 1],
-                extrapolate: "clamp",
-              }),
-            },
-          ],
-          opacity: scrollY.interpolate({
-            inputRange: [400, 600],
-            outputRange: [0.5, 1],
-            extrapolate: "clamp",
-          }),
-        },
-      ]}
-      key={index}
-    >
+  // Filter amenities that exist in the property
+  const availableAmenities = property?.amenities?.filter((amenity: string) =>
+    Object.keys(amenityIcons).includes(amenity)
+  ) || [];
+
+  const renderAmenity = (amenity: string, index: number) => (
+    <View style={styles.amenityCard} key={index}>
       <View style={styles.amenityContent}>
-        <Icon name={icon} size={28} color={COLORS.primary} />
-        <Text style={styles.amenityLabel}>{label}</Text>
+        <Icon name={amenityIcons[amenity]} size={28} color={COLORS.primary} />
+        <Text style={styles.amenityLabel}>{amenity}</Text>
       </View>
-    </Animated.View>
+    </View>
   );
+
+  if (availableAmenities.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Amenities</Text>
       <View style={styles.amenitiesContainer}>
-        {amenities.map((item, index) =>
-          renderAmenity(item.icon, item.label, index)
+        {availableAmenities.map((amenity: string, index: number) =>
+          renderAmenity(amenity, index)
         )}
       </View>
     </View>
@@ -451,51 +909,43 @@ const AmenitiesSection = ({ scrollY }: { scrollY: Animated.Value }) => {
 };
 
 /* FURNITURE SECTION */
-const FurnitureSection = ({ scrollY }: { scrollY: Animated.Value }) => {
-  const furnitureItems = [
-    { icon: "bed-king", label: "King Size Bed" },
-    { icon: "sofa", label: "Premium Sofa" },
-    { icon: "television", label: '55" Smart TV' },
-    { icon: "fridge", label: "Refrigerator" },
-    { icon: "washing-machine", label: "Washing Machine" },
-  ];
+const FurnitureSection = ({ property }: { property: any }) => {
+  const furnitureIcons: { [key: string]: string } = {
+    "Bed": "bed-king",
+    "Sofa": "sofa",
+    "TV": "television",
+    "Cupboard": "wardrobe",
+    "AC": "air-conditioner",
+    "Water Purifier": "water",
+    "Geyser": "shower",
+    "Washing Machine": "washing-machine",
+    "Dining Table": "table-furniture",
+  };
 
-  const renderFurnitureItem = (icon: string, label: string, index: number) => (
-    <Animated.View
-      style={[
-        styles.furnitureCard,
-        {
-          transform: [
-            {
-              scale: scrollY.interpolate({
-                inputRange: [600, 800],
-                outputRange: [0.9, 1],
-                extrapolate: "clamp",
-              }),
-            },
-          ],
-          opacity: scrollY.interpolate({
-            inputRange: [600, 800],
-            outputRange: [0.5, 1],
-            extrapolate: "clamp",
-          }),
-        },
-      ]}
-      key={index}
-    >
+  // Filter furniture that exists in the property
+  const availableFurniture = property?.furnitures?.filter((furniture: string) =>
+    Object.keys(furnitureIcons).includes(furniture)
+  ) || [];
+
+  const renderFurnitureItem = (furniture: string, index: number) => (
+    <View style={styles.furnitureCard} key={index}>
       <View style={styles.furnitureContent}>
-        <Icon name={icon} size={28} color={COLORS.primary} />
-        <Text style={styles.furnitureLabel}>{label}</Text>
+        <Icon name={furnitureIcons[furniture]} size={28} color={COLORS.primary} />
+        <Text style={styles.furnitureLabel}>{furniture}</Text>
       </View>
-    </Animated.View>
+    </View>
   );
+
+  if (availableFurniture.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Included Furniture</Text>
       <View style={styles.furnitureContainer}>
-        {furnitureItems.map((item, index) =>
-          renderFurnitureItem(item.icon, item.label, index)
+        {availableFurniture.map((furniture: string, index: number) =>
+          renderFurnitureItem(furniture, index)
         )}
       </View>
     </View>
@@ -517,12 +967,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: COLORS.text,
+  },
   header: {
     width: "100%",
+    height: 350, // Fixed height
     overflow: "hidden",
   },
   imageContainer: {
-    height: 350,
+    height: 350, // Fixed height
   },
   headerImage: {
     width,
@@ -565,6 +1027,8 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     color: COLORS.background,
+    flex: 1,
+    marginRight: 10,
   },
   headerButtons: {
     flexDirection: "row",
@@ -578,9 +1042,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: 12,
   },
-  content: {
-    // Space for content sections
-  },
+  content: {},
   priceSection: {
     margin: 16,
     borderRadius: 12,
@@ -693,30 +1155,48 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   contactTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
     color: COLORS.text,
     marginBottom: 16,
   },
+  contactDetails: {
+    marginBottom: 16,
+  },
+  contactInfo: {
+    fontSize: 14,
+    color: COLORS.text,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   contactButtons: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
   },
-  callButton: {
-    flex: 1,
+  contactButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
-    padding: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 8,
-    marginRight: 8,
+    flex: 1,
+    minWidth: "30%",
   },
-  buttonText: {
+  lockButton: {
+    backgroundColor: COLORS.warning,
+  },
+  unlockedButton: {
+    backgroundColor: COLORS.success,
+  },
+  contactButtonText: {
     color: COLORS.background,
     fontSize: 12,
-    fontWeight: "500",
-    marginLeft: 8,
+    fontWeight: "600",
+    marginLeft: 6,
   },
   section: {
     margin: 16,
@@ -798,7 +1278,51 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginLeft: 8,
   },
-  /* Fullscreen Image Modal */
+  bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 9999,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+  },
+  bottomBarInfoContainer: {
+    backgroundColor: "#FFE5EA",
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  bottomBarInfoText: {
+    fontSize: 14,
+    color: COLORS.text,
+  },
+  bottomBarButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 8,
+    paddingHorizontal: 30,
+  },
+  bottomBarButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  callButton: {
+    backgroundColor: COLORS.primary,
+  },
+  inquiryButton: {
+    backgroundColor: COLORS.primary,
+  },
+  bottomBarButtonText: {
+    color: "#fff",
+    marginLeft: 6,
+    fontWeight: "600",
+  },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -814,7 +1338,85 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 2,
   },
-  /* Inquiry Modal */
+  // Enhanced Share Modal Styles
+  shareModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  shareModalBackdrop: {
+    flex: 1,
+  },
+  shareModalContainer: {
+    backgroundColor: COLORS.cardBackground,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 34, // Safe area padding
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  shareModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  shareModalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: COLORS.text,
+  },
+  shareModalCloseButton: {
+    padding: 4,
+  },
+  shareOptionsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+  },
+  shareOption: {
+    alignItems: "center",
+    flex: 1,
+  },
+  shareIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  shareOptionText: {
+    fontSize: 14,
+    color: COLORS.text,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  shareCancelButton: {
+    marginHorizontal: 24,
+    paddingVertical: 16,
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  shareCancelButtonText: {
+    fontSize: 16,
+    color: COLORS.textLight,
+    fontWeight: "600",
+  },
   inquiryModalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -867,52 +1469,5 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#DDD",
     marginVertical: 16,
-  },
-  /* Bottom Bar */
-  bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 9999,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-  },
-  bottomBarInfoContainer: {
-    backgroundColor: "#FFE5EA",
-    paddingVertical: 8,
-    alignItems: "center",
-  },
-  bottomBarInfoText: {
-    fontSize: 14,
-    color: COLORS.text,
-  },
-  bottomBarButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 8,
-    paddingHorizontal: 30,
-  },
-  bottomBarButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#232761",
-    padding: 12,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  whatsAppButton: {
-    backgroundColor: "#1E3A8A",
-  },
-  viewNumberButton: {
-    backgroundColor: "#1E3A8A",
-  },
-  bottomBarButtonText: {
-    color: "#fff",
-    marginLeft: 6,
-    fontWeight: "600",
   },
 });
