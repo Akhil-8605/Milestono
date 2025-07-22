@@ -17,7 +17,7 @@ import { useNavigation } from "expo-router";
 import { NavigationProp } from "@react-navigation/native";
 
 const CARD_WIDTH = Dimensions.get("window").width * 0.65;
-const BASE_URL = "http://192.168.164.229:6005"; // or your ngrok URL during dev
+const BASE_URL = "http://localhost:6005"; // or your ngrok URL during dev
 
 export default function NewLaunchProperties() {
   const [properties, setProperties] = useState<any[]>([]);

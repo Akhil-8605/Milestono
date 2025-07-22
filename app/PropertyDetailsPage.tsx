@@ -33,7 +33,7 @@ const DummyImage = require("../assets/images/dummyImg.webp");
 // Device width
 const { width } = Dimensions.get("window");
 
-const BASE_URL = "http://192.168.164.229:6005";
+const BASE_URL = "http://localhost:6005";
 
 // Enhanced color palette
 const COLORS = {

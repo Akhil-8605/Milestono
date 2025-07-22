@@ -9,11 +9,13 @@ import {
   StatusBar,
   Animated,
   Pressable,
-  Linking
+  Linking,
+  Alert,
 } from "react-native";
 import Svg, { G, Path } from "react-native-svg";
 import { useNavigation } from "expo-router";
 import MenuModal from "../components/HeroModel";
+import * as Location from "expo-location";
 
 const cities = [
   "Pune",
@@ -35,7 +37,59 @@ const HeroSection = () => {
   const navigation = useNavigation();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [index, setIndex] = useState(0);
+  const [city, setCity] = useState("Loading...");
+  const [latLong, setLatLong] = useState([18.52097398044019, 73.86017831259551]);
   const translateY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    getCityName(latLong[0], latLong[1])
+  }, [latLong])
+
+  useEffect(() => {
+    const getLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync()
+        if (status !== "granted") {
+          Alert.alert("Permission Denied", "Location permission is required to show city.")
+          setCity("Pune")
+          return
+        }
+
+        const location = await Location.getCurrentPositionAsync({})
+        const latitude = location.coords.latitude
+        const longitude = location.coords.longitude
+
+        setLatLong([latitude, longitude])
+        getCityName(latitude, longitude)
+      } catch (error) {
+        console.error("Error getting location", error)
+        setCity("Pune")
+      }
+    }
+
+    getLocation()
+  }, [])
+
+  const getCityName = async (latitude: number, longitude: number) => {
+    const apiKey = "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
+
+    try {
+      const response = await fetch(url)
+      const data = await response.json()
+      if (data.status === "OK" && data.results.length > 0) {
+        const cityComponent = data.results[0].address_components.find(
+          (component: any) => component.types.includes("locality")
+        )
+        setCity(cityComponent ? cityComponent.long_name : "Unknown Location")
+      } else {
+        setCity("Pune")
+      }
+    } catch (error) {
+      console.error("Error fetching city name", error)
+      setCity("Pune")
+    }
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -58,13 +112,17 @@ const HeroSection = () => {
     return () => clearInterval(interval);
   }, []);
 
-    const ServiceForm = async () => {
-      try {
-        await Linking.openURL(`https://milestono.com/serviceform`);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  useEffect(() => {
+    getCityName(latLong[0], latLong[1]);
+  }, []);
+
+  const ServiceForm = async () => {
+    try {
+      await Linking.openURL(`https://milestono.com/serviceform`);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <View style={stylesHero.container}>
@@ -79,7 +137,7 @@ const HeroSection = () => {
         <View style={stylesHero.header}>
           <Text style={stylesHero.logo}>milestono</Text>
           <View style={stylesHero.buyButton}>
-            <Text style={stylesHero.buyLink}>Buy in Nashik</Text>
+            <Text style={stylesHero.buyLink}>Buy in {city}</Text>
           </View>
           <TouchableOpacity
             style={stylesHero.menuButton}
@@ -99,28 +157,31 @@ const HeroSection = () => {
         <View style={stylesHero.content}>
           <View style={stylesHero.textWrapper}>
             <Text style={stylesHero.description}>
-              <Text style={stylesHero.mainTitle}>Milestono</Text> is an online
-              platform offering properties in every city, perfect for sellers to
-              reach more buyers and get the best deals.
+              <Text style={stylesHero.mainTitle}>Milestono Services</Text> connects you with trusted service providers across every city. From home repairs to professional services, find the right expert for your needs.
             </Text>
           </View>
 
           <View style={stylesHero.searchWrapper}>
             <View style={stylesHero.tabContainer}>
-              <TouchableOpacity style={stylesHero.inactiveTab}
-              onPress={() => navigation.navigate("index" as never)}>
+              <TouchableOpacity
+                style={stylesHero.inactiveTab}
+                onPress={() => navigation.navigate("index" as never)}
+              >
                 <Text style={stylesHero.inactiveTabText}>Real Estate</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={stylesHero.activeTab}
-              >
+              <TouchableOpacity style={stylesHero.activeTab}>
                 <Text style={stylesHero.activeTabText}>Services</Text>
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={[stylesHero.tabContainer,{padding: 8}]}
-            onPress={()=>{ServiceForm()}}>
-              <Text style={stylesHero.ServiceTitle}>Are you an Service Provider? <Text style={{fontWeight: "700"}}>Post your service role here.</Text></Text>
+            <TouchableOpacity
+              style={[stylesHero.tabContainer, { padding: 12 }]}
+              onPress={() => { ServiceForm() }}
+            >
+              <Text style={stylesHero.ServiceTitle}>
+                Are you a Service Provider?
+                <Text style={{ fontWeight: "700" }}> Post your service here.</Text>
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -194,9 +255,6 @@ const stylesHero = StyleSheet.create({
     fontSize: 24,
     fontWeight: "600",
   },
-  boldText: {
-    fontWeight: "bold",
-  },
   description: {
     color: "white",
     fontSize: 12,
@@ -239,38 +297,9 @@ const stylesHero = StyleSheet.create({
     fontWeight: "bold",
   },
   ServiceTitle: {
-    color: "white"
-  },
-  searchContainer: {
-    flexDirection: "row",
-    // height: 35,
-    backgroundColor: "white",
-    borderRadius: 8,
-    overflow: "hidden",
-    alignItems: "center",
-    paddingHorizontal: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 10,
-    color: "#333",
-    paddingVertical: 10,
-  },
-  searchButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#232761", // Dark blue button
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 6,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchButtonText: {
     color: "white",
-    fontSize: 8,
-    fontWeight: "bold",
+    fontSize: 12,
+    textAlign: "center",
   },
 });
 

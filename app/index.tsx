@@ -8,6 +8,10 @@ export default function Main() {
   const statusBarHeight = StatusBar.currentHeight || 0;
   return (
     <View style={{ flex: 1, marginTop: statusBarHeight }}>
+      <StatusBar
+        backgroundColor="white"
+        barStyle="dark-content"
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 80 }}

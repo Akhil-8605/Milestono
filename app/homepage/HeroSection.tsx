@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+"use client"
+
+import React, { useEffect, useState, useRef } from "react"
 import {
   StyleSheet,
   View,
@@ -9,33 +11,147 @@ import {
   StatusBar,
   Animated,
   Pressable,
-} from "react-native";
-import Svg, { G, Path } from "react-native-svg";
-import { useNavigation, useRouter } from "expo-router";
-import MenuModal from "../components/HeroModel";
+  Alert,
+} from "react-native"
+import Svg, { G, Path } from "react-native-svg"
+import { useNavigation, useRouter } from "expo-router"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import axios from "axios"
+import * as Location from "expo-location"
 
 const cities = [
-  "Pune",
-  "Mumbai",
-  "Solapur",
-  "Satara",
-  "Amravati",
-  "Nashik",
-  "Delhi",
-  "Hyderabad",
-  "Noida",
-  "Bangalore",
-  "Chennai",
-  "Kolkata",
-  "Ahmedabad",
-];
+  "Pune", "Mumbai", "Solapur", "Satara", "Amravati", "Nashik",
+  "Delhi", "Hyderabad", "Noida", "Bangalore", "Chennai", "Kolkata", "Ahmedabad",
+]
 
-const HeroSection = () => {
-  const navigation = useNavigation();
-  const router = useRouter ();
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
-  const [index, setIndex] = useState(0);
-  const translateY = useRef(new Animated.Value(0)).current;
+interface UserData {
+  premiumEndDate: string
+  userFullName: string
+}
+
+const HeroSection: React.FC = () => {
+  const navigation = useNavigation()
+  const router = useRouter()
+
+  const [isMenuVisible, setIsMenuVisible] = useState<boolean>(false)
+  const [index, setIndex] = useState<number>(0)
+  const [city, setCity] = useState<string>("Loading...")
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  const [userData, setUserData] = useState<UserData>({ premiumEndDate: "", userFullName: "" })
+  const [latLong, setLatLong] = useState<[number, number]>([18.52097398044019, 73.86017831259551])
+  const translateY = useRef(new Animated.Value(0)).current
+
+  const BASE_URL = "http://localhost:6005";
+
+  useEffect(() => {
+    getCityName(latLong[0], latLong[1])
+  }, [])
+
+  useEffect(() => {
+    const getLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync()
+        if (status !== "granted") {
+          Alert.alert("Permission Denied", "Location permission is required to show city.")
+          setCity("Pune")
+          return
+        }
+
+        const location = await Location.getCurrentPositionAsync({})
+        const latitude = location.coords.latitude
+        const longitude = location.coords.longitude
+
+        setLatLong([latitude, longitude])
+        getCityName(latitude, longitude)
+      } catch (error) {
+        console.error("Error getting location", error)
+        setCity("Pune")
+      }
+    }
+
+    getLocation()
+  }, [])
+
+  const authenticateUser = async () => {
+    try {
+      const token = await AsyncStorage.getItem("auth")
+      if (!token) return
+      const response = await axios.get(`${BASE_URL}/api/authenticate`, {
+        headers: { Authorization: token },
+      })
+      const data = response.data as { role?: string }
+      setIsAuthenticated(data.role === "user")
+    } catch (error) {
+      console.error("Authentication error:", error)
+      setIsAuthenticated(false)
+    }
+  }
+
+  const getUserData = async () => {
+    try {
+      const token = await AsyncStorage.getItem("auth")
+      if (!token) return
+      const response = await axios.get(`${BASE_URL}/api/user-data`, {
+        headers: { Authorization: token },
+      })
+      setUserData(response.data as UserData)
+    } catch (error) {
+      console.error("Error fetching user data:", error)
+    }
+  }
+
+  const getCityName = async (latitude: number, longitude: number) => {
+    const apiKey = "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
+
+    try {
+      const response = await fetch(url)
+      const data = await response.json()
+      if (data.status === "OK" && data.results.length > 0) {
+        const cityComponent = data.results[0].address_components.find(
+          (component: any) => component.types.includes("locality")
+        )
+        setCity(cityComponent ? cityComponent.long_name : "Unknown Location")
+      } else {
+        setCity("Pune")
+      }
+    } catch (error) {
+      console.error("Error fetching city name", error)
+      setCity("Pune")
+    }
+  }
+
+  const getAreaName = async () => {
+    const apiKey = "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLong[0]},${latLong[1]}&key=${apiKey}`
+
+    try {
+      const response = await fetch(url)
+      const data = await response.json()
+      const addressComponents = data.results[0]?.address_components || []
+
+      const areaComponent =
+        addressComponents.find((c: any) => c.types.includes("sublocality_level_1")) ||
+        addressComponents.find((c: any) => c.types.includes("locality"))
+
+      const location = areaComponent?.long_name || "Pune"
+      router.push({ pathname: "/SearchPage", params: { location } })
+    } catch (error) {
+      console.error("Error fetching area name", error)
+      router.push({ pathname: "/SearchPage", params: { location: "Pune" } })
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.multiRemove(["auth", "user_id"])
+      setIsAuthenticated(false)
+      setUserData({ premiumEndDate: "", userFullName: "" })
+      Alert.alert("Success", "Logged out successfully")
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -51,12 +167,21 @@ const HeroSection = () => {
           useNativeDriver: true,
         }),
       ]).start(() => {
-        setIndex((prevIndex) => (prevIndex + 1) % cities.length);
-      });
-    }, 2000);
+        setIndex((prevIndex) => (prevIndex + 1) % cities.length)
+      })
+    }, 2000)
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    getCityName(latLong[0], latLong[1])
+  }, [])
+
+  useEffect(() => {
+    authenticateUser()
+    getUserData()
+  }, [])
 
   return (
     <View style={stylesHero.container}>
@@ -71,12 +196,9 @@ const HeroSection = () => {
         <View style={stylesHero.header}>
           <Text style={stylesHero.logo}>milestono</Text>
           <View style={stylesHero.buyButton}>
-            <Text style={stylesHero.buyLink}>Buy in Nashik</Text>
+            <Text style={stylesHero.buyLink}>Buy in {city}</Text>
           </View>
-          <TouchableOpacity
-            style={stylesHero.menuButton}
-            onPress={() => setIsMenuVisible(true)}
-          >
+          <TouchableOpacity style={stylesHero.menuButton} onPress={() => setIsMenuVisible(true)}>
             <Svg width="30" height="30" viewBox="0 0 24 24" fill="white">
               <Path
                 fillRule="evenodd"
@@ -91,9 +213,8 @@ const HeroSection = () => {
         <View style={stylesHero.content}>
           <View style={stylesHero.textWrapper}>
             <Text style={stylesHero.description}>
-              <Text style={stylesHero.mainTitle}>Milestono</Text> is an online
-              platform offering properties in every city, perfect for sellers to
-              reach more buyers and get the best deals.
+              <Text style={stylesHero.mainTitle}>Milestono</Text> is an online platform offering properties in every
+              city, perfect for sellers to reach more buyers and get the best deals.
             </Text>
           </View>
 
@@ -102,29 +223,15 @@ const HeroSection = () => {
               <TouchableOpacity style={stylesHero.activeTab}>
                 <Text style={stylesHero.activeTabText}>Real Estate</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={stylesHero.inactiveTab}
-                onPress={() => navigation.navigate("ServicePage" as never)}
-              >
+              <TouchableOpacity style={stylesHero.inactiveTab} onPress={() => router.push("/ServicePage")}>
                 <Text style={stylesHero.inactiveTabText}>Services</Text>
               </TouchableOpacity>
             </View>
 
-            <Pressable
-              style={stylesHero.searchContainer}
-              onPress={() => navigation.navigate("SearchPage" as never)}
-            >
-              <Animated.Text style={[stylesHero.searchInput]}>
-                {`Search "${cities[index]}"`}
-              </Animated.Text>
-              <View>
-                <Svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="#232761"
-                  style={stylesHero.searchIcon}
-                >
+            <Pressable style={stylesHero.searchContainer} onPress={() => router.push("/SearchPage")}>
+              <Animated.Text style={[stylesHero.searchInput]}>{`Search "${cities[index]}"`}</Animated.Text>
+              <TouchableOpacity onPress={getAreaName}>
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="#232761" style={stylesHero.searchIcon}>
                   <G id="SVGRepo_iconCarrier">
                     <G>
                       <Path fill="none" d="M0 0h24v24H0z" />
@@ -135,24 +242,19 @@ const HeroSection = () => {
                     </G>
                   </G>
                 </Svg>
-              </View>
-              <View style={stylesHero.searchButton}>
+              </TouchableOpacity>
+              <TouchableOpacity style={stylesHero.searchButton} onPress={() => router.push("/SearchPage")}>
                 <Text style={stylesHero.searchButtonText}>Search</Text>
-              </View>
+              </TouchableOpacity>
             </Pressable>
           </View>
         </View>
       </ImageBackground>
-
-      <MenuModal
-        isVisible={isMenuVisible}
-        onClose={() => setIsMenuVisible(false)}
-      />
     </View>
-  );
-};
+  )
+}
 
-const { width, height } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window")
 const stylesHero = StyleSheet.create({
   container: {
     marginBottom: 5,
@@ -212,9 +314,6 @@ const stylesHero = StyleSheet.create({
     fontSize: 24,
     fontWeight: "600",
   },
-  boldText: {
-    fontWeight: "bold",
-  },
   description: {
     color: "white",
     fontSize: 12,
@@ -258,7 +357,6 @@ const stylesHero = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: "row",
-    // height: 35,
     backgroundColor: "white",
     borderRadius: 8,
     overflow: "hidden",
@@ -274,7 +372,7 @@ const stylesHero = StyleSheet.create({
   searchButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#232761", // Dark blue button
+    backgroundColor: "#232761",
     paddingVertical: 5,
     paddingHorizontal: 15,
     borderRadius: 6,
@@ -287,6 +385,6 @@ const stylesHero = StyleSheet.create({
     fontSize: 8,
     fontWeight: "bold",
   },
-});
+})
 
-export default HeroSection;
+export default HeroSection
