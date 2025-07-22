@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,59 +7,67 @@ import {
   ScrollView,
   StyleSheet,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useNavigation } from "expo-router";
+import axios from "axios";
+import { BASE_URL } from "@env";
 
 const { width } = Dimensions.get("window");
 const cardWidth = width * 0.8;
 
-const newsArticles = [
-  {
-    id: 1,
-    title: "Outlook of Real Estate in 2025",
-    description: "Real estate 2025 outlook: Here's what to expect.",
-    image: require("../../assets/images/dummyImg.webp"),
-  },
-  {
-    id: 2,
-    title: "Shriram Properties plans to double holdings",
-    description: "Real estate giant expands investment portfolio.",
-    image: require("../../assets/images/dummyImg.webp"),
-  },
-  {
-    id: 3,
-    title: "Green Homes: The Future of Housing",
-    description: "How sustainable homes are shaping the market.",
-    image: require("../../assets/images/dummyImg.webp"),
-  },
-];
-
 const NewsArticlesSection = () => {
   const navigation = useNavigation();
+  const [articles, setArticles] = useState([]);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const resp = await axios.get(`${BASE_URL}/api/articles`);
+        setArticles(resp.data);
+      } catch (e) {
+        console.error("Error fetching articles:", e);
+        Alert.alert("Error", "Unable to load articles.");
+      }
+    };
+    fetchArticles();
+  }, []);
+
+  const displayed = showAll ? articles : articles.slice(0, 3);
 
   return (
     <View style={styles.container}>
-      {/* Section Header */}
       <Text style={styles.heading}>News & Article</Text>
       <Text style={styles.subHeading}>
         Read what's happening in Real Estate
       </Text>
 
-      {/* Vertically Scrollable News Cards */}
       <ScrollView
         horizontal
-        style={[styles.scrollView]}
-        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollView}
       >
-        {newsArticles.map((article) => (
-          <View key={article.id} style={styles.card}>
-            <Image source={article.image} style={styles.image} />
+        {displayed.map((article) => (
+          <View key={article._id} style={styles.card}>
+            <Image
+              source={
+                article.imageSrc
+              ? { uri: article.imagesSrc }
+              : "https://yourcdn.com/placeholder.png"} 
+              style={styles.image} 
+            />
             <View style={styles.cardContent}>
-              <Text style={styles.title}>{article.title}</Text>
+              <Text style={styles.title}>{article.name}</Text>
               <Text style={styles.description} numberOfLines={2}>
-                {article.description}
+                {article.paragraph}
               </Text>
-              <TouchableOpacity style={styles.button}>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() =>
+                  navigation.push("NewsDetails", { id: article._id })
+                }
+              >
                 <Text style={styles.buttonText}>Read More</Text>
               </TouchableOpacity>
             </View>
@@ -159,6 +167,30 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginTop: 16,
     textAlign: "right",
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 15,
+  },
+  toggleButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: "#FFF",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  toggleText: {
+    fontSize: 12,
+    color: "#4A4A9C",
+    fontWeight: "500",
+  },
+  seeMore: {
+    fontSize: 14,
+    color: "#4A4A9C",
+    fontWeight: "600",
   },
 });
 

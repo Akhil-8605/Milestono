@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import {
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "expo-router";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
+import axios from "axios";
+import { BASE_URL } from "@env";
 
 const { width } = Dimensions.get("window");
 
@@ -32,12 +34,12 @@ const PropertySearchAndFilter = () => {
   // Bedrooms
   const [selectedBedrooms, setSelectedBedrooms] = useState<string[]>([]);
   // Area Range
-  const [areaRange, setAreaRange] = useState<[number, number]>([1800, 12400]);
-  const [minArea, setMinArea] = useState("1800");
+  const [areaRange, setAreaRange] = useState<[number, number]>([100, 12400]);
+  const [minArea, setMinArea] = useState("100");
   const [maxArea, setMaxArea] = useState("12400");
   // Price Range
   const [priceRange, setPriceRange] = useState<[number, number]>([21.0, 64.3]);
-  const [minPrice, setMinPrice] = useState("210321000");
+  const [minPrice, setMinPrice] = useState("100");
   const [maxPrice, setMaxPrice] = useState("642981000");
   // Type of property
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>(
@@ -115,15 +117,142 @@ const PropertySearchAndFilter = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const [latitude, setLatitude] = useState(-1);
+  const [longitude, setLongitude] = useState(-1);
+  const [radius, setRadius] = useState(50);
+  const [filteredListings, setFilteredListings] = useState([]);
+  const [filterData, setFilterData] = useState([]);
+  const [filterApplied, setFilterApplied] = useState(false);
+  const [filters, setFilters] = useState({
+    category: '',
+    bedrooms: [],
+    areaRange: [0, 10000],
+    priceRange: [0, 100000000],
+    type: '',
+    propertyTypes: [],
+    amenities: [],
+    constructionStatus: [],
+    postedBy: [],
+  });
+
+  const [cityCordinates, setCityCordinates] = useState([-1, -1]);
+  const [searchCity, setSearchCity] = useState('');
+  const [placePredictions, setPlacePredictions] = useState([]);
+
+  const fetchPredictions = async (input) => {
+    if (input.length < 3) {
+      setPlacePredictions([]);
+      return;
+    }
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&key=${GOOGLE_PLACES_API_KEY}`
+      );
+      const data = await response.json();
+      setPlacePredictions(data.predictions);
+    } catch (error) {
+      console.error('Prediction fetch error:', error);
+    }
+  };
+
+  const handlePlaceChange = (text) => {
+    setSearchQuery(text);
+    fetchPredictions(text);
+  };
+
+  const handlePlaceSelect = async (placeId, description) => {
+    setSearchQuery(description);
+    setPlacePredictions([]);
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_PLACES_API_KEY}`
+      );
+      const data = await response.json();
+      const location = data.result.geometry.location;
+      setLatitude(location.lat);
+      setLongitude(location.lng);
+    } catch (error) {
+      console.error('Place details error:', error);
+    }
+  };
+
+  const handleCitySelect = async (city) => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${city}&key=${GOOGLE_PLACES_API_KEY}`
+      );
+      const data = await response.json();
+      const location = data.results[0].geometry.location;
+      setCityCordinates([location.lat, location.lng]);
+    } catch (error) {
+      setCityCordinates([-1, -1]);
+      console.error('City geocode error:', error);
+    }
+  };
+
+  const handleSearch = async () => {
+    try {
+      let rad = radius;
+      let lat = latitude;
+      let lng = longitude;
+      if (latitude === -1 && longitude === -1) {
+        lat = cityCordinates[0];
+        lng = cityCordinates[1];
+        rad = 50;
+      }
+      const response = await axios.post(`${BASE_URL}/api/search_properties`, {
+        latitude: lat,
+        longitude: lng,
+        radius: rad,
+      });
+      setFilteredListings(response.data);
+    } catch (error) {
+      setFilteredListings([]);
+      console.error('Search error:', error);
+    }
+  };
+
+  const applyFilters = () => {
+    const result = filteredListings.filter((property) => {
+      if (filters.category && property.propertyCategory !== filters.category) return false;
+      if (
+        filters.bedrooms.length > 0 &&
+        !filters.bedrooms.some((b) =>
+          b === '1RK' ? property.bedrooms === '1RK' : b.includes(property.bedrooms)
+        )
+      ) return false;
+      const areaSqft = parseInt(property.areaSqft);
+      if (areaSqft < filters.areaRange[0] || areaSqft > filters.areaRange[1]) return false;
+      const expectedPrice = parseInt(property.expectedPrice);
+      if (expectedPrice < filters.priceRange[0] || expectedPrice > filters.priceRange[1]) return false;
+      if (filters.type && property.sellType.toLowerCase() !== filters.type.toLowerCase()) return false;
+      if (filters.propertyTypes.length > 0 &&
+        !filters.propertyTypes.some((type) => property.propertyContains.includes(type))) return false;
+      if (filters.amenities.length > 0 &&
+        !filters.amenities.some((a) => property.amenities.includes(a))) return false;
+      if (filters.constructionStatus.length > 0 &&
+        !filters.constructionStatus.includes(property.oldProperty)) return false;
+      if (filters.postedBy.length > 0 &&
+        !filters.postedBy.includes(property.sellerType)) return false;
+      return true;
+    });
+    setFilterApplied(true);
+    setFilterData(result);
+  };
+
+  useEffect(() => {
+    applyFilters();
+  }, [filteredListings]);
+
   // --- Step 4: Handlers for toggling chips ---
   const handleTypeSelect = (type: string) => {
     setSelectedType(type);
   };
 
-  const handleCitySelect = (city: string) => {
-    setSelectedCity(city);
-    setSearchQuery(city);
-  };
+  // const handleCitySelect = (city: string) => {
+  //   setSelectedCity(city);
+  //   setSearchQuery(city);
+  // };
 
   const handleNext = () => {
     if (searchQuery.trim() || selectedCity) {
@@ -149,11 +278,11 @@ const PropertySearchAndFilter = () => {
   // --- Step 5: Clear all filters ---
   const clearAll = () => {
     setSelectedBedrooms([]);
-    setMinArea("1800");
+    setMinArea("100");
     setMaxArea("12400");
     setAreaRange([1800, 12400]);
 
-    setMinPrice("210321000");
+    setMinPrice("100");
     setMaxPrice("642981000");
     setPriceRange([21.0, 64.3]);
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,64 +7,124 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "expo-router";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+import * as Location from "expo-location"; // Import expo-location
+import { BASE_URL } from "@env";
 
 const CARD_WIDTH = Dimensions.get("window").width * 0.65;
 
 export default function NewLaunchProperties() {
-  const properties = [
-    {
-      id: 1,
-      name: "Sample Property",
-      location: "Sample Location",
-      price: "99999",
-      type: "1BHK BHK",
-      image: require("../../assets/images/dummyImg.webp"),
-    },
-    {
-      id: 2,
-      name: "Sample Property",
-      location: "Sample Location",
-      price: "99999",
-      type: "1BHK BHK",
-      image: require("../../assets/images/dummyImg.webp"),
-    },
-    {
-      id: 3,
-      name: "Sample Property",
-      location: "Sample Location",
-      price: "99999",
-      type: "1BHK BHK",
-      image: require("../../assets/images/dummyImg.webp"),
-    },
-    {
-      id: 1,
-      name: "Sample Property",
-      location: "Sample Location",
-      price: "99999",
-      type: "1BHK BHK",
-      image: require("../../assets/images/dummyImg.webp"),
-    },
-    {
-      id: 2,
-      name: "Sample Property",
-      location: "Sample Location",
-      price: "99999",
-      type: "1BHK BHK",
-      image: require("../../assets/images/dummyImg.webp"),
-    },
-    {
-      id: 3,
-      name: "Sample Property",
-      location: "Sample Location",
-      price: "99999",
-      type: "1BHK BHK",
-      image: require("../../assets/images/dummyImg.webp"),
-    },
-  ];
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
 
-  const navigation = useNavigation()
+  useEffect(() => {
+    getProperties();
+  }, []);
+
+  const getProperties = async () => {
+    // Use AsyncStorage to retrieve the token
+    const token = await AsyncStorage.getItem("auth");
+
+    if (!token) {
+      alert("Please log in to view properties.");
+      navigation.navigate("login" as never);
+      return;
+    }
+
+    try {
+      // Request location permission (if not already granted)
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permission to access location was denied.");
+        return;
+      }
+
+      // Get current location
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      const { latitude, longitude } = location.coords;
+
+
+      const res = await axios.post(
+        `${BASE_URL}/api/home-properties`,
+        {
+          latitude,
+          longitude,
+          radius: 50,
+        },
+        {
+          headers: { Authorization: token },
+        }
+      );
+      setProperties(res.data);
+    } catch (err) {
+      console.error("Error loading properties:", err);
+      fetchWithFallback();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchWithFallback = async () => {
+    const token = await AsyncStorage.getItem("auth");
+    if (!token) {
+      alert("Please log in to view properties.");
+      navigation.navigate("login" as never);
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/home-properties`,
+        {
+          latitude: 18.52097398044019,
+          longitude: 73.86017831259551,
+          radius: 50,
+        },
+        {
+          headers: { Authorization: token },
+        }
+      );
+      setProperties(res.data);
+    } catch (err) {
+      console.error("Error with fallback location:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveClick = async (id) => {
+    const token = await AsyncStorage.getItem("auth");
+    if (!token) {
+      alert("Please log in to save a property.");
+      navigation.navigate("login" as never);
+      return;
+    }
+    try {
+      await axios.post(
+        `${BASE_URL}/api/save-property`,
+        { property_id: id },
+        { headers: { Authorization: token } }
+      );
+      getProperties(); // Refresh saved state
+    } catch (err) {
+      console.error("Error saving property:", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={{ marginTop: 50, alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#2E3192" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -77,59 +137,50 @@ export default function NewLaunchProperties() {
         contentContainerStyle={styles.scrollContainer}
       >
         {properties.map((property) => (
-          <View key={property.id} style={styles.card}>
+          <View key={property._id} style={styles.card}>
             <Image
-              source={property.image}
+              source={{ uri: property.uploadedPhotos?.[0] || "" }}
               style={styles.propertyImage}
-              resizeMode="contain"
+              resizeMode="cover"
             />
             <View style={styles.cardContent}>
-              <Text style={styles.propertyName}>{property.name}</Text>
+              <Text style={styles.propertyName}>
+                {property.heading} ({property.sellerType})
+              </Text>
               <Text style={styles.locationText}>
-                Location: {property.location}
+                Location:{" "}
+                {property.landmark.replace(/\b\w/g, (c) => c.toUpperCase())},{" "}
+                {property.city}
               </Text>
               <View style={styles.priceContainer}>
-                <Text style={styles.priceText}>Rs {property.price}</Text>
-                <Text style={styles.typeText}>| {property.type}</Text>
+                <Text style={styles.priceText}>
+                  {property.sellType === "Sell" ? "Rs " : "Rent: Rs "}
+                  {property.sellType === "Sell"
+                    ? property.expectedPrice
+                    : property.pricePerMonth}
+                </Text>
+                <Text style={styles.typeText}>
+                  | {property.bedrooms}
+                  {property.bedrooms !== "1RK" ? "BHK" : ""}
+                </Text>
               </View>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.saveButton}>
-                  <Text style={styles.saveButtonText}>Save Property</Text>
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={() => handleSaveClick(property._id)}
+                >
+                  <Text style={styles.saveButtonText}>
+                    {property.saved ? "Saved" : "Save Property"}
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.viewButton} onPress={()=>{navigation.navigate("PropertyDetailsPage" as never)}}>
-                  <Text style={styles.viewButtonText}>View Details</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContainer}
-      >
-        {properties.map((property) => (
-          <View key={property.id} style={styles.card}>
-            <Image
-              source={property.image}
-              style={styles.propertyImage}
-              resizeMode="contain"
-            />
-            <View style={styles.cardContent}>
-              <Text style={styles.propertyName}>{property.name}</Text>
-              <Text style={styles.locationText}>
-                Location: {property.location}
-              </Text>
-              <View style={styles.priceContainer}>
-                <Text style={styles.priceText}>Rs {property.price}</Text>
-                <Text style={styles.typeText}>| {property.type}</Text>
-              </View>
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.saveButton}>
-                  <Text style={styles.saveButtonText}>Save Property</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.viewButton} onPress={()=>{navigation.navigate("PropertyDetailsPage" as never)}}>
+                <TouchableOpacity
+                  style={styles.viewButton}
+                  onPress={() =>
+                    navigation.navigate("PropertyDetailsPage", {
+                      propertyId: property._id,
+                    } as never)
+                  }
+                >
                   <Text style={styles.viewButtonText}>View Details</Text>
                 </TouchableOpacity>
               </View>
@@ -154,7 +205,7 @@ const styles = StyleSheet.create({
   subheading: {
     fontSize: 12,
     color: "#666",
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 20,
   },
   scrollContainer: {

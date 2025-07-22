@@ -8,25 +8,23 @@ import {
   View,
   Image,
 } from "react-native";
-import {
-  ImagePickerResponse,
-  launchImageLibrary,
-} from "react-native-image-picker";
+import * as ImagePicker from 'expo-image-picker';
 
 interface Form3Props {
   onBack: () => void;
   onSubmit?: () => void;
 }
 
-const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
+const Form3: React.FC<Form3Props> = ({  formData, updateFormData, uploadedPhotos, setUploadedPhotos, onBack, onSubmit, disabled }) => {
   const [photos, setPhotos] = useState<string[]>([]);
-  const [otherRooms, setOtherRooms] = useState<string[]>([]);
-  const [furnishing, setFurnishing] = useState<string>("");
-  const [parking, setParking] = useState<string[]>([]);
+  const [selectedRoom, setSelectedRooms] = useState<string[]>([]);
+  const [selectedFurnishing, setSelectedFurnishing] = useState<string>("");
+  const [reservedParking, setReservedParking] = useState<string>("");
   const [errors, setErrors] = useState<{ photos?: string }>({});
 
   const validateForm = () => {
-    const newErrors: { photos?: string } = {};
+    const newErrors: { photos?: string } = {};3
+
     if (photos.length === 0) {
       newErrors.photos = "Please add at least one photo";
     }
@@ -36,34 +34,42 @@ const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
 
   const handleFormSubmit = () => {
     if (validateForm()) {
-      console.log("Form data submitted:", {
-        photos,
-        otherRooms,
-        furnishing,
-        parking,
+      updateFormData({
+        selectedRoom,
+        selectedFurnishing,
+        reservedParking,
       });
-      if (onSubmit) {
-        onSubmit();
-      }
+      onSubmit();
+      
     } else {
       Alert.alert("Error", "Please fill in all required fields");
     }
   };
 
-  const handleImagePicker = () => {
-    launchImageLibrary(
-      {
-        mediaType: "photo",
-        selectionLimit: 10,
-      },
-      (response: ImagePickerResponse) => {
-        if (response.assets) {
-          const newPhotos = response.assets.map((asset) => asset.uri || "");
-          setPhotos([...photos, ...newPhotos]);
-        }
-      }
-    );
-  };
+  const handleImagePicker = async () => {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== 'granted') {
+    alert('Permission to access media library is required!');
+    return;
+  }
+
+  let result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsMultipleSelection: true,
+    quality: 1,
+  });
+
+  if (!result.canceled) {
+    const files = result.assets.map((asset) => ({
+      uri: asset.uri,
+      name: asset.fileName || asset.uri.split('/').pop(),
+      type: asset.type || 'image/jpeg',
+    }));
+    const selectedUri = result.assets.map((asset) => asset.uri);
+    setPhotos(selectedUri);
+    setUploadedPhotos(files);
+  }
+};
 
   const SelectionButton = ({ title, selected, onPress }: any) => (
     <TouchableOpacity
@@ -78,19 +84,10 @@ const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
 
   return (
     <View style={styles.container}>
-      {/* Fixed Header */}
-
-      {/* Scrollable Content */}
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onBack}>
             <Text style={styles.arrow}>←</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => console.log("Post Via WhatsApp pressed (Form3)")}
-          >
-            {/* <Text style={styles.whatsapp}>Post Via WhatsApp</Text> */}
           </TouchableOpacity>
         </View>
         <Text style={styles.title}>Basic Details of Your Property</Text>
@@ -130,12 +127,12 @@ const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
                 <SelectionButton
                   key={room}
                   title={room}
-                  selected={otherRooms.includes(room)}
+                  selected={selectedRoom.includes(room)}
                   onPress={() => {
-                    setOtherRooms(
-                      otherRooms.includes(room)
-                        ? otherRooms.filter((r) => r !== room)
-                        : [...otherRooms, room]
+                    setSelectedRooms(
+                      selectedRoom.includes(room)
+                        ? selectedRoom.filter((r) => r !== room)
+                        : [...selectedRoom, room]
                     );
                   }}
                 />
@@ -151,8 +148,8 @@ const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
               <SelectionButton
                 key={option}
                 title={option}
-                selected={furnishing === option}
-                onPress={() => setFurnishing(option)}
+                selected={selectedFurnishing === option}
+                onPress={() => setSelectedFurnishing(option)}
               />
             ))}
           </View>
@@ -165,13 +162,9 @@ const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
               <SelectionButton
                 key={option}
                 title={option}
-                selected={parking.includes(option)}
+                selected={reservedParking===option}
                 onPress={() => {
-                  setParking(
-                    parking.includes(option)
-                      ? parking.filter((p) => p !== option)
-                      : [...parking, option]
-                  );
+                  setReservedParking(option)
                 }}
               />
             ))}
@@ -181,11 +174,11 @@ const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Fixed Bottom Bar */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={styles.bottomButton}
           onPress={handleFormSubmit}
+          disabled={disabled}
         >
           <Text style={styles.bottomButtonText}>Submit</Text>
         </TouchableOpacity>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -10,10 +10,15 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  Linking,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-
-import { useNavigation } from "expo-router";
+import axios from "axios";
+import * as WebBrowser from "expo-web-browser";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation, useRouter, useLocalSearchParams } from "expo-router";
+import { BASE_URL } from "@env";
 
 const { width } = Dimensions.get("window");
 
@@ -24,6 +29,45 @@ export default function LoginScreen() {
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const navigation = useNavigation();
+  const router = useRouter();
+  const searchParams = useLocalSearchParams();
+
+  const handleLogin = async () => {
+    if (!acceptTerms) {
+      Alert.alert(
+        "Terms Required",
+        "You must accept the privacy policy and terms to log in."
+      );
+      return;
+    }
+    try {
+      const response = await axios.post(`${BASE_URL}/api/login`, {
+        email,
+        password,
+      });
+
+      const { token } = response.data;
+      await AsyncStorage.setItem("auth", token);
+      router.replace("/");
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert("Login Failed", error?.response?.data?.message || "An error occurred.");
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    const result = await WebBrowser.openBrowserAsync(
+      `${BASE_URL}/auth/google/callback`
+    );
+  };
+
+  useEffect(() => {
+    const token = searchParams.token;
+    if (token) {
+      AsyncStorage.setItem("auth", token as string);
+      router.replace("/");
+    }
+  }, [searchParams]);
 
   return (
     <ImageBackground
@@ -43,9 +87,7 @@ export default function LoginScreen() {
               <Text style={styles.welcomeText}>
                 Welcome to the MILESTONO,
               </Text>
-              <Text style={styles.subText}>
-                We're thrilled to have you back!
-              </Text>
+              <Text style={styles.subText}>We're thrilled to have you back!</Text>
             </View>
 
             <View style={styles.formContainer}>
@@ -82,9 +124,7 @@ export default function LoginScreen() {
 
               <TouchableOpacity
                 style={styles.forgotPassword}
-                onPress={() =>
-                  navigation.navigate("ForgotPasswordPage" as never)
-                }
+                onPress={() => router.push("/ForgotPasswordPage")}
               >
                 <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
               </TouchableOpacity>
@@ -97,24 +137,22 @@ export default function LoginScreen() {
                   ]}
                   onPress={() => setAcceptTerms(!acceptTerms)}
                 >
-                  {acceptTerms && (
-                    <Feather name="check" size={14} color="#1a237e" />
-                  )}
+                  {acceptTerms && <Feather name="check" size={14} color="#1a237e" />}
                 </TouchableOpacity>
                 <Text style={styles.termsText}>
                   I accept the{" "}
-                  <TouchableOpacity>
-                    <Text style={styles.linkText}>Privacy Policy</Text>
-                  </TouchableOpacity>{" "}
+                  <Text style={styles.linkText} onPress={() => Linking.openURL("/privacy-policy")}>
+                    Privacy Policy
+                  </Text>{" "}
                   and{" "}
-                  <TouchableOpacity>
-                    <Text style={styles.linkText}>Terms and Conditions</Text>
-                  </TouchableOpacity>{" "}
+                  <Text style={styles.linkText} onPress={() => Linking.openURL("/terms-condition")}>
+                    Terms and Conditions
+                  </Text>{" "}
                   of Milestono.
                 </Text>
               </View>
 
-              <TouchableOpacity style={styles.loginButton}>
+              <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
                 <Text style={styles.loginButtonText}>Login</Text>
               </TouchableOpacity>
 
@@ -124,7 +162,7 @@ export default function LoginScreen() {
                 <View style={styles.dividerLine} />
               </View>
 
-              <TouchableOpacity style={styles.googleButton}>
+              <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignup}>
                 <Image
                   source={{ uri: "https://www.google.com/favicon.ico" }}
                   style={styles.googleIcon}
@@ -134,9 +172,7 @@ export default function LoginScreen() {
 
               <View style={styles.signupContainer}>
                 <Text style={styles.signupText}>Don't have an account? </Text>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate("SignupPage" as never)}
-                >
+                <TouchableOpacity onPress={() => router.push("/SignupPage")}>
                   <Text style={styles.signupTextLink}>Sign up</Text>
                 </TouchableOpacity>
               </View>

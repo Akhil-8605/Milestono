@@ -11,23 +11,145 @@ import {
   Dimensions,
   Platform,
   ScrollView,
+  Modal,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
+import axios from "axios";
+import { BASE_URL } from "@env";
+
+interface AxiosError {
+  response?: {
+    data: {
+      message: string;
+    };
+  };
+  message: string;
+}
 
 export default function SignupScreen() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [verifyEmail, setVerifyEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [verifyPhone, setVerifyPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [emailOtp, setEmailOtp] = useState("");
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [emailOtpInput, setEmailOtpInput] = useState("");
+  const [phoneOtpInput, setPhoneOtpInput] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
   const navigation = useNavigation();
 
+  const closeConfirmationModal = () => {
+    setIsConfirmationOpen(false);
+    if (message === "Registered successfully") {
+      navigation.navigate("LoginPage" as never);
+    }
+  };
+
+  const handleSignup = async () => {
+    if (password !== confirmPassword) {
+      setMessage("Passwords do not match");
+      setIsConfirmationOpen(true);
+      return;
+    }
+
+    if (password.length < 8) {
+      setMessage("Password must be at least 8 characters long.");
+      setIsConfirmationOpen(true);
+      return;
+    }
+
+    if (!emailVerified || !phoneVerified) {
+      setMessage("Please verify your email and phone before signing up");
+      setIsConfirmationOpen(true);
+      return;
+    }
+
+    if (!acceptTerms) {
+      setMessage("You must accept the privacy policy and terms and conditions.");
+      setIsConfirmationOpen(true);
+      return;
+    }
+
+    try {
+      await axios.post(`${BASE_URL}/api/register`, {
+        name: fullName,
+        email,
+        phone,
+        password,
+      });
+      setMessage("Registered successfully");
+      setIsConfirmationOpen(true);
+    } catch (error: unknown) {
+      const err = error as AxiosError;
+      if (err.response?.data?.message) {
+        setMessage(err.response.data.message);
+      } else {
+        setMessage("Signup failed: " + err.message);
+      }
+      setIsConfirmationOpen(true);
+    }
+  };
+
+  const verifyEmail = async () => {
+    try {
+      const response = await axios.post(`${BASE_URL}/api/verify-email`, { email });
+      setEmailOtp(response.data.otp);
+      setMessage("OTP sent successfully to email");
+      setIsConfirmationOpen(true);
+    } catch (error: unknown) {
+      const err = error as AxiosError;
+      setMessage("Failed to send email OTP: " + err.message);
+      setIsConfirmationOpen(true);
+    }
+  };
+
+  const verifyPhone = async () => {
+    try {
+      const response = await axios.post(`${BASE_URL}/api/verify-phone`, { phone });
+      setPhoneOtp(response.data.otp);
+      setMessage("OTP sent successfully to phone");
+      setIsConfirmationOpen(true);
+    } catch (error: unknown) {
+      const err = error as AxiosError;
+      setMessage("Failed to send phone OTP: " + err.message);
+      setIsConfirmationOpen(true);
+    }
+  };
+
+  const handleEmailOtpVerification = () => {
+    if (emailOtpInput === emailOtp) {
+      setEmailVerified(true);
+      setMessage("Email verified successfully");
+      setIsConfirmationOpen(true);
+    } else {
+      setMessage("Invalid email OTP");
+      setIsConfirmationOpen(true);
+    }
+  };
+
+  const handlePhoneOtpVerification = () => {
+    if (phoneOtpInput === phoneOtp) {
+      setPhoneVerified(true);
+      setMessage("Phone verified successfully");
+      setIsConfirmationOpen(true);
+    } else {
+      setMessage("Invalid phone OTP");
+      setIsConfirmationOpen(true);
+    }
+  };
+
+  const handleGoogleSignup = () => {
+    window.open(`${BASE_URL}/auth/google/callback`, "_self");
+  };
+  
   return (
     <ImageBackground
       source={require("../assets/images/loginbg.jpg")}
@@ -44,12 +166,8 @@ export default function SignupScreen() {
               <Text style={styles.logo}>MILESTONO</Text>
 
               <View style={styles.welcomeContainer}>
-                <Text style={styles.welcomeText}>
-                  Welcome to the MILESTONO,
-                </Text>
-                <Text style={styles.subText}>
-                  We're excited to welcome you!
-                </Text>
+                <Text style={styles.welcomeText}>Welcome to MILESTONO,</Text>
+                <Text style={styles.subText}>We're excited to welcome you!</Text>
               </View>
 
               <View style={styles.formContainer}>
@@ -62,34 +180,74 @@ export default function SignupScreen() {
                   autoCapitalize="words"
                 />
 
-                <View style={styles.verifyContainer}>
-                  <TextInput
-                    style={[styles.input, styles.verifyInput]}
-                    placeholder="Email Address"
-                    placeholderTextColor="#999"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                  <TouchableOpacity style={styles.verifyButton}>
+              <View style={styles.verifyContainer}>
+                <TextInput
+                  style={[styles.input, styles.verifyInput]}
+                  placeholder="Email Address"
+                  placeholderTextColor="#999"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!emailVerified}
+                />
+                {!emailVerified && (
+                  <TouchableOpacity style={styles.verifyButton} onPress={verifyEmail}>
                     <Text style={styles.verifyButtonText}>Verify</Text>
                   </TouchableOpacity>
-                </View>
+                )}
+              </View>
 
+              {/* Email OTP Input */}
+              {!emailVerified && emailOtp && (
                 <View style={styles.verifyContainer}>
                   <TextInput
                     style={[styles.input, styles.verifyInput]}
-                    placeholder="Phone Number"
+                    placeholder="Enter Email OTP"
                     placeholderTextColor="#999"
-                    value={phone}
-                    onChangeText={setPhone}
-                    keyboardType="phone-pad"
+                    value={emailOtpInput}
+                    onChangeText={setEmailOtpInput}
+                    keyboardType="numeric"
                   />
-                  <TouchableOpacity style={styles.verifyButton}>
-                    <Text style={styles.verifyButtonText}>Verify</Text>
+                  <TouchableOpacity style={styles.verifyButton} onPress={handleEmailOtpVerification}>
+                    <Text style={styles.verifyButtonText}>Verify OTP</Text>
                   </TouchableOpacity>
                 </View>
+              )}
+
+              {/* Phone Input & Verification */}
+              <View style={styles.verifyContainer}>
+                <TextInput
+                  style={[styles.input, styles.verifyInput]}
+                  placeholder="Phone Number"
+                  placeholderTextColor="#999"
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  editable={!phoneVerified}
+                />
+                {!phoneVerified && (
+                  <TouchableOpacity style={styles.verifyButton} onPress={verifyPhone}>
+                    <Text style={styles.verifyButtonText}>Verify</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              
+              {!phoneVerified && phoneOtp && (
+                <View style={styles.verifyContainer}>
+                  <TextInput
+                    style={[styles.input, styles.verifyInput]}
+                    placeholder="Enter Phone OTP"
+                    placeholderTextColor="#999"
+                    value={phoneOtpInput}
+                    onChangeText={setPhoneOtpInput}
+                    keyboardType="numeric"
+                  />
+                  <TouchableOpacity style={styles.verifyButton} onPress={handlePhoneOtpVerification}>
+                    <Text style={styles.verifyButtonText}>Verify OTP</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
 
                 <View style={styles.passwordContainer}>
                   <TextInput
@@ -104,11 +262,7 @@ export default function SignupScreen() {
                     style={styles.eyeIcon}
                     onPress={() => setShowPassword(!showPassword)}
                   >
-                    <Feather
-                      name={showPassword ? "eye" : "eye-off"}
-                      size={22}
-                      color="#999"
-                    />
+                    <Feather name={showPassword ? "eye" : "eye-off"} size={22} color="#999" />
                   </TouchableOpacity>
                 </View>
 
@@ -123,15 +277,10 @@ export default function SignupScreen() {
 
                 <View style={styles.termsContainer}>
                   <TouchableOpacity
-                    style={[
-                      styles.checkbox,
-                      acceptTerms && styles.checkboxChecked,
-                    ]}
+                    style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}
                     onPress={() => setAcceptTerms(!acceptTerms)}
                   >
-                    {acceptTerms && (
-                      <Feather name="check" size={14} color="#1a237e" />
-                    )}
+                    {acceptTerms && <Feather name="check" size={14} color="#1a237e" />}
                   </TouchableOpacity>
                   <Text style={styles.termsText}>
                     I accept the{" "}
@@ -146,7 +295,7 @@ export default function SignupScreen() {
                   </Text>
                 </View>
 
-                <TouchableOpacity style={styles.signupButton}>
+                <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
                   <Text style={styles.signupButtonText}>Sign Up</Text>
                 </TouchableOpacity>
 
@@ -156,29 +305,38 @@ export default function SignupScreen() {
                   <View style={styles.dividerLine} />
                 </View>
 
-                <TouchableOpacity style={styles.googleButton}>
+                <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignup}>
                   <Image
                     source={{ uri: "https://www.google.com/favicon.ico" }}
                     style={styles.googleIcon}
                   />
-                  <Text style={styles.googleButtonText}>
-                    Log in with Google
-                  </Text>
+                  <Text style={styles.googleButtonText}>Log in with Google</Text>
                 </TouchableOpacity>
 
                 <View style={styles.loginPrompt}>
-                  <Text style={styles.loginText}>
-                    Already have an account?{" "}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate("LoginPage" as never)}
-                  >
+                  <Text style={styles.loginText}>Already have an account? </Text>
+                  <TouchableOpacity onPress={() => navigation.navigate("LoginPage" as never)}>
                     <Text style={styles.linkText}>Log in</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             </View>
           </KeyboardAvoidingView>
+          <Modal
+            transparent={true}
+            visible={isConfirmationOpen}
+            animationType="fade"
+            onRequestClose={closeConfirmationModal}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text>{message}</Text>
+                <TouchableOpacity onPress={closeConfirmationModal} style={styles.okButton}>
+                  <Text>OK</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
       </ScrollView>
     </ImageBackground>
@@ -378,6 +536,23 @@ const styles = StyleSheet.create({
       color: "#333",
       fontSize: 14,
       fontWeight: "500",
+    },
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+      backgroundColor: '#fff',
+      padding: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    okButton: {
+      marginTop: 20,
+      backgroundColor: '#000',
+      padding: 10,
     },
   }),
 });

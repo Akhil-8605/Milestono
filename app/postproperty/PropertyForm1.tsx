@@ -28,17 +28,17 @@ const Form1: React.FC<Form1Props> = ({
   const navigation = useNavigation();
 
   // ----- STATE -----
-  const [propertyName, setPropertyName] = useState(formData.propertyName || "");
-  const [propertyKind, setPropertyKind] = useState(formData.propertyKind || "");
+  const [heading, setHeading] = useState(formData.heading || "");
+  const [sellType, setSellType] = useState(formData.sellType || "");
   const [sellerType, setSellerType] = useState(formData.sellerType || "");
-  const [constructionStatus, setConstructionStatus] = useState(
-    formData.constructionStatus || ""
+  const [oldProperty, setOldProperty] = useState(
+    formData.oldProperty || ""
   );
-  const [propertyType, setPropertyType] = useState(formData.propertyType || "");
+  const [propertyCategory, setPropertyCategory] = useState(formData.propertyCategory || "");
 
   // Stores which property services have been selected
-  const [propertyServices, setPropertyServices] = useState<string[]>(
-    formData.propertyServices || []
+  const [propertyContains, setPropertyContains] = useState<string[]>(
+    formData.propertyContains || []
   );
 
   // Stores which amenities have been selected
@@ -70,12 +70,12 @@ const Form1: React.FC<Form1Props> = ({
 
   // Validation errors
   const [errors, setErrors] = useState<{
-    propertyName?: string;
-    propertyKind?: string;
+    heading?: string;
+    sellType?: string;
     sellerType?: string;
-    constructionStatus?: string;
-    propertyType?: string;
-    propertyServices?: string; // new
+    oldProperty?: string;
+    propertyCategory?: string;
+    propertyContains?: string; // new
     amenities?: string; // new
   }>({});
 
@@ -83,25 +83,25 @@ const Form1: React.FC<Form1Props> = ({
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!propertyName) {
-      newErrors.propertyName = "Property name is required";
+    if (!heading) {
+      newErrors.heading = "Property name is required";
     }
-    if (!propertyKind) {
-      newErrors.propertyKind = "Please select property kind";
+    if (!sellType) {
+      newErrors.sellType = "Please select property kind";
     }
     if (!sellerType) {
       newErrors.sellerType = "Please select seller type";
     }
-    if (!constructionStatus) {
-      newErrors.constructionStatus = "Please select construction status";
+    if (!oldProperty) {
+      newErrors.oldProperty = "Please select construction status";
     }
-    if (!propertyType) {
-      newErrors.propertyType = "Please select property type";
+    if (!propertyCategory) {
+      newErrors.propertyCategory = "Please select property type";
     }
 
     // If no property services selected
-    if (propertyServices.length === 0) {
-      newErrors.propertyServices = "Select at least one property service";
+    if (propertyContains.length === 0) {
+      newErrors.propertyContains = "Select at least one property service";
     }
 
     // If no amenities selected
@@ -117,12 +117,12 @@ const Form1: React.FC<Form1Props> = ({
   const handleNext = () => {
     if (validateForm()) {
       updateFormData({
-        propertyName,
-        propertyKind,
+        heading,
+        sellType,
         sellerType,
-        constructionStatus,
-        propertyType,
-        propertyServices,
+        oldProperty,
+        propertyCategory,
+        propertyContains,
         amenities,
       });
       onNext();
@@ -160,7 +160,7 @@ const Form1: React.FC<Form1Props> = ({
 
   // ----- HANDLERS -----
   const togglePropertyService = (service: string) => {
-    setPropertyServices((prev) =>
+    setPropertyContains((prev) =>
       prev.includes(service)
         ? prev.filter((s) => s !== service)
         : [...prev, service]
@@ -206,12 +206,6 @@ const Form1: React.FC<Form1Props> = ({
           >
             <Text style={styles.arrow}>←</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => console.log("Post Via WhatsApp pressed (Form1)")}
-          >
-            {/* <Text style={styles.whatsapp}>Post Via WhatsApp</Text> */}
-          </TouchableOpacity>
         </View>
 
         <Text style={styles.title}>Basic Details</Text>
@@ -222,13 +216,13 @@ const Form1: React.FC<Form1Props> = ({
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Property Name</Text>
           <TextInput
-            style={[styles.input, errors.propertyName && styles.inputError]}
-            value={propertyName}
-            onChangeText={setPropertyName}
+            style={[styles.input, errors.heading && styles.inputError]}
+            value={heading}
+            onChangeText={setHeading}
             placeholder="Enter Property Name"
           />
-          {errors.propertyName && (
-            <Text style={styles.errorText}>{errors.propertyName}</Text>
+          {errors.heading && (
+            <Text style={styles.errorText}>{errors.heading}</Text>
           )}
         </View>
 
@@ -240,25 +234,25 @@ const Form1: React.FC<Form1Props> = ({
           <View style={styles.optionsContainer}>
             <SelectionButton
               title="Sell"
-              selected={propertyKind === "sell"}
-              onPress={() => setPropertyKind("sell")}
-              error={errors.propertyKind}
+              selected={sellType === "Sell"}
+              onPress={() => setSellType("Sell")}
+              error={errors.sellType}
             />
             <SelectionButton
               title="Rent"
-              selected={propertyKind === "rent"}
-              onPress={() => setPropertyKind("rent")}
-              error={errors.propertyKind}
+              selected={sellType === "Rent"}
+              onPress={() => setSellType("Rent")}
+              error={errors.sellType}
             />
             <SelectionButton
               title="PG"
-              selected={propertyKind === "pg"}
-              onPress={() => setPropertyKind("pg")}
-              error={errors.propertyKind}
+              selected={sellType === "PG"}
+              onPress={() => setSellType("PG")}
+              error={errors.sellType}
             />
           </View>
-          {errors.propertyKind && (
-            <Text style={styles.errorText}>{errors.propertyKind}</Text>
+          {errors.sellType && (
+            <Text style={styles.errorText}>{errors.sellType}</Text>
           )}
         </View>
 
@@ -268,26 +262,20 @@ const Form1: React.FC<Form1Props> = ({
           <View style={styles.optionsContainer}>
             <SelectionButton
               title="Owner"
-              selected={sellerType === "owner"}
-              onPress={() => setSellerType("owner")}
+              selected={sellerType === "Owner"}
+              onPress={() => setSellerType("Owner")}
               error={errors.sellerType}
             />
             <SelectionButton
               title="Builder"
-              selected={sellerType === "builder"}
-              onPress={() => setSellerType("builder")}
+              selected={sellerType === "Builder"}
+              onPress={() => setSellerType("Builder")}
               error={errors.sellerType}
             />
             <SelectionButton
               title="Dealer"
-              selected={sellerType === "dealer"}
-              onPress={() => setSellerType("dealer")}
-              error={errors.sellerType}
-            />
-            <SelectionButton
-              title="Feature Dealer"
-              selected={sellerType === "feature_dealer"}
-              onPress={() => setSellerType("feature_dealer")}
+              selected={sellerType === "Dealer"}
+              onPress={() => setSellerType("Dealer")}
               error={errors.sellerType}
             />
           </View>
@@ -302,25 +290,25 @@ const Form1: React.FC<Form1Props> = ({
           <View style={styles.optionsContainer}>
             <SelectionButton
               title="New Launch"
-              selected={constructionStatus === "new_launch"}
-              onPress={() => setConstructionStatus("new_launch")}
-              error={errors.constructionStatus}
+              selected={oldProperty === "New Launch"}
+              onPress={() => setOldProperty("New Launch")}
+              error={errors.oldProperty}
             />
             <SelectionButton
               title="Under Construction"
-              selected={constructionStatus === "under_construction"}
-              onPress={() => setConstructionStatus("under_construction")}
-              error={errors.constructionStatus}
+              selected={oldProperty === "Under Construction"}
+              onPress={() => setOldProperty("Under Construction")}
+              error={errors.oldProperty}
             />
             <SelectionButton
               title="Ready to move"
-              selected={constructionStatus === "ready_to_move"}
-              onPress={() => setConstructionStatus("ready_to_move")}
-              error={errors.constructionStatus}
+              selected={oldProperty === "Ready To Move"}
+              onPress={() => setOldProperty("Ready To Move")}
+              error={errors.oldProperty}
             />
           </View>
-          {errors.constructionStatus && (
-            <Text style={styles.errorText}>{errors.constructionStatus}</Text>
+          {errors.oldProperty && (
+            <Text style={styles.errorText}>{errors.oldProperty}</Text>
           )}
         </View>
 
@@ -330,19 +318,19 @@ const Form1: React.FC<Form1Props> = ({
           <View style={styles.optionsContainer}>
             <SelectionButton
               title="Residential"
-              selected={propertyType === "residential"}
-              onPress={() => setPropertyType("residential")}
-              error={errors.propertyType}
+              selected={propertyCategory === "Residential"}
+              onPress={() => setPropertyCategory("Residential")}
+              error={errors.propertyCategory}
             />
             <SelectionButton
               title="Commercial"
-              selected={propertyType === "commercial"}
-              onPress={() => setPropertyType("commercial")}
-              error={errors.propertyType}
+              selected={propertyCategory === "Commercial"}
+              onPress={() => setPropertyCategory("Commercial")}
+              error={errors.propertyCategory}
             />
           </View>
-          {errors.propertyType && (
-            <Text style={styles.errorText}>{errors.propertyType}</Text>
+          {errors.propertyCategory && (
+            <Text style={styles.errorText}>{errors.propertyCategory}</Text>
           )}
         </View>
 
@@ -363,13 +351,13 @@ const Form1: React.FC<Form1Props> = ({
               <MultiSelectButton
                 key={service}
                 title={service}
-                selected={propertyServices.includes(service)}
+                selected={propertyContains.includes(service)}
                 onPress={() => togglePropertyService(service)}
               />
             ))}
           </View>
-          {errors.propertyServices && (
-            <Text style={styles.errorText}>{errors.propertyServices}</Text>
+          {errors.propertyContains && (
+            <Text style={styles.errorText}>{errors.propertyContains}</Text>
           )}
         </View>
 

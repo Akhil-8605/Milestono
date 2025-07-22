@@ -15,9 +15,13 @@ import {
 import { useNavigation } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { LinearGradient } from "expo-linear-gradient";
+import Toast from "react-native-toast-message";
+import axios from "axios";
+import { BASE_URL } from "@env";
 
 const { width } = Dimensions.get("window");
 const cardWidth = width * 0.75;
+const cardGap = 15;
 
 /* ---------- SAMPLE NEW PROJECT DATA (residential + commercial) ---------- */
 const residentialProjects = [
@@ -97,85 +101,112 @@ const commercialProjects = [
     rating: 4.5,
   },
 ];
-
 export default function RecommendedProjectsSection() {
   const navigation = useNavigation();
-
-  // Combine residential + commercial
-  const combined = [...residentialProjects, ...commercialProjects];
-  const projects = combined;
-
+  const [projects, setProjects] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedProject, setSelectedProject] = useState<null | {
-    id: string;
-    name: string;
-    location: string;
-    status: string;
-    image: any;
-    description: string;
-    price: string;
-    possession: string;
-    rating: number;
-  }>(null);
+  const [selectedProject, setSelectedProject] = useState(null);
   const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef(null);
   const scrollX = useRef(new Animated.Value(0)).current;
+
+  // Fetch projects from API
+  const fetchProjects = async () => {
+    try {
+      const resp = await axios.get(`${BASE_URL}/api/projects`);
+      setProjects(resp.data);
+    } catch (e) {
+      console.error("Error fetching projects:", e);
+      Toast.show({ type: "error", text1: "Failed to load projects." });
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
   // Auto-scroll every 5 seconds
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (currentIndex < projects.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      } else {
-        setCurrentIndex(0);
-      }
+    const iv = setInterval(() => {
+      setCurrentIndex((idx) =>
+        idx < projects.length - 1 ? idx + 1 : 0
+      );
     }, 5000);
-    return () => clearInterval(interval);
-  }, [currentIndex, projects.length]);
+    return () => clearInterval(iv);
+  }, [projects.length]);
 
   // Scroll to current index
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
-        x: currentIndex * (cardWidth + 15),
+        x: currentIndex * (cardWidth + cardGap),
         animated: true,
       });
     }
   }, [currentIndex]);
 
-  // Capture scroll for pagination
+  // Handle scroll event
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { x: scrollX } } }],
     { useNativeDriver: false }
   );
 
   // Snap to index
-  const handleMomentumScrollEnd = (event: { nativeEvent: { contentOffset: { x: number } } }) => {
+  const handleMomentumScrollEnd = (e) => {
     const newIndex = Math.round(
-      event.nativeEvent.contentOffset.x / (cardWidth + 15)
+      e.nativeEvent.contentOffset.x / (cardWidth + cardGap)
     );
     setCurrentIndex(newIndex);
   };
 
-  // Render each card with "View Details" + "Inquiry" button
-  const renderCard = (proj: { id: string; name: string; location: string; status: string; image: any; description: string; price: string; possession: string; rating: number }) => (
-    <View key={proj.id} style={[styles.projectCard, { width: cardWidth }]}>
+  // Inquiry handler
+  const handleInquiryClick = async (projectId) => {
+    const token = await AsyncStorage.getItem("authToken");
+    if (!token) {
+      Alert.alert("Login Required", "Please log in to send an inquiry.");
+      return;
+    }
+    try {
+      await axios.post(
+        `${BASE_URL}/api/project-enquiry`,
+        { project_id: projectId },
+        { headers: { Authorization: token } }
+      );
+      Toast.show({
+        type: "success",
+        text1: "Inquiry sent to agent successfully.",
+      });
+    } catch (e) {
+      console.error("Enquiry error:", e);
+      Toast.show({
+        type: "error",
+        text1: "Error submitting enquiry.",
+      });
+    }
+  };
+
+  const renderCard = (proj) => (
+    <View key={proj._id} style={[styles.projectCard, { width: cardWidth }]}>
       <View style={styles.projectImageContainer}>
-        <Image source={proj.image} style={styles.projectImage} />
-        {/* Gradient overlay on top */}
+        <Image
+          source={
+            proj.images?.[0]
+              ? { uri: proj.images[0] }
+              : "https://yourcdn.com/placeholder.png"
+          }
+          style={styles.projectImage}
+        />
         <LinearGradient
           colors={["rgba(0,0,0,0)", "transparent"]}
           style={styles.imageGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 0.6 }}
         />
-        {/* Status badge */}
         {proj.status && (
           <View style={styles.projectBadge}>
             <Text style={styles.projectBadgeText}>{proj.status}</Text>
           </View>
         )}
-        {/* Rating badge */}
         {proj.rating && (
           <View style={styles.ratingBadge}>
             <Text style={styles.ratingText}>★ {proj.rating}</Text>
@@ -185,18 +216,23 @@ export default function RecommendedProjectsSection() {
       <View style={styles.projectInfo}>
         <Text style={styles.projectTitle}>{proj.name}</Text>
         <View style={styles.locationContainer}>
-          <Text style={styles.projectLocation}>📍 {proj.location}</Text>
-          {proj.price && <Text style={styles.projectPrice}>{proj.price}</Text>}
+          <Text style={styles.projectLocation}>📍 {proj.address}</Text>
+          {proj.minPrice && proj.maxPrice && (
+            <Text style={styles.projectPrice}>
+              {proj.minPrice}-{proj.maxPrice}
+            </Text>
+          )}
         </View>
         {proj.possession && (
           <Text style={styles.projectPossession}>
-            🗓️ Possession: {proj.possession}
+            🗓️ Possession:{" "}
+            {new Date(proj.possession).toLocaleString("default", {
+              month: "long",
+              year: "numeric",
+            })}
           </Text>
         )}
-
-        {/* Buttons row */}
         <View style={styles.projectButtons}>
-          {/* "View Details" opens modal */}
           <TouchableOpacity
             style={styles.viewButton}
             onPress={() => setSelectedProject(proj)}
@@ -204,12 +240,10 @@ export default function RecommendedProjectsSection() {
           >
             <Text style={styles.buttonText}>View Details</Text>
           </TouchableOpacity>
-
-          {/* "Inquiry" button opens inquiry overlay */}
           <TouchableOpacity
             style={styles.inquiryButton}
+            onPress={() => handleInquiryClick(proj._id)}
             activeOpacity={0.8}
-            onPress={() => setInquiryModalVisible(true)}
           >
             <Text style={styles.buttonText}>Inquiry</Text>
           </TouchableOpacity>
@@ -220,63 +254,54 @@ export default function RecommendedProjectsSection() {
 
   return (
     <View style={styles.container}>
-      {/* Header with accent bar */}
-      <Text style={styles.heading}>Explore our Projects</Text>
+      <Text style={styles.heading}>Recommended Projects</Text>
 
-      {/* Horizontal scroll of recommended projects */}
       <Animated.ScrollView
         ref={scrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollView}
-        snapToInterval={cardWidth + 15}
+        snapToInterval={cardWidth + cardGap}
         decelerationRate="fast"
         onScroll={handleScroll}
         onMomentumScrollEnd={handleMomentumScrollEnd}
       >
-        {projects.map((proj) => renderCard(proj))}
+        {projects.map(renderCard)}
       </Animated.ScrollView>
 
-      {/* Pagination dots */}
       <View style={styles.paginationContainer}>
-        {projects.map((_, index) => {
+        {projects.map((_, idx) => {
           const inputRange = [
-            (index - 1) * (cardWidth + 15),
-            index * (cardWidth + 15),
-            (index + 1) * (cardWidth + 15),
+            (idx - 1) * (cardWidth + cardGap),
+            idx * (cardWidth + cardGap),
+            (idx + 1) * (cardWidth + cardGap),
           ];
-
           const dotWidth = scrollX.interpolate({
             inputRange,
             outputRange: [8, 16, 8],
             extrapolate: "clamp",
           });
-
           const opacity = scrollX.interpolate({
             inputRange,
             outputRange: [0.3, 1, 0.3],
             extrapolate: "clamp",
           });
-
           return (
             <Animated.View
-              key={index}
+              key={idx}
               style={[styles.paginationDot, { width: dotWidth, opacity }]}
             />
           );
         })}
       </View>
 
-      {/* See More Button */}
       <TouchableOpacity
-        onPress={() => {
-          navigation.navigate("NewProjectsPage" as never);
-        }}
+        onPress={() => navigation.navigate("NewProjectsPage")}
       >
         <Text style={styles.seeMore}>See More</Text>
       </TouchableOpacity>
 
-      {/* Overlay Modal for project details */}
+      {/* Details Modal */}
       <Modal
         visible={!!selectedProject}
         animationType="fade"
@@ -285,30 +310,29 @@ export default function RecommendedProjectsSection() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setSelectedProject(null)}
+            >
+              <Icon name="x" size={24} color="#fff" />
+            </TouchableOpacity>
             {selectedProject && (
               <>
-                {/* Close button */}
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setSelectedProject(null)}
-                >
-                  <Icon name="close" size={24} color="#FFF" />
-                </TouchableOpacity>
-
-                {/* Project Image */}
                 <Image
-                  source={selectedProject.image}
+                  source={
+                    selectedProject.images?.[0]
+                      ? { uri: selectedProject.images[0] }
+                      : "https://yourcdn.com/placeholder.png"
+                  }
                   style={styles.modalImage}
                 />
-
-                {/* Scrollable Info */}
                 <ScrollView style={styles.modalScrollView}>
                   <Text style={styles.modalTitle}>
                     {selectedProject.name}
                   </Text>
                   <View style={styles.modalInfoRow}>
                     <Text style={styles.modalLocation}>
-                      📍 {selectedProject.location}
+                      📍 {selectedProject.address}
                     </Text>
                     {selectedProject.rating && (
                       <Text style={styles.modalRating}>
@@ -319,34 +343,34 @@ export default function RecommendedProjectsSection() {
                   <Text style={styles.modalStatus}>
                     {selectedProject.status}
                   </Text>
-
-                  {/* Price range */}
-                  {selectedProject.price && (
+                  {selectedProject.minPrice && selectedProject.maxPrice && (
                     <View style={styles.priceContainer}>
                       <Text style={styles.priceLabel}>Price Range:</Text>
                       <Text style={styles.priceValue}>
-                        {selectedProject.price}
+                        {selectedProject.minPrice}-
+                        {selectedProject.maxPrice}
                       </Text>
                     </View>
                   )}
-
-                  {/* Possession */}
                   {selectedProject.possession && (
                     <View style={styles.possessionContainer}>
-                      <Text style={styles.possessionLabel}>Possession:</Text>
+                      <Text style={styles.possessionLabel}>
+                        Possession:
+                      </Text>
                       <Text style={styles.possessionValue}>
-                        {selectedProject.possession}
+                        {new Date(
+                          selectedProject.possession
+                        ).toLocaleString("default", {
+                          month: "long",
+                          year: "numeric",
+                        })}
                       </Text>
                     </View>
                   )}
-
-                  {/* Description */}
                   <Text style={styles.modalDescription}>
                     {selectedProject.description}
                   </Text>
                 </ScrollView>
-
-                {/* Modal Buttons */}
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
                     style={styles.modalButton}
@@ -355,9 +379,12 @@ export default function RecommendedProjectsSection() {
                     <Text style={styles.modalButtonCloseText}>Close</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.modalButton, styles.modalInquiryButton]}
+                    style={[
+                      styles.modalButton,
+                      styles.modalInquiryButton,
+                    ]}
                     onPress={() => {
-                      setInquiryModalVisible(true);
+                      handleInquiryClick(selectedProject._id);
                       setSelectedProject(null);
                     }}
                   >
@@ -370,52 +397,11 @@ export default function RecommendedProjectsSection() {
         </View>
       </Modal>
 
-      {/* Inquiry Modal */}
-      <Modal
-        visible={inquiryModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setInquiryModalVisible(false)}
-      >
-        <View style={styles.inquiryModalOverlay}>
-          <View style={styles.inquiryModalContainer}>
-            <TouchableOpacity
-              style={styles.inquiryModalCloseButton}
-              onPress={() => setInquiryModalVisible(false)}
-            >
-              <Icon name="close" size={30} color={"#232761"} />
-            </TouchableOpacity>
-
-            <Text style={styles.inquiryModalTitle}>
-              You are requesting to view advertiser details
-            </Text>
-
-            <View style={styles.inquiryModalDetails}>
-              <Text style={styles.inquiryModalLabel}>POSTED BY AGENT:</Text>
-              <Text style={styles.inquiryModalValue}>
-                +91 988** **** | i********@gmail.com
-              </Text>
-              <Text style={styles.inquiryModalValue}>VISHAL KATE</Text>
-
-              <View style={styles.divider} />
-
-              <Text style={styles.inquiryModalLabel}>
-                POSTED ON 17th DEC, 2024
-              </Text>
-              <Text style={styles.inquiryModalValue}>
-                ₹ 15 Lac | Phule Nagar Akkuj
-              </Text>
-              <Text style={styles.inquiryModalValue}>
-                2 Guntha | Residential Land
-              </Text>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {/* Inquiry Toast Handler */}
+      <Toast ref={(ref) => Toast.setRef(ref)} />
     </View>
   );
 }
-
 /* ---------- STYLES ---------- */
 const styles = StyleSheet.create({
   container: {
