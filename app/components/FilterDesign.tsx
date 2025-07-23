@@ -8,6 +8,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons"
 import { useNavigation } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
+import { BASE_URL } from "@env";
 
 interface FilterDesignProps {
   selectedCity: string | null
@@ -79,7 +80,6 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
   onApplyFilters,
 }) => {
   const navigation = useNavigation()
-  const BASE_URL = "http://localhost:6005"
 
   // Additional filter states from SearchFiltersPage
   const [selectedCategory, setSelectedCategory] = useState<string>("")

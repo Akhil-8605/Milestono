@@ -23,13 +23,13 @@ import MultiSlider from "@ptomasroos/react-native-multi-slider"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import * as Location from "expo-location"
+import { BASE_URL, GOOGLE_API_KEY } from "@env";
 
 const { width } = Dimensions.get("window")
 
 const PropertySearchAndFilter = () => {
   const router = useRouter()
   const statusBarHeight = StatusBar.currentHeight || 0
-  const BASE_URL = "http://localhost:6005"
 
   // Basic states for Category, Search, etc.
   const [selectedType, setSelectedType] = useState("Sell")
@@ -181,7 +181,7 @@ const PropertySearchAndFilter = () => {
   // Get address from coordinates using reverse geocoding
   const getAddressFromCoordinates = async (lat: number, lng: number): Promise<string> => {
     try {
-      const apiKey = "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+      const apiKey = GOOGLE_API_KEY;
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`,
       )
@@ -232,7 +232,7 @@ const PropertySearchAndFilter = () => {
     setSearchQuery(text)
     if (text.length > 2) {
       try {
-        const apiKey = "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+        const apiKey = GOOGLE_API_KEY;
         const response = await fetch(
           `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&key=${apiKey}&components=country:in`,
         )
@@ -258,7 +258,7 @@ const PropertySearchAndFilter = () => {
     setLoading(true)
 
     try {
-      const apiKey = "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+      const apiKey = GOOGLE_API_KEY;
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&key=${apiKey}`,
       )
@@ -299,7 +299,7 @@ const PropertySearchAndFilter = () => {
   const handleCitySelect = async (city: string) => {
     setLoading(true)
     try {
-      const apiKey = "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+      const apiKey = GOOGLE_API_KEY;
       const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(city)}&key=${apiKey}`
 
       const response = await fetch(geocodeUrl)

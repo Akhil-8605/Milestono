@@ -18,6 +18,7 @@ import { useNavigation, useRouter } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import * as Location from "expo-location"
+import { BASE_URL } from "@env";
 
 const cities = [
   "Pune", "Mumbai", "Solapur", "Satara", "Amravati", "Nashik",
@@ -40,8 +41,6 @@ const HeroSection: React.FC = () => {
   const [userData, setUserData] = useState<UserData>({ premiumEndDate: "", userFullName: "" })
   const [latLong, setLatLong] = useState<[number, number]>([18.52097398044019, 73.86017831259551])
   const translateY = useRef(new Animated.Value(0)).current
-
-  const BASE_URL = "http://localhost:6005";
 
   useEffect(() => {
     getCityName(latLong[0], latLong[1])

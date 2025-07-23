@@ -15,9 +15,9 @@ import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { useNavigation } from "expo-router";
 import { NavigationProp } from "@react-navigation/native";
+import { BASE_URL } from "@env";
 
 const CARD_WIDTH = Dimensions.get("window").width * 0.65;
-const BASE_URL = "http://localhost:6005"; // or your ngrok URL during dev
 
 export default function NewLaunchProperties() {
   const [properties, setProperties] = useState<any[]>([]);

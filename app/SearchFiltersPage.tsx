@@ -17,6 +17,7 @@ import { useNavigation } from "expo-router"
 import { NavigationProp } from "@react-navigation/native";
 import MultiSlider from "@ptomasroos/react-native-multi-slider"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { BASE_URL } from "@env";
 
 const FiltersPage = () => {
   const [selectedBedrooms, setSelectedBedrooms] = useState<string[]>([])
@@ -35,7 +36,6 @@ const FiltersPage = () => {
   const [loading, setLoading] = useState(false)
 
   const navigation = useNavigation<NavigationProp<{ PropertiesPage: { filters: any } }>>();
-  const BASE_URL = "http://localhost:6005"
 
   const bedroomOptions = ["1RK", "1BHK", "2BHK", "3BHK", "4BHK", "5+BHK"]
   const propertyTypeOptions = [

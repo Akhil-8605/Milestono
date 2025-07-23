@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import {
   StyleSheet,
   View,
@@ -15,25 +15,35 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Dimensions,
 } from "react-native"
 import Icon from "react-native-vector-icons/Ionicons"
 import FilterDesign from "./components/FilterDesign"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
+import { BASE_URL, GOOGLE_API_KEY } from "@env"
+import { useNavigation } from "expo-router";
+import { NavigationProp } from "@react-navigation/native";
 
+const { width: screenWidth } = Dimensions.get("window")
 const dummyImg = require("../assets/images/dummyImg.webp")
 
+// Updated interface to match Properties.tsx structure
 interface Property {
   _id: string
-  propertyTitle: string
+  heading: string
   propertyCategory: string
   sellType: string
   bedrooms: string
   areaSqft: string
   expectedPrice: string
-  propertyLocation: string
-  propertyImages: string[]
+  pricePerMonth?: string
+  landmark: string
+  city: string
+  propertyLocation?: string
+  uploadedPhotos: string[]
+  propertyImages?: string[]
   amenities: string[]
   propertyContains: string
   sellerType: string
@@ -46,15 +56,16 @@ interface Property {
 
 const PropertyCard = ({ property }: { property: Property }) => {
   const router = useRouter()
+  const navigation = useNavigation<NavigationProp<{ PropertyDetailsPage: { property: any } }>>();
 
   const formatPrice = (price: string | number) => {
     const numPrice = typeof price === "string" ? Number.parseInt(price) : price
     if (numPrice >= 10000000) {
-      return `₹ ${(numPrice / 10000000).toFixed(1)} CR`
+      return `₹${(numPrice / 10000000).toFixed(1)} Cr`
     } else if (numPrice >= 100000) {
-      return `₹ ${(numPrice / 100000).toFixed(1)} L`
+      return `₹${(numPrice / 100000).toFixed(1)} L`
     } else {
-      return `₹ ${numPrice.toLocaleString()}`
+      return `₹${numPrice.toLocaleString()}`
     }
   }
 
@@ -63,89 +74,178 @@ const PropertyCard = ({ property }: { property: Property }) => {
     const numArea = Number.parseInt(area)
     if (numArea > 0) {
       const pricePerSqft = numPrice / numArea
-      return `₹ ${Math.round(pricePerSqft).toLocaleString()}/sq.ft`
+      return `₹${Math.round(pricePerSqft).toLocaleString()}/sq.ft`
     }
     return "Price on request"
   }
 
   const getPropertyImage = () => {
-    if (property.propertyImages && property.propertyImages.length > 0) {
-      return { uri: property.propertyImages[0] }
+    const images = property.uploadedPhotos || property.propertyImages
+    if (images && images.length > 0) {
+      return { uri: images[0] }
     }
     return dummyImg
   }
 
+  const getLocationText = () => {
+    if (property.landmark && property.city) {
+      return `${property.landmark}, ${property.city}`
+    }
+    return property.propertyLocation || "Location not specified"
+  }
+
+  const getPropertyTitle = () => {
+    return property.heading || (property as any).propertyTitle || "Property"
+  }
+
+  const getPrice = () => {
+    if (property.sellType === "Sell") {
+      return property.expectedPrice
+    } else {
+      return property.pricePerMonth || property.expectedPrice
+    }
+  }
+
+  const navigateToDetails = () => {
+    navigation.navigate("PropertyDetailsPage", { property })
+  }
+
+  const getPropertyTypeColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "flats/apartment":
+        return "#4CAF50"
+      case "independent house/villa":
+        return "#2196F3"
+      case "plot/land":
+        return "#FF9800"
+      default:
+        return "#232761"
+    }
+  }
+
+  const getSellTypeColor = (sellType: string) => {
+    return sellType === "Sell" ? "#E91E63" : "#9C27B0"
+  }
+
   return (
     <View style={styles.card}>
+      {/* Image Container with Enhanced Overlay */}
       <View style={styles.imageContainer}>
         <Image source={getPropertyImage()} style={styles.propertyImage} />
-        <View style={styles.propertyTypeTag}>
+
+        {/* Gradient Overlay */}
+        <View style={styles.gradientOverlay} />
+
+        {/* Property Type Badge */}
+        <View style={[styles.propertyTypeBadge, { backgroundColor: getPropertyTypeColor(property.propertyCategory) }]}>
+          <Icon name="home" size={12} color="#fff" />
           <Text style={styles.propertyTypeText}>{property.propertyCategory}</Text>
         </View>
-        <View style={styles.sellTypeTag}>
+
+        {/* Sell Type Badge */}
+        <View style={[styles.sellTypeBadge, { backgroundColor: getSellTypeColor(property.sellType) }]}>
           <Text style={styles.sellTypeText}>{property.sellType}</Text>
         </View>
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={styles.propertyTitle} numberOfLines={2}>
-          {property.propertyTitle}
-        </Text>
 
-        <View style={styles.featuresRow}>
-          <View style={styles.featureItem}>
-            <Icon name="location-outline" size={16} color="#666" />
-            <Text style={styles.featureText} numberOfLines={1}>
-              {property.propertyLocation}
-            </Text>
-          </View>
-          <View style={styles.featureItem}>
-            <Icon name="home-outline" size={16} color="#666" />
-            <Text style={styles.featureText}>{property.areaSqft} sq.ft</Text>
-          </View>
-        </View>
-
-        <View style={styles.bedroomRow}>
-          <View style={styles.featureItem}>
-            <Icon name="bed-outline" size={16} color="#666" />
-            <Text style={styles.featureText}>{property.bedrooms}</Text>
-          </View>
-          <View style={styles.featureItem}>
-            <Icon name="person-outline" size={16} color="#666" />
-            <Text style={styles.featureText}>{property.sellerType}</Text>
-          </View>
-        </View>
-
-        <View style={styles.priceContainer}>
-          <Text style={styles.pricePerSqft}>{formatPricePerSqft(property.expectedPrice, property.areaSqft)}</Text>
-          <Text style={styles.price}>{formatPrice(property.expectedPrice)}</Text>
-        </View>
-
-        {property.amenities && property.amenities.length > 0 && (
-          <View style={styles.amenitiesContainer}>
-            <Text style={styles.amenitiesLabel}>Amenities:</Text>
-            <Text style={styles.amenitiesText} numberOfLines={1}>
-              {property.amenities.slice(0, 3).join(", ")}
-              {property.amenities.length > 3 && "..."}
+        {/* Image Count Badge */}
+        {(property.uploadedPhotos || property.propertyImages || []).length > 1 && (
+          <View style={styles.imageCountBadge}>
+            <Icon name="images" size={12} color="#fff" />
+            <Text style={styles.imageCountText}>
+              {(property.uploadedPhotos || property.propertyImages || []).length}
             </Text>
           </View>
         )}
+      </View>
 
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={styles.viewButton}
-            onPress={() => {
-              router.push({
-                pathname: "/PropertyDetailsPage",
-                params: { propertyId: property._id },
-              })
-            }}
-          >
-            <Icon name="eye-outline" size={18} color="#fff" />
-            <Text style={styles.viewButtonText}>View Details</Text>
+      {/* Card Content */}
+      <View style={styles.cardContent}>
+        {/* Property Title */}
+        <Text style={styles.propertyTitle} numberOfLines={2}>
+          {getPropertyTitle()}
+        </Text>
+
+        {/* Location Row */}
+        <View style={styles.locationRow}>
+          <Icon name="location" size={16} color="#FF6B6B" />
+          <Text style={styles.locationText} numberOfLines={1}>
+            {getLocationText()}
+          </Text>
+        </View>
+
+        {/* Property Details Grid */}
+        <View style={styles.detailsGrid}>
+          <View style={styles.detailItem}>
+            <View style={styles.detailIconContainer}>
+              <Icon name="bed" size={16} color="#4ECDC4" />
+            </View>
+            <Text style={styles.detailLabel}>Bedrooms</Text>
+            <Text style={styles.detailValue}>
+              {property.bedrooms}
+              {property.bedrooms !== "1RK" ? " BHK" : ""}
+            </Text>
+          </View>
+
+          <View style={styles.detailItem}>
+            <View style={styles.detailIconContainer}>
+              <Icon name="resize" size={16} color="#45B7D1" />
+            </View>
+            <Text style={styles.detailLabel}>Area</Text>
+            <Text style={styles.detailValue}>{property.areaSqft} sq.ft</Text>
+          </View>
+
+          <View style={styles.detailItem}>
+            <View style={styles.detailIconContainer}>
+              <Icon name="person" size={16} color="#96CEB4" />
+            </View>
+            <Text style={styles.detailLabel}>Seller</Text>
+            <Text style={styles.detailValue}>{property.sellerType}</Text>
+          </View>
+        </View>
+
+        {/* Price Section */}
+        <View style={styles.priceSection}>
+          <View style={styles.priceContainer}>
+            <Text style={styles.mainPrice}>{formatPrice(getPrice())}</Text>
+            <Text style={styles.priceLabel}>{property.sellType === "Sell" ? "Total Price" : "Per Month"}</Text>
+          </View>
+          <View style={styles.pricePerSqftContainer}>
+            <Text style={styles.pricePerSqft}>{formatPricePerSqft(getPrice(), property.areaSqft)}</Text>
+          </View>
+        </View>
+
+        {/* Amenities Preview */}
+        {property.amenities && property.amenities.length > 0 && (
+          <View style={styles.amenitiesPreview}>
+            <View style={styles.amenitiesHeader}>
+              <Icon name="checkmark-circle" size={14} color="#4CAF50" />
+              <Text style={styles.amenitiesLabel}>Key Amenities</Text>
+            </View>
+            <View style={styles.amenitiesList}>
+              {property.amenities.slice(0, 3).map((amenity, index) => (
+                <View key={index} style={styles.amenityTag}>
+                  <Text style={styles.amenityText}>{amenity}</Text>
+                </View>
+              ))}
+              {property.amenities.length > 3 && (
+                <View style={styles.amenityTag}>
+                  <Text style={styles.amenityText}>+{property.amenities.length - 3} more</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Action Buttons */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.viewDetailsButton} onPress={navigateToDetails} activeOpacity={0.8}>
+            <Icon name="eye" size={18} color="#fff" />
+            <Text style={styles.viewDetailsText}>View Details</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.contactButton}>
-            <Icon name="call-outline" size={18} color="#232761" />
-            <Text style={styles.contactButtonText}>Contact</Text>
+
+          <TouchableOpacity style={styles.contactButton} onPress={navigateToDetails} activeOpacity={0.8}>
+            <Icon name="call" size={18} color="#232761" />
+            <Text style={styles.contactText}>Contact Now</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -156,7 +256,9 @@ const PropertyCard = ({ property }: { property: Property }) => {
 const PropertyListingScreen = () => {
   const router = useRouter()
   const params = useLocalSearchParams()
-  const BASE_URL = "http://localhost:6005";
+
+  // Use ref to track if initial load has been done
+  const initialLoadDone = useRef(false)
 
   // Search & header state
   const [searchText, setSearchText] = useState("")
@@ -166,7 +268,6 @@ const PropertyListingScreen = () => {
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [appliedFilters, setAppliedFilters] = useState<any>(null)
-  const [hasSearched, setHasSearched] = useState(false) // Track if search has been performed
 
   // Filter modal visibility state
   const [showFilters, setShowFilters] = useState(false)
@@ -209,55 +310,8 @@ const PropertyListingScreen = () => {
   const amenitiesOptions = ["Car Parking", "CCTV", "Guard", "Gym", "Club House", "Water Supply", "Lift"]
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
 
-  // Load initial data from route params or AsyncStorage
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        // Check if data was passed from navigation
-        if (params?.properties) {
-          const propertiesData =
-            typeof params.properties === "string" ? JSON.parse(params.properties) : params.properties
-          setProperties(propertiesData)
-          setOriginalProperties(propertiesData)
-          setHeaderCity((params.searchQuery as string) || "")
-          setSearchText((params.searchQuery as string) || "")
-          setHasSearched(true)
-          if (params.appliedFilters) {
-            const filters = typeof params.appliedFilters === "string" ? JSON.parse(params.appliedFilters) : params.appliedFilters
-            setAppliedFilters(filters)
-            loadFiltersFromData(filters)
-          }
-          return
-        }
-
-        // Load from AsyncStorage only if no params
-        const savedLocation = await AsyncStorage.getItem("searchLocation")
-        const savedFilters = await AsyncStorage.getItem("propertyFilters")
-
-        if (savedLocation) {
-          const location = JSON.parse(savedLocation)
-          setSearchText(location.query || "")
-          setHeaderCity(location.query || "")
-          // Only search if we haven't searched yet
-          if (!hasSearched) {
-            await searchProperties(location)
-          }
-        }
-
-        if (savedFilters) {
-          const filters = JSON.parse(savedFilters)
-          loadFiltersFromData(filters)
-        }
-      } catch (error) {
-        console.error("Error loading initial data:", error)
-      }
-    }
-
-    loadInitialData()
-  }, [params])
-
   // Load filters from saved data
-  const loadFiltersFromData = (filters: any) => {
+  const loadFiltersFromData = useCallback((filters: any) => {
     setSelectedBedrooms(filters.bedrooms || [])
     setAreaRange(filters.areaRange || [1800, 12400])
     setMinArea(filters.minArea || "1800")
@@ -269,38 +323,120 @@ const PropertyListingScreen = () => {
     setSelectedConstructionStatus(filters.constructionStatus || [])
     setSelectedPostedBy(filters.postedBy || [])
     setSelectedAmenities(filters.amenities || [])
-  }
+  }, [])
 
   // Search properties with backend API
-  const searchProperties = async (locationData?: any) => {
-    try {
-      setLoading(true)
-      const location = locationData || (await AsyncStorage.getItem("searchLocation"))
-      const parsedLocation = typeof location === "string" ? JSON.parse(location) : location
+  const searchProperties = useCallback(
+    async (locationData?: any) => {
+      try {
+        setLoading(true)
+        const location = locationData || (await AsyncStorage.getItem("searchLocation"))
+        const parsedLocation = typeof location === "string" ? JSON.parse(location) : location
 
-      if (!parsedLocation) {
-        Alert.alert("Error", "No search location found")
-        return
+        if (!parsedLocation) {
+          Alert.alert("Error", "No search location found")
+          return
+        }
+
+        const response = await axios.post(`${BASE_URL}/api/search_properties`, {
+          latitude: parsedLocation.latitude,
+          longitude: parsedLocation.longitude,
+          radius: parsedLocation.radius || 5,
+        })
+
+        // Transform the data if needed to match the expected structure
+        const transformedProperties = Array.isArray(response.data)
+          ? response.data.map((property: any) => {
+            const heading = property?.heading || property?.propertyTitle || "Untitled"
+            const uploadedPhotos = Array.isArray(property?.uploadedPhotos)
+              ? property.uploadedPhotos
+              : Array.isArray(property?.propertyImages)
+                ? property.propertyImages
+                : []
+
+            const landmark = property?.landmark || ""
+            const city = property?.city || ""
+            const propertyLocation =
+              typeof property?.propertyLocation === "string"
+                ? property.propertyLocation
+                : `${landmark}, ${city}`.trim().replace(/^,\s*/, "")
+
+            return {
+              ...property,
+              heading,
+              uploadedPhotos,
+              landmark,
+              city,
+              propertyLocation,
+            }
+          })
+          : []
+
+
+        setProperties(transformedProperties as Property[])
+        setOriginalProperties(transformedProperties as Property[])
+      } catch (error) {
+        console.error("Error searching properties:", error)
+        setProperties([])
+        setOriginalProperties([])
+      } finally {
+        setLoading(false)
       }
+    },
+    [BASE_URL],
+  )
 
-      const response = await axios.post(`${BASE_URL}/api/search_properties`, {
-        latitude: parsedLocation.latitude,
-        longitude: parsedLocation.longitude,
-        radius: parsedLocation.radius || 5,
-      })
+  // Load initial data from route params or AsyncStorage
+  useEffect(() => {
+    const loadInitialData = async () => {
+      // Prevent multiple initial loads
+      if (initialLoadDone.current) return
 
-      setProperties(response.data as Property[])
-      setOriginalProperties(response.data as Property[])
-      setHasSearched(true)
-    } catch (error) {
-      console.error("Error searching properties:", error)
-      setProperties([])
-      setOriginalProperties([])
-      setHasSearched(true)
-    } finally {
-      setLoading(false)
+      try {
+        // Check if data was passed from navigation
+        if (params?.properties) {
+          const propertiesData =
+            typeof params.properties === "string" ? JSON.parse(params.properties) : params.properties
+          setProperties(propertiesData)
+          setOriginalProperties(propertiesData)
+          setHeaderCity((params.searchQuery as string) || "")
+          setSearchText((params.searchQuery as string) || "")
+
+          if (params.appliedFilters) {
+            const filters =
+              typeof params.appliedFilters === "string" ? JSON.parse(params.appliedFilters) : params.appliedFilters
+            setAppliedFilters(filters)
+            loadFiltersFromData(filters)
+          }
+          initialLoadDone.current = true
+          return
+        }
+
+        // Load from AsyncStorage only if no params
+        const savedLocation = await AsyncStorage.getItem("searchLocation")
+        const savedFilters = await AsyncStorage.getItem("propertyFilters")
+
+        if (savedLocation) {
+          const location = JSON.parse(savedLocation)
+          setSearchText(location.query || "")
+          setHeaderCity(location.query || "")
+          await searchProperties(location)
+        }
+
+        if (savedFilters) {
+          const filters = JSON.parse(savedFilters)
+          loadFiltersFromData(filters)
+        }
+
+        initialLoadDone.current = true
+      } catch (error) {
+        console.error("Error loading initial data:", error)
+        initialLoadDone.current = true
+      }
     }
-  }
+
+    loadInitialData()
+  }, [])
 
   // Handle search button press
   const handleSearch = async () => {
@@ -311,10 +447,9 @@ const PropertyListingScreen = () => {
 
     try {
       setLoading(true)
-      setHasSearched(false) // Reset search state
 
       // Geocode the search text
-      const apiKey = "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+      const apiKey = GOOGLE_API_KEY
       const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(searchText)}&key=${apiKey}`
 
       const response = await fetch(geocodeUrl)
@@ -334,12 +469,10 @@ const PropertyListingScreen = () => {
         await searchProperties(locationData)
       } else {
         Alert.alert("Error", "Location not found. Please try a different search term.")
-        setHasSearched(true)
       }
     } catch (error) {
       console.error("Error searching:", error)
       Alert.alert("Error", "Failed to search. Please try again.")
-      setHasSearched(true)
     } finally {
       setLoading(false)
     }
@@ -351,7 +484,6 @@ const PropertyListingScreen = () => {
     setHeaderCity("")
     setProperties([])
     setOriginalProperties([])
-    setHasSearched(false)
   }
 
   // Handle refresh
@@ -437,7 +569,7 @@ const PropertyListingScreen = () => {
             <Text style={styles.resultCount}>
               {properties.length} Properties for sale in {headerCity}
             </Text>
-            <Text style={styles.updateDate}>Updated: {new Date().toLocaleDateString()}</Text>
+            <Text style={styles.updateDate}>Updated: 23/07/2025</Text>
           </View>
         )}
 
@@ -446,7 +578,7 @@ const PropertyListingScreen = () => {
             <ActivityIndicator size="large" color="#232761" />
             <Text style={styles.loadingText}>Searching properties...</Text>
           </View>
-        ) : hasSearched && properties.length === 0 ? (
+        ) : properties.length === 0 && initialLoadDone.current ? (
           <View style={styles.emptyContainer}>
             <Icon name="home-outline" size={64} color="#ccc" />
             <Text style={styles.emptyTitle}>No Properties Found</Text>
@@ -505,7 +637,7 @@ const PropertyListingScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f8f9fa",
   },
   header: {
     flexDirection: "row",
@@ -514,19 +646,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   backButton: {
     marginRight: 16,
+    padding: 4,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 20,
+    fontWeight: "700",
     color: "#232761",
   },
   searchContainer: {
-    padding: 8,
+    padding: 12,
     backgroundColor: "#fff",
-    elevation: 2,
+    elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -535,25 +673,29 @@ const styles = StyleSheet.create({
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   inputContainer: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    paddingHorizontal: 8,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
   },
   input: {
     flex: 1,
     paddingLeft: 8,
-    paddingVertical: 12,
-    fontSize: 14,
+    paddingVertical: 14,
+    fontSize: 15,
     color: "#333",
   },
   iconButton: {
-    padding: 8,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
   },
   disabledButton: {
     opacity: 0.6,
@@ -563,10 +705,12 @@ const styles = StyleSheet.create({
   },
   resultHeader: {
     padding: 16,
+    backgroundColor: "#fff",
+    marginBottom: 8,
   },
   resultCount: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
     color: "#333",
     marginBottom: 4,
   },
@@ -604,149 +748,256 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 32,
   },
+
+  // Enhanced Card Styles
   card: {
     backgroundColor: "#fff",
     marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 12,
-    elevation: 3,
+    marginBottom: 20,
+    borderRadius: 16,
+    elevation: 4,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
     overflow: "hidden",
   },
   imageContainer: {
     position: "relative",
+    height: 220,
   },
   propertyImage: {
     width: "100%",
-    height: 180,
+    height: "100%",
     backgroundColor: "#e0e0e0",
   },
-  propertyTypeTag: {
+  gradientOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    backgroundColor: "rgba(0,0,0,0.3)",
+  },
+  propertyTypeBadge: {
     position: "absolute",
     top: 12,
     left: 12,
-    backgroundColor: "#232761",
-    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 20,
+    gap: 4,
   },
   propertyTypeText: {
     color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 11,
+    fontWeight: "700",
   },
-  sellTypeTag: {
+  sellTypeBadge: {
     position: "absolute",
     top: 12,
     right: 12,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 20,
   },
   sellTypeText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  imageCountBadge: {
+    position: "absolute",
+    bottom: 12,
+    right: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.7)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  imageCountText: {
+    color: "#fff",
+    fontSize: 10,
     fontWeight: "600",
   },
   cardContent: {
-    padding: 16,
+    padding: 20,
   },
   propertyTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1a1a1a",
     marginBottom: 12,
-    lineHeight: 22,
+    lineHeight: 24,
   },
-  featuresRow: {
+  locationRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  bedroomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
+    gap: 6,
   },
-  featureItem: {
+  locationText: {
+    fontSize: 14,
+    color: "#666",
+    flex: 1,
+    fontWeight: "500",
+  },
+  detailsGrid: {
     flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+    paddingVertical: 16,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+  },
+  detailItem: {
     alignItems: "center",
     flex: 1,
   },
-  featureText: {
-    marginLeft: 6,
-    fontSize: 13,
-    color: "#666",
-    flex: 1,
+  detailIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 6,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
-  priceContainer: {
+  detailLabel: {
+    fontSize: 11,
+    color: "#888",
+    fontWeight: "500",
+    marginBottom: 2,
+  },
+  detailValue: {
+    fontSize: 13,
+    color: "#333",
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  priceSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "baseline",
-    marginBottom: 12,
+    alignItems: "center",
+    marginBottom: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#f0f8ff",
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: "#232761",
+  },
+  priceContainer: {
+    flex: 1,
+  },
+  mainPrice: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#232761",
+    marginBottom: 2,
+  },
+  priceLabel: {
+    fontSize: 12,
+    color: "#666",
+    fontWeight: "500",
+  },
+  pricePerSqftContainer: {
+    alignItems: "flex-end",
   },
   pricePerSqft: {
     fontSize: 13,
     color: "#666",
+    fontWeight: "600",
+    backgroundColor: "#fff",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
-  price: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#232761",
+  amenitiesPreview: {
+    marginBottom: 20,
   },
-  amenitiesContainer: {
-    marginBottom: 16,
+  amenitiesHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 6,
   },
   amenitiesLabel: {
-    fontSize: 13,
-    color: "#666",
-    marginBottom: 4,
-  },
-  amenitiesText: {
-    fontSize: 13,
+    fontSize: 14,
     color: "#333",
-    fontWeight: "500",
+    fontWeight: "600",
   },
-  buttonRow: {
+  amenitiesList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  amenityTag: {
+    backgroundColor: "#e8f5e8",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#c8e6c9",
+  },
+  amenityText: {
+    fontSize: 11,
+    color: "#2e7d32",
+    fontWeight: "600",
+  },
+  buttonContainer: {
     flexDirection: "row",
     gap: 12,
   },
-  viewButton: {
+  viewDetailsButton: {
     flex: 1,
     backgroundColor: "#232761",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
     gap: 8,
+    elevation: 2,
+    shadowColor: "#232761",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
-  viewButtonText: {
+  viewDetailsText: {
     color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
   },
   contactButton: {
     flex: 1,
-    backgroundColor: "transparent",
+    backgroundColor: "#fff",
     borderWidth: 2,
     borderColor: "#232761",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 10,
-    borderRadius: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
     gap: 8,
   },
-  contactButtonText: {
+  contactText: {
     color: "#232761",
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
   },
+
   // Modal Styles
   modalOverlay: {
     flex: 1,
