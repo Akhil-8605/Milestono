@@ -16,7 +16,7 @@ import Svg, { G, Path } from "react-native-svg";
 import { useNavigation } from "expo-router";
 import MenuModal from "../components/HeroModel";
 import * as Location from "expo-location";
-
+import { GOOGLE_API_KEY } from "@env";
 const cities = [
   "Pune",
   "Mumbai",
@@ -71,7 +71,7 @@ const HeroSection = () => {
   }, [])
 
   const getCityName = async (latitude: number, longitude: number) => {
-    const apiKey = "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+    const apiKey = GOOGLE_API_KEY;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
 
     try {

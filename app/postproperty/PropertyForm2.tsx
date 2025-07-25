@@ -9,6 +9,8 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import * as Location from 'expo-location';
+import LocationPickerComponent from "./LocationPickerComponent";
 
 interface Form2Props {
   formData: any;
@@ -34,9 +36,11 @@ const Form2: React.FC<Form2Props> = ({
   const [bedrooms, setBedrooms] = useState(formData.bedrooms || "");
   const [bathrooms, setBathrooms] = useState(formData.bathrooms || "");
   const [balconies, setBalconies] = useState(formData.balconies || "");
-  const [furnishings, setFurnishings] = useState(formData.furnishings || []);
-  const [basicDetails, setBasicDetails] = useState(formData.basicDetails || "");
-  const [area, setArea] = useState(formData.area || "");
+  const [furnitures, setFurnitures] = useState(formData.furnitures || []);
+  const [deposite, setDeposite] = useState(formData.deposite || "");
+  const [pricePerMonth, setPricePerMonth] = useState(formData.pricePerMonth || "");
+  const [ownership, setOwnership] = useState(formData.ownership || "");
+  const [areaSqft, setAreaSqft] = useState(formData.areaSqft || "");
   const [expectedPrice, setExpectedPrice] = useState(
     formData.expectedPrice || ""
   );
@@ -44,24 +48,72 @@ const Form2: React.FC<Form2Props> = ({
   const [isAllInclusive, setIsAllInclusive] = useState(
     formData.isAllInclusive || false
   );
-  const [isNegotiable, setIsNegotiable] = useState(
-    formData.isNegotiable || false
+  const [isPriceNegotiable, setIsPriceNegotiable] = useState(
+    formData.isPriceNegotiable || false
   );
-  const [taxExcluded, setTaxExcluded] = useState(formData.taxExcluded || false);
-  const [propertyDescription, setPropertyDescription] = useState(
-    formData.propertyDescription || ""
+  const [isTaxchargeExc, setIsTaxchargeExc] = useState(formData.isTaxchargeExc || false);
+  const [uniqueFeatures, setUniqueFeatures] = useState(
+    formData.uniqueFeatures || ""
   );
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const validateForm = () => {
+
     const newErrors: { [key: string]: string } = {};
 
-    if (!city) newErrors.city = "City is required";
-    if (!location) newErrors.location = "Please select location on map";
-    if (!bedrooms) newErrors.bedrooms = "Please select number of bedrooms";
-    if (!bathrooms) newErrors.bathrooms = "Please select number of bathrooms";
-    if (!area) newErrors.area = "Area is required";
-    if (!expectedPrice) newErrors.expectedPrice = "Expected price is required";
+    if (!location) {
+      newErrors.location = "Please select or detect your property location.";
+    }
+
+    if (!city) {
+      newErrors.city = "Please fill the city name";
+    }
+
+    if (!landmark) {
+      newErrors.landmark = "Please fill the landmark";
+    }
+
+    if (!bedrooms) {
+      newErrors.bedrooms = "Number of bedrooms is required.";
+    }
+
+    if (!bathrooms) {
+      newErrors.bathrooms = "Number of bathrooms is required.";
+    }
+
+    if (!balconies) {
+      newErrors.balconies = "Number of balconies is required.";
+    }
+
+    if (!ownership) {
+      newErrors.ownership = "Please select a Ownership.";
+    }
+
+    if (formData.sellType !== "Sell") {
+      if (!deposite) {
+        newErrors.deposite = "Deposite is required.";
+
+      }
+      if (!pricePerMonth) {
+        newErrors.pricePerMonth = "Price per month is required.";
+
+      }
+    }
+
+    if (formData.sellType === "Sell") {
+      if (!areaSqft) {
+        newErrors.areaSqft = "Area in sq.ft. is required.";
+
+      }
+      if (!expectedPrice) {
+        newErrors.expectedPrice = "Expected price is required.";
+
+      }
+      if (!pricePerSqFt) {
+        newErrors.pricePerSqFt = "Price per sq.ft. is required.";
+
+      }
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -72,19 +124,20 @@ const Form2: React.FC<Form2Props> = ({
       updateFormData({
         city,
         landmark,
-        location,
+        latitude: location.latitude,
+        longitude: location.longitude,
         bedrooms,
         bathrooms,
         balconies,
-        furnishings,
-        basicDetails,
-        area,
+        furnitures,
+        ownership,
+        areaSqft,
         expectedPrice,
         pricePerSqFt,
         isAllInclusive,
-        isNegotiable,
-        taxExcluded,
-        propertyDescription,
+        isPriceNegotiable,
+        isTaxchargeExc,
+        uniqueFeatures,
       });
       onNext();
     } else {
@@ -138,16 +191,6 @@ const Form2: React.FC<Form2Props> = ({
     </TouchableOpacity>
   );
 
-  const LocationPickerComponent = ({ onLocationSelect, style }: any) => {
-    return (
-      <View style={[style, styles.webMapFallback]}>
-        <Text style={styles.webMapText}>
-          Please enter your location details in the fields above. Map selection
-          is available in the mobile app.
-        </Text>
-      </View>
-    );
-  };
 
   return (
     <View style={styles.container}>
@@ -156,12 +199,6 @@ const Form2: React.FC<Form2Props> = ({
         <View style={styles.header}>
           <TouchableOpacity onPress={onBack}>
             <Text style={styles.arrow}>←</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => console.log("Post Via WhatsApp pressed (Form2)")}
-          >
-            {/* <Text style={styles.whatsapp}>Post Via WhatsApp</Text> */}
           </TouchableOpacity>
         </View>
 
@@ -190,6 +227,26 @@ const Form2: React.FC<Form2Props> = ({
         </View>
 
         {/* Map Location */}
+        <TouchableOpacity
+          style={styles.detectLocationButton}
+          onPress={async () => {
+            try {
+              let { status } = await Location.requestForegroundPermissionsAsync();
+              if (status !== 'granted') {
+                alert('Permission to access location was denied');
+                return;
+              }
+
+              let locationResult = await Location.getCurrentPositionAsync({});
+              const { latitude, longitude } = locationResult.coords;
+              setLocation({ latitude, longitude });
+            } catch (err) {
+              console.error("Location error:", err);
+            }
+          }}
+        >
+          <Text style={styles.detectLocationButtonText}>📍 Detect My Location</Text>
+        </TouchableOpacity>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             Select Your Property Location on the Map
@@ -201,6 +258,7 @@ const Form2: React.FC<Form2Props> = ({
                   coordinate: { latitude: number; longitude: number };
                 };
               }) => setLocation(e.nativeEvent.coordinate)}
+              location={location}
               style={styles.map}
             />
           </View>
@@ -280,12 +338,12 @@ const Form2: React.FC<Form2Props> = ({
               <FurnishingButton
                 key={item}
                 title={item}
-                selected={furnishings.includes(item)}
+                selected={furnitures.includes(item)}
                 onPress={() => {
-                  setFurnishings(
-                    furnishings.includes(item)
-                      ? furnishings.filter((f: string) => f !== item)
-                      : [...furnishings, item]
+                  setFurnitures(
+                    furnitures.includes(item)
+                      ? furnitures.filter((f: string) => f !== item)
+                      : [...furnitures, item]
                   );
                 }}
               />
@@ -306,92 +364,121 @@ const Form2: React.FC<Form2Props> = ({
               <SelectionBasicDetailsButton
                 key={detail}
                 title={detail}
-                selected={basicDetails === detail}
-                onPress={() => setBasicDetails(detail)}
+                selected={ownership === detail}
+                onPress={() => setOwnership(detail)}
                 style={styles.selectionButton}
               />
             ))}
           </View>
         </View>
+        {formData.sellType !== 'Sell' ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Price Details</Text>
 
-        {/* Area */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Area Details</Text>
-          <TextInput
-            style={[styles.input, errors.area && styles.inputError]}
-            value={area}
-            onChangeText={setArea}
-            placeholder="₹ Area sq.ft."
-            keyboardType="numeric"
-          />
-          {errors.area && <Text style={styles.errorText}>{errors.area}</Text>}
-        </View>
+            <TextInput
+              style={[styles.input, errors.deposite && styles.inputError]}
+              value={deposite}
+              onChangeText={setDeposite}
+              placeholder="₹ Deposite"
+              keyboardType="numeric"
+            />
+            {errors.deposite && (
+              <Text style={styles.errorText}>{errors.deposite}</Text>
+            )}
 
-        {/* Price Details */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Price Details</Text>
-          <TextInput
-            style={[styles.input, errors.expectedPrice && styles.inputError]}
-            value={expectedPrice}
-            onChangeText={setExpectedPrice}
-            placeholder="₹ Expected Price"
-            keyboardType="numeric"
-          />
-          {errors.expectedPrice && (
-            <Text style={styles.errorText}>{errors.expectedPrice}</Text>
-          )}
-
-          <TextInput
-            style={styles.input}
-            value={pricePerSqFt}
-            onChangeText={setPricePerSqFt}
-            placeholder="₹ Price per sq.ft."
-            keyboardType="numeric"
-          />
-
-          <View style={styles.checkboxContainer}>
-            <TouchableOpacity
-              style={styles.checkbox}
-              onPress={() => setIsAllInclusive(!isAllInclusive)}
-            >
-              <View
-                style={[
-                  styles.checkboxBox,
-                  isAllInclusive && styles.checkboxChecked,
-                ]}
-              />
-              <Text style={styles.checkboxLabel}>All inclusive price?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.checkbox}
-              onPress={() => setIsNegotiable(!isNegotiable)}
-            >
-              <View
-                style={[
-                  styles.checkboxBox,
-                  isNegotiable && styles.checkboxChecked,
-                ]}
-              />
-              <Text style={styles.checkboxLabel}>Price Negotiable</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.checkbox}
-              onPress={() => setTaxExcluded(!taxExcluded)}
-            >
-              <View
-                style={[
-                  styles.checkboxBox,
-                  taxExcluded && styles.checkboxChecked,
-                ]}
-              />
-              <Text style={styles.checkboxLabel}>
-                Tax and Govt.charges excluded
-              </Text>
-            </TouchableOpacity>
+            <TextInput
+              style={[styles.input, errors.pricePerMonth && styles.inputError]}
+              value={pricePerMonth}
+              onChangeText={setPricePerMonth}
+              placeholder="₹ Price per month"
+              keyboardType="numeric"
+            />
+            {errors.pricePerMonth && (
+              <Text style={styles.errorText}>{errors.pricePerMonth}</Text>
+            )}
           </View>
-        </View>
+        ) : (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Price Details</Text>
+
+            <TextInput
+              style={[styles.input, errors.areaSqft && styles.inputError]}
+              value={areaSqft}
+              onChangeText={setAreaSqft}
+              placeholder="Area sq.ft."
+              keyboardType="numeric"
+            />
+            {errors.areaSqft && (
+              <Text style={styles.errorText}>{errors.areaSqft}</Text>
+            )}
+
+            <TextInput
+              style={[styles.input, errors.expectedPrice && styles.inputError]}
+              value={expectedPrice}
+              onChangeText={setExpectedPrice}
+              placeholder="₹ Expected Price"
+              keyboardType="numeric"
+            />
+            {errors.expectedPrice && (
+              <Text style={styles.errorText}>{errors.expectedPrice}</Text>
+            )}
+
+            <TextInput
+              style={[styles.input, errors.pricePerSqFt && styles.inputError]}
+              value={pricePerSqFt}
+              onChangeText={setPricePerSqFt}
+              placeholder="₹ Price per sq.ft."
+              keyboardType="numeric"
+            />
+            {errors.pricePerSqFt && (
+              <Text style={styles.errorText}>{errors.pricePerSqFt}</Text>
+            )}
+
+            <View style={styles.checkboxContainer}>
+              <TouchableOpacity
+                style={styles.checkbox}
+                onPress={() => setIsAllInclusive(!isAllInclusive)}
+              >
+                <View
+                  style={[
+                    styles.checkboxBox,
+                    isAllInclusive && styles.checkboxChecked,
+                  ]}
+                />
+                <Text style={styles.checkboxLabel}>All inclusive price?</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.checkbox}
+                onPress={() => setIsPriceNegotiable(!isPriceNegotiable)}
+              >
+                <View
+                  style={[
+                    styles.checkboxBox,
+                    isPriceNegotiable && styles.checkboxChecked,
+                  ]}
+                />
+                <Text style={styles.checkboxLabel}>Price Negotiable</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.checkbox}
+                onPress={() => setIsTaxchargeExc(!isTaxchargeExc)}
+              >
+                <View
+                  style={[
+                    styles.checkboxBox,
+                    isTaxchargeExc && styles.checkboxChecked,
+                  ]}
+                />
+                <Text style={styles.checkboxLabel}>
+                  Tax and Govt.charges excluded
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
 
         {/* Description */}
         <View style={styles.section}>
@@ -400,8 +487,8 @@ const Form2: React.FC<Form2Props> = ({
           </Text>
           <TextInput
             style={styles.textArea}
-            value={propertyDescription}
-            onChangeText={setPropertyDescription}
+            value={uniqueFeatures}
+            onChangeText={setUniqueFeatures}
             placeholder="Share some details about your property..."
             multiline
             numberOfLines={4}
@@ -425,6 +512,8 @@ export default Form2;
 
 /* --- STYLES --- */
 const styles = StyleSheet.create({
+
+
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -487,6 +576,18 @@ const styles = StyleSheet.create({
     color: "#ff0000",
     fontSize: 12,
     marginTop: 4,
+  },
+  detectLocationButton: {
+    backgroundColor: '#222761',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 10,
+    alignSelf: 'flex-start',
+  },
+  detectLocationButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   mapContainer: {
     height: 300,

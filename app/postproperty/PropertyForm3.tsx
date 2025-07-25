@@ -1,96 +1,121 @@
-import React, { useState } from "react";
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Image,
-} from "react-native";
-import {
-  ImagePickerResponse,
-  launchImageLibrary,
-} from "react-native-image-picker";
+"use client"
 
-interface Form3Props {
-  onBack: () => void;
-  onSubmit?: () => void;
+import type React from "react"
+import { useState } from "react"
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from "react-native"
+import * as ImagePicker from "expo-image-picker"
+
+interface PhotoFile {
+  uri: string
+  name: string
+  type: string
 }
 
-const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
-  const [photos, setPhotos] = useState<string[]>([]);
-  const [otherRooms, setOtherRooms] = useState<string[]>([]);
-  const [furnishing, setFurnishing] = useState<string>("");
-  const [parking, setParking] = useState<string[]>([]);
-  const [errors, setErrors] = useState<{ photos?: string }>({});
+interface FormData {
+  selectedRoom: string[]
+  selectedFurnishing: string
+  reservedParking: string
+  [key: string]: any
+}
+
+interface Form3Props {
+  onBack: () => void
+  onSubmit?: () => void
+  updateFormData: (data: Partial<FormData>) => void
+  formData: FormData
+  uploadedPhotos: PhotoFile[]
+  setUploadedPhotos: (photos: PhotoFile[]) => void
+  disabled?: boolean
+}
+
+const Form3: React.FC<Form3Props> = ({
+  formData,
+  updateFormData,
+  uploadedPhotos,
+  setUploadedPhotos,
+  onBack,
+  onSubmit,
+  disabled,
+}) => {
+  const [photos, setPhotos] = useState<string[]>([])
+  const [selectedRoom, setSelectedRooms] = useState<string[]>([])
+  const [selectedFurnishing, setSelectedFurnishing] = useState<string>("")
+  const [reservedParking, setReservedParking] = useState<string>("")
+  const [errors, setErrors] = useState<{ photos?: string }>({})
 
   const validateForm = () => {
-    const newErrors: { photos?: string } = {};
+    const newErrors: { photos?: string } = {}
+
     if (photos.length === 0) {
-      newErrors.photos = "Please add at least one photo";
+      newErrors.photos = "Please add at least one photo"
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleFormSubmit = () => {
     if (validateForm()) {
-      console.log("Form data submitted:", {
-        photos,
-        otherRooms,
-        furnishing,
-        parking,
-      });
+      updateFormData({
+        selectedRoom,
+        selectedFurnishing,
+        reservedParking,
+      })
       if (onSubmit) {
-        onSubmit();
+        onSubmit()
       }
     } else {
-      Alert.alert("Error", "Please fill in all required fields");
+      Alert.alert("Error", "Please fill in all required fields")
     }
-  };
+  }
 
-  const handleImagePicker = () => {
-    launchImageLibrary(
-      {
-        mediaType: "photo",
-        selectionLimit: 10,
-      },
-      (response: ImagePickerResponse) => {
-        if (response.assets) {
-          const newPhotos = response.assets.map((asset) => asset.uri || "");
-          setPhotos([...photos, ...newPhotos]);
-        }
+  const handleImagePicker = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+      if (status !== "granted") {
+        Alert.alert("Permission Required", "Permission to access media library is required!")
+        return
       }
-    );
-  };
 
-  const SelectionButton = ({ title, selected, onPress }: any) => (
-    <TouchableOpacity
-      style={[styles.selectionButton, selected && styles.selectedButton]}
-      onPress={onPress}
-    >
-      <Text style={[styles.selectionText, selected && styles.selectedText]}>
-        {title}
-      </Text>
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 1,
+      })
+
+      if (!result.canceled) {
+        const files: PhotoFile[] = result.assets.map((asset) => ({
+          uri: asset.uri,
+          name: asset.fileName || asset.uri.split("/").pop() || "image.jpg",
+          type: asset.type || "image/jpeg",
+        }))
+        const selectedUri = result.assets.map((asset) => asset.uri)
+        setPhotos(selectedUri)
+        setUploadedPhotos(files)
+      }
+    } catch (error) {
+      console.error("Error picking images:", error)
+      Alert.alert("Error", "Failed to pick images")
+    }
+  }
+
+  interface SelectionButtonProps {
+    title: string
+    selected: boolean
+    onPress: () => void
+  }
+
+  const SelectionButton: React.FC<SelectionButtonProps> = ({ title, selected, onPress }) => (
+    <TouchableOpacity style={[styles.selectionButton, selected && styles.selectedButton]} onPress={onPress}>
+      <Text style={[styles.selectionText, selected && styles.selectedText]}>{title}</Text>
     </TouchableOpacity>
-  );
+  )
 
   return (
     <View style={styles.container}>
-      {/* Fixed Header */}
-
-      {/* Scrollable Content */}
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onBack}>
             <Text style={styles.arrow}>←</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => console.log("Post Via WhatsApp pressed (Form3)")}
-          >
-            {/* <Text style={styles.whatsapp}>Post Via WhatsApp</Text> */}
           </TouchableOpacity>
         </View>
         <Text style={styles.title}>Basic Details of Your Property</Text>
@@ -98,26 +123,15 @@ const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Add Photos & Other Details</Text>
-          <TouchableOpacity
-            style={styles.uploadContainer}
-            onPress={handleImagePicker}
-          >
+          <TouchableOpacity style={styles.uploadContainer} onPress={handleImagePicker}>
             <Text style={styles.uploadText}>+ Add Photos</Text>
-            <Text style={styles.uploadSubtext}>
-              Click or drag and drop photos here
-            </Text>
+            <Text style={styles.uploadSubtext}>Click or drag and drop photos here</Text>
           </TouchableOpacity>
-          {errors.photos && (
-            <Text style={styles.errorText}>{errors.photos}</Text>
-          )}
+          {errors.photos && <Text style={styles.errorText}>{errors.photos}</Text>}
 
           <View style={styles.photoGrid}>
             {photos.map((photo, index) => (
-              <Image
-                key={index}
-                source={{ uri: photo }}
-                style={styles.photoThumbnail}
-              />
+              <Image key={index} source={{ uri: photo }} style={styles.photoThumbnail} />
             ))}
           </View>
         </View>
@@ -125,22 +139,18 @@ const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Other Rooms (Optional)</Text>
           <View style={styles.optionsContainer}>
-            {["Pooja Room", "Servant Room", "Study Room", "Others"].map(
-              (room) => (
-                <SelectionButton
-                  key={room}
-                  title={room}
-                  selected={otherRooms.includes(room)}
-                  onPress={() => {
-                    setOtherRooms(
-                      otherRooms.includes(room)
-                        ? otherRooms.filter((r) => r !== room)
-                        : [...otherRooms, room]
-                    );
-                  }}
-                />
-              )
-            )}
+            {["Pooja Room", "Servant Room", "Study Room", "Others"].map((room) => (
+              <SelectionButton
+                key={room}
+                title={room}
+                selected={selectedRoom.includes(room)}
+                onPress={() => {
+                  setSelectedRooms(
+                    selectedRoom.includes(room) ? selectedRoom.filter((r) => r !== room) : [...selectedRoom, room],
+                  )
+                }}
+              />
+            ))}
           </View>
         </View>
 
@@ -151,8 +161,8 @@ const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
               <SelectionButton
                 key={option}
                 title={option}
-                selected={furnishing === option}
-                onPress={() => setFurnishing(option)}
+                selected={selectedFurnishing === option}
+                onPress={() => setSelectedFurnishing(option)}
               />
             ))}
           </View>
@@ -165,13 +175,9 @@ const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
               <SelectionButton
                 key={option}
                 title={option}
-                selected={parking.includes(option)}
+                selected={reservedParking === option}
                 onPress={() => {
-                  setParking(
-                    parking.includes(option)
-                      ? parking.filter((p) => p !== option)
-                      : [...parking, option]
-                  );
+                  setReservedParking(option)
                 }}
               />
             ))}
@@ -181,20 +187,20 @@ const Form3: React.FC<Form3Props> = ({ onBack, onSubmit }) => {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Fixed Bottom Bar */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
-          style={styles.bottomButton}
+          style={[styles.bottomButton, disabled && styles.disabledButton]}
           onPress={handleFormSubmit}
+          disabled={disabled}
         >
           <Text style={styles.bottomButtonText}>Submit</Text>
         </TouchableOpacity>
       </View>
     </View>
-  );
-};
+  )
+}
 
-export default Form3;
+export default Form3
 
 /* --- STYLES --- */
 const styles = StyleSheet.create({
@@ -209,7 +215,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: 0, // to avoid overlap with header
+    paddingTop: 0,
     paddingBottom: 25,
   },
   arrow: {
@@ -224,9 +230,9 @@ const styles = StyleSheet.create({
 
   /* SCROLL CONTENT */
   scrollContent: {
-    paddingTop: 16, // offset for header
+    paddingTop: 16,
     paddingHorizontal: 16,
-    paddingBottom: 60, // offset for bottom bar
+    paddingBottom: 60,
   },
   title: {
     fontSize: 22,
@@ -324,7 +330,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    width: '80%',
+    width: "80%",
+  },
+  disabledButton: {
+    backgroundColor: "#ccc",
   },
   bottomButtonText: {
     color: "#fff",
@@ -332,4 +341,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
-});
+})

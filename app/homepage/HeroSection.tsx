@@ -19,7 +19,7 @@ import { useNavigation, useRouter } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import * as Location from "expo-location"
-import { BASE_URL } from "@env";
+import { BASE_URL ,GOOGLE_API_KEY} from "@env";
 
 const cities = [
   "Pune", "Mumbai", "Solapur", "Satara", "Amravati", "Nashik",
@@ -101,7 +101,7 @@ const HeroSection: React.FC = () => {
   }
 
   const getCityName = async (latitude: number, longitude: number) => {
-    const apiKey = "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+    const apiKey = GOOGLE_API_KEY;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
 
     try {
@@ -122,7 +122,7 @@ const HeroSection: React.FC = () => {
   }
 
   const getAreaName = async () => {
-    const apiKey = "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+    const apiKey = GOOGLE_API_KEY;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLong[0]},${latLong[1]}&key=${apiKey}`
 
     try {

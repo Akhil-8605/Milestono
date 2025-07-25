@@ -8,64 +8,140 @@ import {
   StyleSheet,
   Dimensions,
   ActivityIndicator,
-  Alert,
 } from "react-native";
-import * as Location from "expo-location";
-import * as SecureStore from "expo-secure-store";
-import axios from "axios";
 import { useNavigation } from "expo-router";
-import { NavigationProp } from "@react-navigation/native";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
 import { BASE_URL } from "@env";
 
 const CARD_WIDTH = Dimensions.get("window").width * 0.65;
 
-export default function NewLaunchProperties() {
-  const [properties, setProperties] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigation = useNavigation<NavigationProp<{ PropertyDetailsPage: { property: any } }>>();
+interface Property {
+  _id: string;
+  heading: string;
+  sellerType: string;
+  landmark: string;
+  city: string;
+  sellType: "Sell" | "Rent";
+  expectedPrice: string;
+  pricePerMonth: string;
+  bedrooms: string;
+  uploadedPhotos: string[];
+  saved: boolean;
+}
 
-  const fetchProperties = async (lat: number, lng: number) => {
+interface NavigationProps {
+  navigate: (screen: string, params?: any) => void;
+}
+
+export default function NewLaunchProperties() {
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const navigation = useNavigation<NavigationProps>();
+
+  useEffect(() => {
+    getProperties();
+  }, []);
+
+  const getProperties = async (): Promise<void> => {
+    // Use AsyncStorage to retrieve the token
+    const token = await AsyncStorage.getItem("auth");
+
+    if (!token) {
+      alert("Please log in to view properties.");
+      navigation.navigate("login" as never);
+      return;
+    }
+
     try {
-      const token = await SecureStore.getItemAsync("auth"); // optional: if you use token
-      const response = await axios.post<any[]>(
+      // Request location permission (if not already granted)
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permission to access location was denied.");
+        fetchWithFallback();
+        return;
+      }
+
+      // Get current location
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      const { latitude, longitude } = location.coords;
+
+      const res = await axios.post<Property[]>(
         `${BASE_URL}/api/home-properties`,
         {
-          latitude: lat,
-          longitude: lng,
+          latitude,
+          longitude,
           radius: 50,
         },
         {
-          headers: {
-            Authorization: token || "",
-          },
+          headers: { Authorization: token },
         }
       );
-      setProperties(response.data);
-    } catch (error) {
-      console.error("Failed to fetch properties:", error);
-      // Alert.alert("Error", "Failed to load properties from server.");
+      setProperties(res.data);
+    } catch (err) {
+      console.error("Error loading properties:", err);
+      fetchWithFallback();
     } finally {
       setLoading(false);
     }
   };
 
-  const getUserLocationAndFetch = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      // fallback to default location (Pune)
-      fetchProperties(18.52097398044019, 73.86017831259551);
-    } else {
-      const location = await Location.getCurrentPositionAsync({});
-      fetchProperties(location.coords.latitude, location.coords.longitude);
+  const fetchWithFallback = async (): Promise<void> => {
+    const token = await AsyncStorage.getItem("auth");
+    if (!token) {
+      alert("Please log in to view properties.");
+      navigation.navigate("login" as never);
+      return;
+    }
+
+    try {
+      const res = await axios.post<Property[]>(
+        `${BASE_URL}/api/home-properties`,
+        {
+          latitude: 18.52097398044019,
+          longitude: 73.86017831259551,
+          radius: 50,
+        },
+        {
+          headers: { Authorization: token },
+        }
+      );
+      setProperties(res.data);
+    } catch (err) {
+      console.error("Error with fallback location:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    getUserLocationAndFetch();
-  }, []);
+  const handleSaveClick = async (id: string): Promise<void> => {
+    const token = await AsyncStorage.getItem("auth");
+    if (!token) {
+      alert("Please log in to save a property.");
+      navigation.navigate("login" as never);
+      return;
+    }
+    try {
+      await axios.post(
+        `${BASE_URL}/api/save-property`,
+        { property_id: id },
+        { headers: { Authorization: token } }
+      );
+      getProperties(); // Refresh saved state
+    } catch (err) {
+      console.error("Error saving property:", err);
+    }
+  };
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#2E3192" style={{ marginTop: 20 }} />;
+    return (
+      <View style={{ marginTop: 50, alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#2E3192" />
+      </View>
+    );
   }
 
   const propertyCount = properties.length;
@@ -80,40 +156,49 @@ export default function NewLaunchProperties() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        {properties.slice(0,propertyCount/2).map((property) => (
+        {properties.slice(0, Math.floor(propertyCount / 2)).map((property: Property) => (
           <View key={property._id} style={styles.card}>
             <Image
-              source={{ uri: property.uploadedPhotos[0] }}
+              source={{ uri: property.uploadedPhotos?.[0] || "" }}
               style={styles.propertyImage}
               resizeMode="cover"
             />
             <View style={styles.cardContent}>
-              <Text style={styles.propertyName}>{property.heading}</Text>
+              <Text style={styles.propertyName}>
+                {property.heading} ({property.sellerType})
+              </Text>
               <Text style={styles.locationText}>
-                Location: {property.landmark}, {property.city}
+                Location:{" "}
+                {property.landmark?.replace(/\b\w/g, (c: string) => c.toUpperCase())},{" "}
+                {property.city}
               </Text>
               <View style={styles.priceContainer}>
                 <Text style={styles.priceText}>
-                  Rs{" "}
+                  {property.sellType === "Sell" ? "Rs " : "Rent: Rs "}
                   {property.sellType === "Sell"
                     ? property.expectedPrice
                     : property.pricePerMonth}
                 </Text>
                 <Text style={styles.typeText}>
-                  | {property.bedrooms} {property.bedrooms !== "1RK" && "BHK"}
+                  | {property.bedrooms}
+                  {property.bedrooms !== "1RK" ? "BHK" : ""}
                 </Text>
               </View>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.saveButton}>
-                  <Text style={styles.saveButtonText}>Save Property</Text>
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={() => handleSaveClick(property._id)}
+                >
+                  <Text style={styles.saveButtonText}>
+                    {property.saved ? "Saved" : "Save Property"}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.viewButton}
                   onPress={() =>
-                    // navigation.navigate("PropertyDetailsPage", {
-                    //   id: property._id,
-                    // })
-                    navigation.navigate("PropertyDetailsPage", { property })
+                    navigation.navigate("PropertyDetailsPage", {
+                      propertyId: property._id,
+                    } as never)
                   }
                 >
                   <Text style={styles.viewButtonText}>View Details</Text>
@@ -129,40 +214,49 @@ export default function NewLaunchProperties() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        {properties.slice(propertyCount / 2 ,properties.length).map((property) => (
+        {properties.slice(Math.floor(propertyCount / 2), properties.length).map((property: Property) => (
           <View key={property._id} style={styles.card}>
             <Image
-              source={{ uri: property.uploadedPhotos[0] }}
+              source={{ uri: property.uploadedPhotos?.[0] || "" }}
               style={styles.propertyImage}
               resizeMode="cover"
             />
             <View style={styles.cardContent}>
-              <Text style={styles.propertyName}>{property.heading}</Text>
+              <Text style={styles.propertyName}>
+                {property.heading} ({property.sellerType})
+              </Text>
               <Text style={styles.locationText}>
-                Location: {property.landmark}, {property.city}
+                Location:{" "}
+                {property.landmark?.replace(/\b\w/g, (c: string) => c.toUpperCase())},{" "}
+                {property.city}
               </Text>
               <View style={styles.priceContainer}>
                 <Text style={styles.priceText}>
-                  Rs{" "}
+                  {property.sellType === "Sell" ? "Rs " : "Rent: Rs "}
                   {property.sellType === "Sell"
                     ? property.expectedPrice
                     : property.pricePerMonth}
                 </Text>
                 <Text style={styles.typeText}>
-                  | {property.bedrooms} {property.bedrooms !== "1RK" && "BHK"}
+                  | {property.bedrooms}
+                  {property.bedrooms !== "1RK" ? "BHK" : ""}
                 </Text>
               </View>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.saveButton}>
-                  <Text style={styles.saveButtonText}>Save Property</Text>
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={() => handleSaveClick(property._id)}
+                >
+                  <Text style={styles.saveButtonText}>
+                    {property.saved ? "Saved" : "Save Property"}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.viewButton}
                   onPress={() =>
-                    // navigation.navigate("PropertyDetailsPage", {
-                    //   id: property._id,
-                    // })
-                    navigation.navigate("PropertyDetailsPage", { property })
+                    navigation.navigate("PropertyDetailsPage", {
+                      propertyId: property._id,
+                    } as never)
                   }
                 >
                   <Text style={styles.viewButtonText}>View Details</Text>

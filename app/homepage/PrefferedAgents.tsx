@@ -1,4 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
+import * as Location from "expo-location";
+import axios from "axios";
+import { BASE_URL } from "@env";
 import {
   StyleSheet,
   View,
@@ -23,7 +26,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "expo-router";
 
-const mockAgents = [
+const agents = [
   {
     id: 1,
     fullName: "Sarah Johnson",
@@ -435,12 +438,12 @@ export default function AgentsSection() {
   const modalAnimation = useRef(new Animated.Value(0)).current;
   const { width } = Dimensions.get("window");
   const cardWidth = width * 0.85;
+  const [agents, setAgents] = useState([]);
 
-  // Auto scroll functionality
   useEffect(() => {
     const interval = setInterval(() => {
       if (scrollViewRef.current) {
-        const nextIndex = (activeIndex + 1) % mockAgents.slice(0, 5).length;
+        const nextIndex = (activeIndex + 1) % agents.slice(0, 5).length;
         scrollViewRef.current.scrollTo({
           x: nextIndex * (cardWidth + 20),
           animated: true,
@@ -500,36 +503,89 @@ export default function AgentsSection() {
   });
   const statusBarHeight = StatusBar.currentHeight || 0;
 
+  const handleAgents = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.warn("Permission to access location was denied");
+        fetchAgents(18.52097398044019, 73.86017831259551);
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+      fetchAgents(latitude, longitude);
+    } catch (error) {
+      console.error("Error fetching location or agents:", error);
+      fetchAgents(18.52097398044019, 73.86017831259551);
+    }
+  };
+
+  const fetchAgents = async (latitude: number, longitude: number): Promise<void> => {
+    try {
+      const response = await axios.post(`${BASE_URL}/api/verified-agents-by-city`, {
+        latitude,
+        longitude,
+      });
+      setAgents(response.data as any);
+    } catch (err) {
+      console.error("Error fetching agents:", err);
+      setAgents([]);
+    }
+  };
+
+  useEffect(() => {
+    handleAgents();
+  }, []);
+
   const renderAgentCard = (agent: any) => {
+    const fullName = `${agent.firstName} ${agent.lastName}`;
+    const branding = agent.branding;
+    const isVerified = branding === "trusted" || branding === "custom";
+    const showFeatured =
+      branding === "custom" && !agent.logo;
+
+    const profileUri = agent.profile || "https://yourcdn.com/placeholder.png";
+    const logoUri = agent.logo || "https://yourcdn.com/placeholder.png";
+
     return (
-      <View key={agent.id} style={styles.cardContainer}>
+      <View key={agent._id} style={styles.cardContainer}>
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Image
-              source={{ uri: agent.image }}
+              source={{ uri: profileUri }}
               style={styles.agentImage}
               resizeMode="cover"
             />
-            {agent.featured && (
+
+            {branding === "custom" && agent.logo ? (
+              <Image
+                source={{ uri: logoUri }}
+                style={styles.agentLogo}
+                resizeMode="contain"
+              />
+            ) : showFeatured ? (
               <View style={styles.featuredBadge}>
                 <AntDesign name="star" size={12} color="#fff" />
-                <Text style={styles.featuredText}>Featured</Text>
+                <Text style={styles.featuredText}>{agent.agency}</Text>
               </View>
-            )}
-            {agent.verified && (
+            ) : null}
+
+            {isVerified && (
               <View style={styles.verifiedBadge}>
                 <Ionicons name="checkmark-circle" size={14} color="#fff" />
                 <Text style={styles.verifiedText}>Verified</Text>
               </View>
             )}
           </View>
+
           <View style={styles.cardBody}>
             <View style={styles.cardBodyTop}>
               <View>
-                <Text style={styles.agentName}>{agent.fullName}</Text>
+                <Text style={styles.agentName}>{fullName}</Text>
                 <View style={styles.companyContainer}>
                   <MaterialIcons name="business" size={14} color="#666" />
-                  <Text style={styles.companyText}>{agent.company}</Text>
+                  <Text style={styles.companyText}>{agent.agency}</Text>
                 </View>
               </View>
               <View style={styles.ratingContainer}>
@@ -544,32 +600,30 @@ export default function AgentsSection() {
                       style={{ marginRight: 2 }}
                     />
                   ))}
-                <Text style={styles.ratingTextAgent}>
-                  ({agent.rating.toFixed(1)})
-                </Text>
+                <Text style={styles.ratingTextAgent}>{agent.rating}</Text>
               </View>
             </View>
+
             <View style={styles.statsContainer}>
               <View style={styles.agentStatBox}>
-                <Text style={styles.agentStatValue}>
-                  {agent.propertiesSold}
-                </Text>
-                <Text style={styles.agentStatLabel}>Properties Sold</Text>
+                <Text style={styles.agentStatValue}>13</Text>
+                <Text style={styles.agentStatLabel}>Properties</Text>
               </View>
               <View style={styles.agentStatBox}>
-                <Text style={styles.agentStatValue}>{agent.experience}</Text>
+                <Text style={styles.agentStatValue}>{agent.yearsOfExperience}</Text>
                 <Text style={styles.agentStatLabel}>Years Experience</Text>
               </View>
               <View style={styles.agentStatBox}>
-                <Text style={styles.agentStatValue}>{agent.awards}</Text>
-                <Text style={styles.agentStatLabel}>Awards</Text>
+                <Text style={styles.agentStatValue}>3</Text>
+                <Text style={styles.agentStatLabel}>Projects</Text>
               </View>
             </View>
+
             <View style={styles.infoSection}>
               <View style={styles.infoRow}>
                 <Feather name="calendar" size={14} color="#666" />
                 <Text style={styles.infoText}>
-                  Operating since {agent.operatingSince}
+                  Operating since: {new Date(agent.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                 </Text>
               </View>
               <View style={styles.infoRow}>
@@ -609,12 +663,12 @@ export default function AgentsSection() {
         snapToInterval={cardWidth + 20}
         decelerationRate="fast"
       >
-        {mockAgents.slice(0, 5).map((agent) => renderAgentCard(agent))}
+        {agents.slice(0, 5).map((agent) => renderAgentCard(agent))}
       </ScrollView>
-      
+
       {/* Carousel Dots */}
       <View style={styles.paginationContainer}>
-        {mockAgents.slice(0, 5).map((_, index) => (
+        {agents.slice(0, 5).map((_, index) => (
           <View
             key={index}
             style={[
@@ -624,7 +678,7 @@ export default function AgentsSection() {
           />
         ))}
       </View>
-      
+
       <TouchableOpacity
         onPress={() => navigation.navigate("AgentsPage" as never)}
       >
@@ -665,15 +719,15 @@ export default function AgentsSection() {
               >
                 <View style={styles.modalAgentInfo}>
                   <Image
-                    source={{ uri: selectedAgent.image }}
+                    source={{ uri: selectedAgent.profile }}
                     style={styles.modalAgentImage}
                   />
                   <View style={styles.modalAgentDetails}>
                     <Text style={styles.modalAgentName}>
-                      {selectedAgent.fullName}
+                      {selectedAgent.firstName + " " + selectedAgent.lastName}
                     </Text>
                     <Text style={styles.modalAgentCompany}>
-                      {selectedAgent.company}
+                      {selectedAgent.agency}
                     </Text>
                     <View style={styles.modalAgentRating}>
                       {Array(5)
@@ -682,7 +736,7 @@ export default function AgentsSection() {
                           <AntDesign
                             key={i}
                             name={
-                              i < Math.floor(selectedAgent.rating)
+                              i < Math.floor(4)
                                 ? "star"
                                 : "staro"
                             }
@@ -692,7 +746,7 @@ export default function AgentsSection() {
                           />
                         ))}
                       <Text style={styles.modalRatingText}>
-                        ({selectedAgent.rating.toFixed(1)})
+                        ({4})
                       </Text>
                     </View>
                   </View>
@@ -700,32 +754,31 @@ export default function AgentsSection() {
                 <View style={styles.statsContainer}>
                   <View style={styles.agentStatBox}>
                     <Text style={styles.agentStatValue}>
-                      {selectedAgent.propertiesSold}
+                      {4}
                     </Text>
                     <Text style={styles.agentStatLabel}>Properties Sold</Text>
                   </View>
                   <View style={styles.agentStatBox}>
                     <Text style={styles.agentStatValue}>
-                      {selectedAgent.experience}
+                      {selectedAgent.yearsOfExperience}
                     </Text>
                     <Text style={styles.agentStatLabel}>Years Experience</Text>
                   </View>
                   <View style={styles.agentStatBox}>
                     <Text style={styles.agentStatValue}>
-                      {selectedAgent.awards}
+                      {3}
                     </Text>
-                    <Text style={styles.agentStatLabel}>Awards</Text>
+                    <Text style={styles.agentStatLabel}>Projects</Text>
                   </View>
                 </View>
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>About Agent</Text>
                   <Text style={styles.aboutText}>
-                    {selectedAgent.fullName} is a professional real estate agent
-                    with {selectedAgent.experience} years of experience,
-                    specializing in {selectedAgent.specialization || "N/A"}.
-                    With a proven track record of {selectedAgent.propertiesSold}{" "}
-                    properties sold, they are a trusted advisor in the real
-                    estate market.
+                    {selectedAgent.firstName + " " + selectedAgent.lastName} is a professional real estate agent
+                    with {selectedAgent.yearsOfExperience} years of experience,
+                    specializing in {selectedAgent.projects} new projects. With a proven
+                    track record of {selectedAgent.properties} properties
+                    , they are a trusted advisor in the real estate market.
                   </Text>
                 </View>
                 <View style={styles.modalSection}>
@@ -742,7 +795,7 @@ export default function AgentsSection() {
                         style={[
                           styles.tabButtonText,
                           selectedTab === "residential" &&
-                            styles.activeTabButtonText,
+                          styles.activeTabButtonText,
                         ]}
                       >
                         Residential
@@ -759,7 +812,7 @@ export default function AgentsSection() {
                         style={[
                           styles.tabButtonText,
                           selectedTab === "commercial" &&
-                            styles.activeTabButtonText,
+                          styles.activeTabButtonText,
                         ]}
                       >
                         Commercial
@@ -1375,6 +1428,24 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 15,
   },
+  agentLogo: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    minWidth: 50,
+    maxWidth: 50,
+    minHeight: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+
   agentStatBox: {
     alignItems: "center",
   },

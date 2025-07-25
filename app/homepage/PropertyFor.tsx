@@ -11,6 +11,8 @@ import {
   Modal,
 } from "react-native";
 import { BlurView } from "expo-blur";
+import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 const CARD_WIDTH = Dimensions.get("window").width * 0.65;
 
@@ -37,6 +39,25 @@ export default function PropertyForSection() {
   const handleExplore = (type: string) => {
     setSelectedType(type);
     setModalVisible(true);
+  };
+
+  const handleSubmit = () => {
+    if (selectedType === "For Students" || selectedType === "For Buyers") {
+      // Navigate to SearchPage with the location input
+      router.push({
+        pathname: "SearchPage" as never,
+        params: {
+          location: location,
+        },
+      });
+    }
+    setModalVisible(false);
+    setLocation(""); // Reset location input
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setLocation(""); // Reset location input
   };
 
   return (
@@ -66,7 +87,6 @@ export default function PropertyForSection() {
             </View>
           </View>
         ))}
-
         <View key={3} style={styles.card}>
           <Image
             source={require("../../assets/images/ForInvestorsImg.jpg")}
@@ -79,7 +99,10 @@ export default function PropertyForSection() {
               "Discover lucrative property investment opportunities for
               long-term gains."
             </Text>
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => router.push("NewProjectsPage" as never)}
+            >
               <Text style={styles.buttonText}>EXPLORE</Text>
             </TouchableOpacity>
           </View>
@@ -87,43 +110,79 @@ export default function PropertyForSection() {
       </ScrollView>
 
       <Modal
-        animationType="fade"
+        animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={handleCloseModal}
       >
         <View style={styles.modalOverlay}>
           <BlurView
             style={styles.modalContent}
-            intensity={50}
-            tint="systemThinMaterialLight"
+            intensity={80}
+            tint="systemThinMaterialDark"
           >
-            <Text style={styles.modalTitle}>
-              Find Properties {selectedType}
-            </Text>
-            <Text style={styles.modalLabel}>Location Preferences:</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g., City center, suburbs"
-              placeholderTextColor="#666"
-              value={location}
-              onChangeText={setLocation}
-            />
+            {/* Close button */}
             <TouchableOpacity
-              style={styles.submitButton}
-              onPress={() => {
-                // Handle submit logic here
-                setModalVisible(false);
-              }}
+              style={styles.closeIconButton}
+              onPress={handleCloseModal}
             >
-              <Text style={styles.submitButtonText}>Submit</Text>
+              <Ionicons name="close" size={24} color="#fff" />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
+
+            {/* Header with icon */}
+            <View style={styles.modalHeader}>
+              <View style={styles.iconContainer}>
+                <Ionicons
+                  name={selectedType === "For Students" ? "school" : "home"}
+                  size={32}
+                  color="#4A90E2"
+                />
+              </View>
+              <Text style={styles.modalTitle}>
+                Find Properties {selectedType}
+              </Text>
+              <Text style={styles.modalSubtitle}>
+                Tell us your preferred location to get started
+              </Text>
+            </View>
+
+            {/* Input section */}
+            <View style={styles.inputSection}>
+              <Text style={styles.modalLabel}>
+                <Ionicons name="location" size={16} color="#fff" /> Location Preferences
+              </Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="search" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="e.g., City center, suburbs, university area"
+                  placeholderTextColor="#999"
+                  value={location}
+                  onChangeText={setLocation}
+                  autoCapitalize="words"
+                />
+              </View>
+            </View>
+
+            {/* Action buttons */}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.submitButton, !location.trim() && styles.disabledButton]}
+                onPress={handleSubmit}
+                disabled={!location.trim()}
+              >
+                <Text style={styles.submitButtonText}>
+                  <Ionicons name="search" size={16} color="#fff" /> Search Properties
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={handleCloseModal}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           </BlurView>
         </View>
       </Modal>
@@ -205,7 +264,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
@@ -213,36 +272,102 @@ const styles = StyleSheet.create({
   modalContent: {
     width: "95%",
     maxWidth: 400,
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 24,
+    padding: 0,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  closeIconButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 1,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalHeader: {
+    alignItems: "center",
+    paddingTop: 32,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "rgba(74, 144, 226, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
   },
   modalTitle: {
     fontSize: 24,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#fff",
-    marginBottom: 20,
+    marginBottom: 8,
     textAlign: "center",
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  inputSection: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
   },
   modalLabel: {
     fontSize: 16,
     color: "#fff",
-    marginBottom: 8,
+    marginBottom: 12,
+    fontWeight: "600",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   modalInput: {
-    backgroundColor: "white",
-    borderRadius: 8,
-    padding: 12,
+    flex: 1,
+    padding: 16,
     fontSize: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    color: "#333",
+  },
+  buttonContainer: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    gap: 12,
   },
   submitButton: {
-    backgroundColor: "#1a237e",
-    paddingVertical: 14,
-    borderRadius: 8,
-    marginBottom: 12,
+    backgroundColor: "#4A90E2",
+    paddingVertical: 16,
+    borderRadius: 12,
+    shadowColor: "#4A90E2",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  disabledButton: {
+    backgroundColor: "rgba(74, 144, 226, 0.5)",
+    shadowOpacity: 0,
+    elevation: 0,
   },
   submitButtonText: {
     color: "white",
@@ -250,15 +375,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
-  closeButton: {
+  cancelButton: {
     backgroundColor: "transparent",
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#666",
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
-  closeButtonText: {
-    color: "#fff",
+  cancelButtonText: {
+    color: "rgba(255, 255, 255, 0.8)",
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",

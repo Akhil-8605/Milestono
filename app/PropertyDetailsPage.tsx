@@ -23,6 +23,7 @@ import { BlurView } from "expo-blur";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
+import { BASE_URL } from "@env";
 
 // Import our two separate sections
 import UserFeedbackSection from "./propertydetails/UserFeedbackSection";
@@ -32,8 +33,6 @@ const DummyImage = require("../assets/images/dummyImg.webp");
 
 // Device width
 const { width } = Dimensions.get("window");
-
-const BASE_URL = "http://localhost:6005";
 
 // Enhanced color palette
 const COLORS = {

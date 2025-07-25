@@ -1,11 +1,34 @@
+import React, { useState ,useEffect} from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation } from "expo-router";
+import axios from "axios";
+import { BASE_URL } from "@env";
 
 export default function PropertyRegistration() {
+  
+  const [data, setData] = useState({
+    users: 0,
+    projects: 0,
+    properties: 0,
+  });
+
+    const handleData = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/home-count`);
+      setData(response.data as any);
+    } catch (error) {
+      console.error("Error searching properties:", error);
+    }
+  };
+
+  useEffect(() => {
+    handleData();
+  }, [location]);
+  
   const stats = [
-    { number: "04", label: "Property Listings" },
-    { number: "05", label: "Projects" },
-    { number: "27", label: "Total Users" },
+    { number: data.properties.toString(), label: "Property Listings" },
+    { number: data.projects.toString(), label: "Projects" },
+    { number: data.users.toString(), label: "Total Users" },
   ];
 
   const navigation = useNavigation();

@@ -10,7 +10,7 @@ import {
   Dimensions,
   Platform,
 } from "react-native";
-
+import { useNavigation } from "expo-router";
 const cities = [
   {
     id: "1",
@@ -55,7 +55,7 @@ const cities = [
 ];
 
 export default function ProjectsSection() {
-
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Explore Real Estate in Popular Indian Cities</Text>
@@ -65,7 +65,7 @@ export default function ProjectsSection() {
         contentContainerStyle={styles.scrollContent}
       >
         {cities.map((cities) => (
-          <TouchableOpacity key={cities.id} style={styles.card}>
+          <TouchableOpacity key={cities.id} style={styles.card} onPress={()=>navigation.navigate("SearchPage" as never)}>
             <Image
               source={cities.image}
               style={styles.projectImage}
