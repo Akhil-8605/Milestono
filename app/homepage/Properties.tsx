@@ -26,7 +26,7 @@ export default function NewLaunchProperties() {
 
   const fetchProperties = async (lat: number, lng: number) => {
     try {
-      const token = await SecureStore.getItemAsync("jwt"); // optional: if you use token
+      const token = await SecureStore.getItemAsync("auth"); // optional: if you use token
       const response = await axios.post<any[]>(
         `${BASE_URL}/api/home-properties`,
         {

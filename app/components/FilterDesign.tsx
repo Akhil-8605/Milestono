@@ -5,10 +5,9 @@ import { useState, useEffect } from "react"
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert } from "react-native"
 import MultiSlider from "@ptomasroos/react-native-multi-slider"
 import Icon from "react-native-vector-icons/MaterialCommunityIcons"
-import { useNavigation } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
-import { BASE_URL } from "@env";
+import { BASE_URL } from "@env"
 
 interface FilterDesignProps {
   selectedCity: string | null
@@ -79,11 +78,9 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
   clearAll,
   onApplyFilters,
 }) => {
-  const navigation = useNavigation()
-
   // Additional filter states from SearchFiltersPage
-  const [selectedCategory, setSelectedCategory] = useState<string>("")
-  const [selectedType, setSelectedType] = useState<string>("")
+  const [selectedCategory, setSelectedCategory] = useState<string>("Residential")
+  const [selectedType, setSelectedType] = useState<string>("Sell")
   const [loading, setLoading] = useState(false)
 
   // Load saved filters from AsyncStorage when component mounts
@@ -94,8 +91,8 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
         const filters = JSON.parse(savedFilters)
 
         // Load category and type
-        setSelectedCategory(filters.category || "")
-        setSelectedType(filters.type || "")
+        setSelectedCategory(filters.category || "Residential")
+        setSelectedType(filters.type || "Sell")
 
         // Update parent component states with saved filters
         if (filters.bedrooms && filters.bedrooms.length > 0) {
@@ -169,7 +166,7 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
   const applyFiltersToResults = (properties: any[], filters: any) => {
     return properties.filter((property) => {
       // Category filter
-      if (filters.category && property.propertyCategory !== filters.category) {
+      if (filters.category && filters.category !== "Residential" && property.propertyCategory !== filters.category) {
         return false
       }
 
@@ -180,25 +177,36 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
 
       // Bedrooms filter
       if (filters.bedrooms.length > 0) {
-        let matchesFilter = false
-        filters.bedrooms.forEach((filterBedroom: any) => {
-          if (filterBedroom.includes(property.bedrooms)) {
-            if ((filterBedroom === "1RK" && property.bedrooms === "1RK") || filterBedroom !== "1RK") {
-              matchesFilter = true
-            }
-          }
+        const propertyBedrooms = property.bedrooms
+        const matchesBedroom = filters.bedrooms.some((filterBedroom: string) => {
+          if (filterBedroom === "1RK" && propertyBedrooms === "1RK") return true
+          if (filterBedroom === "1BHK" && propertyBedrooms === "1BHK") return true
+          if (filterBedroom === "2BHK" && propertyBedrooms === "2BHK") return true
+          if (filterBedroom === "3BHK" && propertyBedrooms === "3BHK") return true
+          if (filterBedroom === "4BHK" && propertyBedrooms === "4BHK") return true
+          if (
+            filterBedroom === "5+BHK" &&
+            (propertyBedrooms === "5BHK" ||
+              propertyBedrooms === "6BHK" ||
+              propertyBedrooms === "7BHK" ||
+              propertyBedrooms === "8BHK" ||
+              propertyBedrooms === "9BHK" ||
+              propertyBedrooms === "10BHK")
+          )
+            return true
+          return false
         })
-        if (!matchesFilter) return false
+        if (!matchesBedroom) return false
       }
 
       // Area filter
-      const areaSqft = Number.parseInt(property.areaSqft)
+      const areaSqft = Number.parseInt(property.areaSqft) || 0
       if (areaSqft < filters.areaRange[0] || areaSqft > filters.areaRange[1]) {
         return false
       }
 
       // Price filter
-      const expectedPrice = Number.parseInt(property.expectedPrice)
+      const expectedPrice = Number.parseInt(property.expectedPrice) || 0
       const minPriceValue = filters.priceRange[0] * 10000000
       const maxPriceValue = filters.priceRange[1] * 10000000
       if (expectedPrice < minPriceValue || expectedPrice > maxPriceValue) {
@@ -207,46 +215,41 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
 
       // Property types filter
       if (filters.propertyTypes.length > 0) {
-        let matchesFilter = false
-        filters.propertyTypes.forEach((filterPropertyType: any) => {
-          if (property.propertyContains.includes(filterPropertyType)) {
-            matchesFilter = true
-          }
-        })
-        if (!matchesFilter) return false
+        const propertyCategory = property.propertyCategory || ""
+        const propertyContains = property.propertyContains || ""
+        const matchesPropertyType = filters.propertyTypes.some(
+          (filterType: string) =>
+            propertyCategory.toLowerCase().includes(filterType.toLowerCase()) ||
+            propertyContains.toLowerCase().includes(filterType.toLowerCase()),
+        )
+        if (!matchesPropertyType) return false
       }
 
       // Amenities filter
       if (filters.amenities.length > 0) {
-        let matchesFilter = false
-        filters.amenities.forEach((filterAmenity: any) => {
-          if (property.amenities.includes(filterAmenity)) {
-            matchesFilter = true
-          }
-        })
-        if (!matchesFilter) return false
+        const propertyAmenities = property.amenities || []
+        const matchesAmenity = filters.amenities.some((filterAmenity: string) =>
+          propertyAmenities.some((amenity: string) => amenity.toLowerCase().includes(filterAmenity.toLowerCase())),
+        )
+        if (!matchesAmenity) return false
       }
 
       // Construction status filter
       if (filters.constructionStatus.length > 0) {
-        let matchesFilter = false
-        filters.constructionStatus.forEach((filterStatus: any) => {
-          if (property.oldProperty === filterStatus) {
-            matchesFilter = true
-          }
-        })
-        if (!matchesFilter) return false
+        const oldProperty = property.oldProperty || ""
+        const matchesStatus = filters.constructionStatus.some((filterStatus: string) =>
+          oldProperty.toLowerCase().includes(filterStatus.toLowerCase()),
+        )
+        if (!matchesStatus) return false
       }
 
       // Posted by filter
       if (filters.postedBy.length > 0) {
-        let matchesFilter = false
-        filters.postedBy.forEach((filterPostedBy: any) => {
-          if (property.sellerType === filterPostedBy) {
-            matchesFilter = true
-          }
-        })
-        if (!matchesFilter) return false
+        const sellerType = property.sellerType || ""
+        const matchesPostedBy = filters.postedBy.some((filterPostedBy: string) =>
+          sellerType.toLowerCase().includes(filterPostedBy.toLowerCase()),
+        )
+        if (!matchesPostedBy) return false
       }
 
       return true
@@ -308,8 +311,8 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
   // Enhanced clear all function (matching SearchFiltersPage)
   const handleClearAll = () => {
     clearAll()
-    setSelectedCategory("")
-    setSelectedType("")
+    setSelectedCategory("Residential")
+    setSelectedType("Sell")
 
     // Reset to SearchFiltersPage default values
     setAreaRange([1800, 12400])
@@ -346,7 +349,7 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
             <TouchableOpacity
               key={category}
               style={[styles.bedroomChip, selectedCategory === category && styles.selectedChip]}
-              onPress={() => setSelectedCategory(selectedCategory === category ? "" : category)}
+              onPress={() => setSelectedCategory(selectedCategory === category ? "Residential" : category)}
             >
               <Text style={[styles.bedroomText, selectedCategory === category && styles.selectedChipText]}>
                 {category}
@@ -364,7 +367,7 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
             <TouchableOpacity
               key={type}
               style={[styles.bedroomChip, selectedType === type && styles.selectedChip]}
-              onPress={() => setSelectedType(selectedType === type ? "" : type)}
+              onPress={() => setSelectedType(selectedType === type ? "Sell" : type)}
             >
               <Text style={[styles.bedroomText, selectedType === type && styles.selectedChipText]}>{type}</Text>
             </TouchableOpacity>

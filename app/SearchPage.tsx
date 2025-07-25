@@ -95,6 +95,37 @@ const PropertySearchAndFilter = () => {
 
   const [index, setIndex] = useState(0)
 
+  // Load saved filters on component mount
+  useEffect(() => {
+    loadSavedFilters()
+  }, [])
+
+  // Load saved filters from AsyncStorage
+  const loadSavedFilters = async () => {
+    try {
+      const savedFilters = await AsyncStorage.getItem("propertyFilters")
+      if (savedFilters) {
+        const filters = JSON.parse(savedFilters)
+        setSelectedBedrooms(filters.bedrooms || [])
+        setAreaRange(filters.areaRange || [1800, 12400])
+        setMinArea(filters.minArea || "1800")
+        setMaxArea(filters.maxArea || "12400")
+        setPriceRange(filters.priceRange || [21.0, 64.3])
+        setMinPrice(filters.minPrice || "210321000")
+        setMaxPrice(filters.maxPrice || "642981000")
+        setSelectedPropertyTypes(filters.propertyTypes || [])
+        setSelectedConstructionStatus(filters.constructionStatus || [])
+        setSelectedPostedBy(filters.postedBy || [])
+        setSelectedAmenities(filters.amenities || [])
+        if (filters.type) {
+          setSelectedType(filters.type)
+        }
+      }
+    } catch (error) {
+      console.error("Error loading saved filters:", error)
+    }
+  }
+
   // Animated city names
   useEffect(() => {
     const interval = setInterval(() => {
@@ -254,6 +285,7 @@ const PropertySearchAndFilter = () => {
 
   const handlePlaceSelect = async (place: any) => {
     setSearchQuery(place.description)
+    setSelectedCity(place.description)
     setPlacePredictions([])
     setLoading(true)
 
@@ -323,6 +355,87 @@ const PropertySearchAndFilter = () => {
     }
   }
 
+  // Apply filters to search results
+  const applyFiltersToResults = (properties: any[]) => {
+    return properties.filter((property) => {
+      // Type filter (Sell/Rent/PG)
+      if (selectedType && property.sellType.toLowerCase() !== selectedType.toLowerCase()) {
+        return false
+      }
+
+      // Bedrooms filter
+      if (selectedBedrooms.length > 0) {
+        const propertyBedrooms = property.bedrooms
+        const matchesBedroom = selectedBedrooms.some(filterBedroom => {
+          if (filterBedroom === "1RK" && propertyBedrooms === "1RK") return true
+          if (filterBedroom === "1BHK" && propertyBedrooms === "1BHK") return true
+          if (filterBedroom === "2BHK" && propertyBedrooms === "2BHK") return true
+          if (filterBedroom === "3BHK" && propertyBedrooms === "3BHK") return true
+          if (filterBedroom === "4BHK" && propertyBedrooms === "4BHK") return true
+          if (filterBedroom === "5+BHK" && (propertyBedrooms === "5BHK" || propertyBedrooms === "6BHK" || propertyBedrooms === "7BHK" || propertyBedrooms === "8BHK" || propertyBedrooms === "9BHK" || propertyBedrooms === "10BHK")) return true
+          return false
+        })
+        if (!matchesBedroom) return false
+      }
+
+      // Area filter
+      const areaSqft = Number.parseInt(property.areaSqft) || 0
+      if (areaSqft < areaRange[0] || areaSqft > areaRange[1]) {
+        return false
+      }
+
+      // Price filter
+      const expectedPrice = Number.parseInt(property.expectedPrice) || 0
+      const minPriceValue = priceRange[0] * 10000000
+      const maxPriceValue = priceRange[1] * 10000000
+      if (expectedPrice < minPriceValue || expectedPrice > maxPriceValue) {
+        return false
+      }
+
+      // Property types filter
+      if (selectedPropertyTypes.length > 0) {
+        const propertyCategory = property.propertyCategory || ""
+        const propertyContains = property.propertyContains || ""
+        const matchesPropertyType = selectedPropertyTypes.some(filterType =>
+          propertyCategory.toLowerCase().includes(filterType.toLowerCase()) ||
+          propertyContains.toLowerCase().includes(filterType.toLowerCase())
+        )
+        if (!matchesPropertyType) return false
+      }
+
+      // Amenities filter
+      if (selectedAmenities.length > 0) {
+        const propertyAmenities = property.amenities || []
+        const matchesAmenity = selectedAmenities.some(filterAmenity =>
+          propertyAmenities.some((amenity: string) =>
+            amenity.toLowerCase().includes(filterAmenity.toLowerCase())
+          )
+        )
+        if (!matchesAmenity) return false
+      }
+
+      // Construction status filter
+      if (selectedConstructionStatus.length > 0) {
+        const oldProperty = property.oldProperty || ""
+        const matchesStatus = selectedConstructionStatus.some(filterStatus =>
+          oldProperty.toLowerCase().includes(filterStatus.toLowerCase())
+        )
+        if (!matchesStatus) return false
+      }
+
+      // Posted by filter
+      if (selectedPostedBy.length > 0) {
+        const sellerType = property.sellerType || ""
+        const matchesPostedBy = selectedPostedBy.some(filterPostedBy =>
+          sellerType.toLowerCase().includes(filterPostedBy.toLowerCase())
+        )
+        if (!matchesPostedBy) return false
+      }
+
+      return true
+    })
+  }
+
   // Search properties with backend API
   const searchProperties = async () => {
     try {
@@ -354,7 +467,7 @@ const PropertySearchAndFilter = () => {
       // Save filters to AsyncStorage
       await saveFiltersToStorage()
 
-      // Navigate to results page
+      // Navigate to results page with proper data structure
       router.push({
         pathname: "/PropertiesPage",
         params: {
@@ -407,97 +520,6 @@ const PropertySearchAndFilter = () => {
     } catch (error) {
       console.error("Error saving filters:", error)
     }
-  }
-
-  // Apply filters to search results
-  const applyFiltersToResults = (properties: any[]) => {
-    return properties.filter((property) => {
-      // Category filter
-      if (selectedType === "Commercial" && property.propertyCategory !== "Commercial") {
-        return false
-      }
-      if (selectedType === "Residential" && property.propertyCategory !== "Residential") {
-        return false
-      }
-
-      // Bedrooms filter
-      if (selectedBedrooms.length > 0) {
-        let matchesFilter = false
-        selectedBedrooms.forEach((filterBedroom) => {
-          if (filterBedroom.includes(property.bedrooms)) {
-            if ((filterBedroom === "1RK" && property.bedrooms === "1RK") || filterBedroom !== "1RK") {
-              matchesFilter = true
-            }
-          }
-        })
-        if (!matchesFilter) return false
-      }
-
-      // Area filter
-      const areaSqft = Number.parseInt(property.areaSqft)
-      if (areaSqft < areaRange[0] || areaSqft > areaRange[1]) {
-        return false
-      }
-
-      // Price filter
-      const expectedPrice = Number.parseInt(property.expectedPrice)
-      const minPriceValue = priceRange[0] * 10000000
-      const maxPriceValue = priceRange[1] * 10000000
-      if (expectedPrice < minPriceValue || expectedPrice > maxPriceValue) {
-        return false
-      }
-
-      // Type filter (Sell/Rent/PG)
-      if (selectedType && property.sellType.toLowerCase() !== selectedType.toLowerCase()) {
-        return false
-      }
-
-      // Property types filter
-      if (selectedPropertyTypes.length > 0) {
-        let matchesFilter = false
-        selectedPropertyTypes.forEach((filterPropertyType) => {
-          if (property.propertyContains.includes(filterPropertyType)) {
-            matchesFilter = true
-          }
-        })
-        if (!matchesFilter) return false
-      }
-
-      // Amenities filter
-      if (selectedAmenities.length > 0) {
-        let matchesFilter = false
-        selectedAmenities.forEach((filterAmenity) => {
-          if (property.amenities.includes(filterAmenity)) {
-            matchesFilter = true
-          }
-        })
-        if (!matchesFilter) return false
-      }
-
-      // Construction status filter
-      if (selectedConstructionStatus.length > 0) {
-        let matchesFilter = false
-        selectedConstructionStatus.forEach((filterStatus) => {
-          if (property.oldProperty === filterStatus) {
-            matchesFilter = true
-          }
-        })
-        if (!matchesFilter) return false
-      }
-
-      // Posted by filter
-      if (selectedPostedBy.length > 0) {
-        let matchesFilter = false
-        selectedPostedBy.forEach((filterPostedBy) => {
-          if (property.sellerType === filterPostedBy) {
-            matchesFilter = true
-          }
-        })
-        if (!matchesFilter) return false
-      }
-
-      return true
-    })
   }
 
   const handleTypeSelect = (type: string) => {
@@ -664,10 +686,20 @@ const PropertySearchAndFilter = () => {
           {["Commercial", "Residential"].map((category) => (
             <TouchableOpacity
               key={category}
-              style={[styles.bedroomChip, selectedType === category && styles.selectedChip]}
-              onPress={() => handleTypeSelect(category)}
+              style={[styles.bedroomChip, (selectedType === "Commercial" ? "Commercial" : "Residential") === category && styles.selectedChip]}
+              onPress={() => {
+                // This affects the type selection logic
+                if (category === "Commercial") {
+                  setSelectedType("Commercial")
+                } else {
+                  // Default to Sell for Residential
+                  if (selectedType === "Commercial") {
+                    setSelectedType("Sell")
+                  }
+                }
+              }}
             >
-              <Text style={[styles.bedroomText, selectedType === category && styles.selectedChipText]}>{category}</Text>
+              <Text style={[styles.bedroomText, (selectedType === "Commercial" ? "Commercial" : "Residential") === category && styles.selectedChipText]}>{category}</Text>
             </TouchableOpacity>
           ))}
         </View>

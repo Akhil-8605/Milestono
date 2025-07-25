@@ -23,8 +23,6 @@ import { useRouter, useLocalSearchParams } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import { BASE_URL, GOOGLE_API_KEY } from "@env"
-import { useNavigation } from "expo-router";
-import { NavigationProp } from "@react-navigation/native";
 
 const { width: screenWidth } = Dimensions.get("window")
 const dummyImg = require("../assets/images/dummyImg.webp")
@@ -56,7 +54,6 @@ interface Property {
 
 const PropertyCard = ({ property }: { property: Property }) => {
   const router = useRouter()
-  const navigation = useNavigation<NavigationProp<{ PropertyDetailsPage: { property: any } }>>();
 
   const formatPrice = (price: string | number) => {
     const numPrice = typeof price === "string" ? Number.parseInt(price) : price
@@ -107,7 +104,18 @@ const PropertyCard = ({ property }: { property: Property }) => {
   }
 
   const navigateToDetails = () => {
-    navigation.navigate("PropertyDetailsPage", { property })
+    try {
+      // Use the same navigation pattern as Properties.tsx
+      router.push({
+        pathname: "/PropertyDetailsPage",
+        params: {
+          property: JSON.stringify(property),
+        },
+      })
+    } catch (error) {
+      console.error("Navigation error:", error)
+      Alert.alert("Error", "Unable to navigate to property details. Please try again.")
+    }
   }
 
   const getPropertyTypeColor = (category: string) => {
@@ -325,6 +333,96 @@ const PropertyListingScreen = () => {
     setSelectedAmenities(filters.amenities || [])
   }, [])
 
+  // Apply filters to search results - Enhanced filter logic
+  const applyFiltersToResults = useCallback((properties: Property[], filters?: any) => {
+    const currentFilters = filters || {
+      bedrooms: selectedBedrooms,
+      areaRange,
+      priceRange,
+      propertyTypes: selectedPropertyTypes,
+      constructionStatus: selectedConstructionStatus,
+      postedBy: selectedPostedBy,
+      amenities: selectedAmenities,
+    }
+
+    return properties.filter((property) => {
+      // Bedrooms filter
+      if (currentFilters.bedrooms && currentFilters.bedrooms.length > 0) {
+        const propertyBedrooms = property.bedrooms
+        const matchesBedroom = currentFilters.bedrooms.some((filterBedroom: string) => {
+          if (filterBedroom === "1RK" && propertyBedrooms === "1RK") return true
+          if (filterBedroom === "1BHK" && propertyBedrooms === "1BHK") return true
+          if (filterBedroom === "2BHK" && propertyBedrooms === "2BHK") return true
+          if (filterBedroom === "3BHK" && propertyBedrooms === "3BHK") return true
+          if (filterBedroom === "4BHK" && propertyBedrooms === "4BHK") return true
+          if (filterBedroom === "5+BHK" && (propertyBedrooms === "5BHK" || propertyBedrooms === "6BHK" || propertyBedrooms === "7BHK" || propertyBedrooms === "8BHK" || propertyBedrooms === "9BHK" || propertyBedrooms === "10BHK")) return true
+          return false
+        })
+        if (!matchesBedroom) return false
+      }
+
+      // Area filter
+      if (currentFilters.areaRange) {
+        const areaSqft = Number.parseInt(property.areaSqft) || 0
+        if (areaSqft < currentFilters.areaRange[0] || areaSqft > currentFilters.areaRange[1]) {
+          return false
+        }
+      }
+
+      // Price filter
+      if (currentFilters.priceRange) {
+        const expectedPrice = Number.parseInt(property.expectedPrice) || 0
+        const minPriceValue = currentFilters.priceRange[0] * 10000000
+        const maxPriceValue = currentFilters.priceRange[1] * 10000000
+        if (expectedPrice < minPriceValue || expectedPrice > maxPriceValue) {
+          return false
+        }
+      }
+
+      // Property types filter
+      if (currentFilters.propertyTypes && currentFilters.propertyTypes.length > 0) {
+        const propertyCategory = property.propertyCategory || ""
+        const propertyContains = property.propertyContains || ""
+        const matchesPropertyType = currentFilters.propertyTypes.some((filterType: string) =>
+          propertyCategory.toLowerCase().includes(filterType.toLowerCase()) ||
+          propertyContains.toLowerCase().includes(filterType.toLowerCase())
+        )
+        if (!matchesPropertyType) return false
+      }
+
+      // Amenities filter
+      if (currentFilters.amenities && currentFilters.amenities.length > 0) {
+        const propertyAmenities = property.amenities || []
+        const matchesAmenity = currentFilters.amenities.some((filterAmenity: string) =>
+          propertyAmenities.some((amenity: string) =>
+            amenity.toLowerCase().includes(filterAmenity.toLowerCase())
+          )
+        )
+        if (!matchesAmenity) return false
+      }
+
+      // Construction status filter
+      if (currentFilters.constructionStatus && currentFilters.constructionStatus.length > 0) {
+        const oldProperty = property.oldProperty || ""
+        const matchesStatus = currentFilters.constructionStatus.some((filterStatus: string) =>
+          oldProperty.toLowerCase().includes(filterStatus.toLowerCase())
+        )
+        if (!matchesStatus) return false
+      }
+
+      // Posted by filter
+      if (currentFilters.postedBy && currentFilters.postedBy.length > 0) {
+        const sellerType = property.sellerType || ""
+        const matchesPostedBy = currentFilters.postedBy.some((filterPostedBy: string) =>
+          sellerType.toLowerCase().includes(filterPostedBy.toLowerCase())
+        )
+        if (!matchesPostedBy) return false
+      }
+
+      return true
+    })
+  }, [selectedBedrooms, areaRange, priceRange, selectedPropertyTypes, selectedConstructionStatus, selectedPostedBy, selectedAmenities])
+
   // Search properties with backend API
   const searchProperties = useCallback(
     async (locationData?: any) => {
@@ -372,9 +470,11 @@ const PropertyListingScreen = () => {
           })
           : []
 
-
-        setProperties(transformedProperties as Property[])
         setOriginalProperties(transformedProperties as Property[])
+
+        // Apply current filters to the results
+        const filteredResults = applyFiltersToResults(transformedProperties as Property[])
+        setProperties(filteredResults)
       } catch (error) {
         console.error("Error searching properties:", error)
         setProperties([])
@@ -383,7 +483,7 @@ const PropertyListingScreen = () => {
         setLoading(false)
       }
     },
-    [BASE_URL],
+    [applyFiltersToResults, BASE_URL],
   )
 
   // Load initial data from route params or AsyncStorage
@@ -436,7 +536,7 @@ const PropertyListingScreen = () => {
     }
 
     loadInitialData()
-  }, [])
+  }, [searchProperties, loadFiltersFromData])
 
   // Handle search button press
   const handleSearch = async () => {
@@ -511,6 +611,9 @@ const PropertyListingScreen = () => {
     setSelectedConstructionStatus([])
     setSelectedPostedBy([])
     setSelectedAmenities([])
+
+    // Apply cleared filters to show all original properties
+    setProperties(originalProperties)
   }
 
   const statusBarHeight = StatusBar.currentHeight || 0

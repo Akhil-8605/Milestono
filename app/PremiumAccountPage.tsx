@@ -1,245 +1,269 @@
-import React, { useState, useEffect, useRef } from "react";
+"use client"
+
+import type React from "react"
+import { useState, useEffect } from "react"
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Animated,
   Dimensions,
   SafeAreaView,
-  Easing,
   Platform,
   StatusBar,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   Modal,
   TouchableWithoutFeedback,
   Linking,
-} from "react-native";
-import { SvgXml } from "react-native-svg";
-import { BlurView } from "expo-blur";
-import Header from "./components/Header";
-import { useRouter } from "expo-router";
-const { width, height } = Dimensions.get("window");
+  Alert,
+} from "react-native"
+import { SvgXml } from "react-native-svg"
+import { BlurView } from "expo-blur"
+import Header from "./components/Header"
+import { useRouter } from "expo-router"
+import axios from "axios"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import { handlePayment } from "./Payment"
+
+const { width, height } = Dimensions.get("window")
 
 interface Plan {
-  name: string;
-  price: number;
-  ogprice: number;
-  period: string;
-  pricePerMonth: string;
-  subtitle: string;
-  color: "basic" | "silver" | "gold";
-  responseText: string;
-  features: string[];
-  benefits: string[];
+  name: string
+  current: boolean
+  price: number
+  yearPrice: number
+  period: string
+  pricePerMonth: string
+  subtitle: string
+  color: "basic" | "pro" | "premium"
+  responseText: string
+  features: string[]
+  benefits: string[]
+  numOfProperties: number
+  numOfContactDetails: number
+  numOfImages: number
+  numOfVideos: number
+  numOfFeaturedProperties: number
+  crmAccess: boolean
+  whatsappIntegration: boolean
+  exportCustomers: string
+  bulkUpload: boolean
+  branding: string
 }
 
 const PLANS: { [key: string]: Plan } = {
-  basic: {
-    name: "Basic",
-    price: 3489,
-    ogprice: 1459,
+  starterRealty: {
+    name: "Starter Realty",
+    current: true,
+    price: 0,
+    yearPrice: 0,
     period: "Monthly",
-    pricePerMonth:
-      "₹2,000–₹3,500 per month (or ₹22,000–₹42,000 annually with discounts)",
-    subtitle: "Entry Level",
+    pricePerMonth: "Free",
+    subtitle: "For First-Time Sellers",
     color: "basic",
-    responseText: "Start your journey",
+    responseText: "Get Started for Free",
     features: [
-      "15-30 property listings",
-      "Basic visibility",
-      "Standard leads access",
+      "Post up to 3 properties (buy/sell/rent)",
+      "Basic listing with 5 images per property",
+      "Unlock 3 Contacts",
+      "Standard visibility in search results",
+      "Access to basic analytics (views, inquiries)",
     ],
     benefits: [
-      "Limited listing slots (15-30 properties)",
-      "Basic visibility",
-      "Access to standard leads only",
+      "Ideal for homeowners selling/renting without investment",
+      "No cost to list properties",
+      "Standard exposure in search results",
     ],
+    numOfProperties: 3,
+    numOfContactDetails: 3,
+    numOfImages: 5,
+    numOfVideos: 0,
+    numOfFeaturedProperties: 0,
+    crmAccess: false,
+    whatsappIntegration: false,
+    exportCustomers: "no",
+    bulkUpload: false,
+    branding: "no",
   },
-  silver: {
-    name: "Silver",
-    price: 7489,
-    ogprice: 5479,
+  smartSeller: {
+    name: "Smart Seller",
+    current: true,
+    price: 999,
+    yearPrice: 8999,
     period: "Monthly",
-    pricePerMonth:
-      "₹5,000–₹7,500 per month (or ₹50,000–₹75,000 annually with discounts)",
-    subtitle: "Professional",
-    color: "silver",
-    responseText: "Enhanced visibility & leads",
+    pricePerMonth: "₹999 per month (or ₹8,999 annually with 10% discount)",
+    subtitle: "For Frequent Sellers & Small Property Managers",
+    color: "basic",
+    responseText: "Upgrade for Better Leads",
     features: [
-      "32-78 property listings",
-      "Verified dealer/agent tag",
-      "Call tracking (15 calls/month)",
+      "Post up to 10 properties",
+      "Enhanced listing with 10 images per property",
+      "Unlock 12 Contacts",
+      "WhatsApp chat integration for instant communication",
+      "Basic CRM dashboard for lead management",
+      "Export leads in Excel/CSV format",
+      "Monthly performance report",
     ],
     benefits: [
-      "32-78 property listing slots",
-      "Verified dealer/agent tag",
-      "Basic performance analytics (views and inquiries)",
-      "Access to detailed lead information",
-      "Visibility boost for up to 6 properties",
-      "Call tracking (15 calls per month): Agents can view interested users' contact details, including phone numbers and email addresses.",
+      "Higher visibility than free listings",
+      "Better lead management with CRM tools",
+      "Direct WhatsApp communication for faster conversions",
     ],
+    numOfProperties: 10,
+    numOfContactDetails: 12,
+    numOfImages: 10,
+    numOfVideos: 0,
+    numOfFeaturedProperties: 0,
+    crmAccess: true,
+    whatsappIntegration: true,
+    exportCustomers: "email",
+    bulkUpload: false,
+    branding: "no",
   },
-  gold: {
-    name: "Gold",
-    price: 11489,
-    ogprice: 8459,
+  eliteAgent: {
+    name: "Elite Agent",
+    current: true,
+    price: 2499,
+    yearPrice: 22499,
     period: "Monthly",
-    pricePerMonth:
-      "₹12,000–₹15,000 per month (or ₹1,20,000–₹1,50,000 annually).",
-    subtitle: "Enterprise",
-    color: "gold",
-    responseText: "Maximum exposure & features",
+    pricePerMonth: "₹2,499 per month (or ₹22,499 annually with 20% discount)",
+    subtitle: "For Professional Agents & Brokers",
+    color: "pro",
+    responseText: "Boost Your Real Estate Business",
+    features: [
+      "Post up to 50 properties",
+      "Featured badge for 5 properties (highlighted in search results)",
+      "Rich media support (20 images, 2 videos)",
+      "Unlock 24 Contacts",
+      "Verified agent profile with 'Trusted Badge'",
+      "Advanced CRM dashboard with lead tracking & reminders",
+      "Export leads in Excel/CSV format",
+      "SEO optimization tips for better rankings",
+      "Dedicated account manager for onboarding & support",
+    ],
+    benefits: [
+      "Increased property exposure with featured listings",
+      "Enhanced credibility with a verified agent profile",
+      "Advanced CRM and lead management for higher conversions",
+    ],
+    numOfProperties: 50,
+    numOfContactDetails: 24,
+    numOfImages: 20,
+    numOfVideos: 2,
+    numOfFeaturedProperties: 5,
+    crmAccess: true,
+    whatsappIntegration: true,
+    exportCustomers: "email",
+    bulkUpload: false,
+    branding: "trusted",
+  },
+  developerPro: {
+    name: "Developer Pro",
+    current: true,
+    price: 4999,
+    yearPrice: 44999,
+    period: "Monthly",
+    pricePerMonth: "₹4,999 per month (or ₹44,999 annually with 20% discount)",
+    subtitle: "For Developers & Large-Scale Property Managers",
+    color: "premium",
+    responseText: "Maximize Your Real Estate Reach",
     features: [
       "Unlimited property listings",
-      "High visibility in search",
+      "Featured badge for 10 properties",
+      "Custom branding (logo, banner) on profile",
+      "Bulk upload feature for quick multiple listings",
+      "Access to Milestono's exclusive developer network",
       "Advanced analytics",
-      "Bulk upload feature",
-      "Multi-location support",
+      "Export leads with Contact Number in Excel/CSV format",
+      "Discounted virtual staging service (₹1,999 per property)",
+      "Legal assistance (₹99/month add-on available)",
+      "Priority placement in locality-specific searches",
     ],
     benefits: [
-      "Unlimited property listings",
-      "High visibility in search results",
-      "Advanced performance analytics and reporting",
-      "Bulk upload feature <br/>How it works: Dealers can use an Excel template or similar format provided by the platform to upload multiple property details (location, price, size, etc.) all at once",
-      "Sponsored listings for 10 days per month",
-      "Video and virtual tour uploads for all properties",
-      "Multi-location listing support",
-      "Priority lead access and support",
+      "Unlimited listings for large-scale property managers",
+      "Increased brand visibility with custom branding",
+      "Comprehensive analytics for data-driven decision-making",
+      "Exclusive access to a premium developer network",
     ],
+    numOfProperties: -1,
+    numOfContactDetails: -1,
+    numOfImages: -1,
+    numOfVideos: -1,
+    numOfFeaturedProperties: 10,
+    crmAccess: true,
+    whatsappIntegration: true,
+    exportCustomers: "mobile",
+    bulkUpload: true,
+    branding: "custom",
   },
-};
+}
 
 const checkmarkSvg = `
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" fill="currentColor"/>
 </svg>
-`;
+`
 
 const patternSvg = `
 <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M10 10L90 90M30 10L90 70M50 10L90 50M70 10L90 30M10 30L70 90M10 50L50 90M10 70L30 90" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round"/>
 </svg>
-`;
+`
 
-// New crown icon for premium features
 const crownSvg = `
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
 </svg>
-`;
+`
 
-// New shield icon for security features
 const shieldSvg = `
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM12 11.99H19C18.47 16.11 15.72 19.78 12 20.93V12H5V6.3L12 3.19V11.99Z" fill="currentColor"/>
 </svg>
-`;
+`
 
-const PricingPage: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "yearly">(
-    "monthly"
-  );
-  const [activePlanIndex, setActivePlanIndex] = useState<number>(0); // Default to Basic plan
-  const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+const PremiumAccountPage: React.FC = () => {
+  const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL || "https://your-api-url.com"
 
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const scrollViewRef = useRef<ScrollView | null>(null);
-  const planKeys = Object.keys(PLANS);
+  const [plans, setPlans] = useState(PLANS)
+  const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "yearly">("monthly")
+  const [selectedPlan, setSelectedPlan] = useState<string>("smartSeller")
+  const [modalVisible, setModalVisible] = useState<boolean>(false)
+  const [expandedBenefits, setExpandedBenefits] = useState<string[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
 
-  // Modal animation values
-  const modalSlideAnim = useRef(new Animated.Value(height)).current;
-  const modalBackdropAnim = useRef(new Animated.Value(0)).current;
+  const planKeys = Object.keys(plans)
+  const router = useRouter()
 
-  // Animation values
-  const headerAnimation = useRef(new Animated.Value(0)).current;
-  const cardAnims = useRef<Animated.Value[]>(
-    planKeys.map(() => new Animated.Value(0))
-  ).current;
-
-  // FIX: Initialize feature animations per plan using each plan's own features array.
-  const featureAnimations = useRef(
-    planKeys.map((planKey) =>
-      PLANS[planKey].features.map(() => new Animated.Value(0))
-    )
-  ).current;
-
-  // Parallax effect for background
-  const backgroundTranslateX = scrollX.interpolate({
-    inputRange: [0, width * planKeys.length],
-    outputRange: [0, -width * 0.2],
-    extrapolate: "clamp",
-  });
-
+  // Check authentication on component mount
   useEffect(() => {
-    // Animate header
-    Animated.timing(headerAnimation, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-      easing: Easing.out(Easing.cubic),
-    }).start();
+    checkAuthentication()
+  }, [])
 
-    // Animate cards sequentially
-    const animations = cardAnims.map((anim, index) =>
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: 600,
-        delay: 200 + 150 * index,
-        useNativeDriver: true,
-        easing: Easing.out(Easing.back(1.5)),
-      })
-    );
-    Animated.stagger(150, animations).start();
-
-    // Animate features with staggered delay for each plan
-    planKeys.forEach((_, planIndex) => {
-      const featureAnims = featureAnimations[planIndex];
-      const anims = featureAnims.map((anim, idx) =>
-        Animated.timing(anim, {
-          toValue: 1,
-          duration: 400,
-          delay: 800 + 100 * idx,
-          useNativeDriver: true,
-          easing: Easing.out(Easing.cubic),
-        })
-      );
-      Animated.stagger(80, anims).start();
-    });
-
-    // Scroll to the active plan after a short delay
-    setTimeout(() => {
-      scrollViewRef.current?.scrollTo({
-        x: activePlanIndex * (width * 0.8 + 20),
-        animated: true,
-      });
-    }, 500);
-  }, [
-    activePlanIndex,
-    cardAnims,
-    featureAnimations,
-    headerAnimation,
-    planKeys,
-    scrollX,
-  ]);
-
-  useEffect(() => {
-    const autoScrollInterval = setInterval(() => {
-      setActivePlanIndex((prevIndex) => {
-        const newIndex = (prevIndex + 1) % planKeys.length;
-        scrollViewRef.current?.scrollTo({
-          x: newIndex * (width * 0.8 + 20),
-          animated: true,
-        });
-        return newIndex;
-      });
-    }, 10000);
-
-    return () => clearInterval(autoScrollInterval);
-  }, [planKeys.length]);
+  const checkAuthentication = async () => {
+    try {
+      const token = await AsyncStorage.getItem("auth")
+      if (!token) {
+        Alert.alert("Authentication Required", "Please login to access premium plans", [
+          {
+            text: "OK",
+            onPress: () => router.push("/LoginPage"),
+          },
+        ])
+        return
+      }
+      setIsAuthenticated(true)
+    } catch (error) {
+      console.error("Error checking authentication:", error)
+      Alert.alert("Error", "Authentication check failed", [
+        {
+          text: "OK",
+          onPress: () => router.push("/LoginPage"),
+        },
+      ])
+    }
+  }
 
   const getCardColor = (color: string) => {
     switch (color) {
@@ -249,251 +273,158 @@ const PricingPage: React.FC = () => {
           header: "#0c4a6e",
           accent: "#0ea5e9",
           border: "#e0f2fe",
-          gradient: ["#f0f9ff", "#e0f2fe"],
           pattern: "rgba(14, 165, 233, 0.05)",
           modalBg: "#f0f9ff",
           modalHeader: "#0284c7",
-        };
-      case "silver":
+        }
+      case "pro":
         return {
           bg: "#f5f3ff",
           header: "#5b21b6",
           accent: "#8b5cf6",
           border: "#ede9fe",
-          gradient: ["#f5f3ff", "#ede9fe"],
           pattern: "rgba(139, 92, 246, 0.05)",
           modalBg: "#f5f3ff",
           modalHeader: "#7c3aed",
-        };
-      case "gold":
+        }
+      case "premium":
         return {
           bg: "#fffbeb",
           header: "#92400e",
           accent: "#f59e0b",
           border: "#fef3c7",
-          gradient: ["#fffbeb", "#fef3c7"],
           pattern: "rgba(245, 158, 11, 0.05)",
           modalBg: "#fffbeb",
           modalHeader: "#d97706",
-        };
+        }
       default:
         return {
           bg: "#f0f9ff",
           header: "#0c4a6e",
           accent: "#0ea5e9",
           border: "#e0f2fe",
-          gradient: ["#f0f9ff", "#e0f2fe"],
           pattern: "rgba(14, 165, 233, 0.05)",
           modalBg: "#f0f9ff",
           modalHeader: "#0284c7",
-        };
+        }
     }
-  };
+  }
+
+  const handleDurationChange = (planId: string, isMonthly: boolean) => {
+    const updatedPlans = { ...plans }
+    updatedPlans[planId].current = isMonthly
+    setPlans(updatedPlans)
+  }
+
+  const toggleBenefits = (planId: string) => {
+    setExpandedBenefits((prev) => (prev.includes(planId) ? prev.filter((p) => p !== planId) : [...prev, planId]))
+  }
+
+  const handlePlanSelect = (planId: string) => {
+    setSelectedPlan(planId)
+  }
+
+  const handleBuyNow = async () => {
+    const token = await AsyncStorage.getItem("auth")
+
+    if (!token) {
+      Alert.alert("Error", "Unauthorized: No token found.")
+      return
+    }
+
+    const plan = plans[selectedPlan]
+    const userProfile = {
+      numOfProperties: plan.numOfProperties,
+      numOfContactDetails: plan.numOfContactDetails,
+      numOfImages: plan.numOfImages,
+      numOfVideos: plan.numOfVideos,
+      numOfFeaturedProperties: plan.numOfFeaturedProperties,
+      crmAccess: plan.crmAccess,
+      whatsappIntegration: plan.whatsappIntegration,
+      exportCustomers: plan.exportCustomers,
+      bulkUpload: plan.bulkUpload,
+      branding: plan.branding,
+      current: plan.current,
+      accountName: plan.name,
+      price: plan.current ? Number.parseInt(plan.price.toString()) : Number.parseInt(plan.yearPrice.toString()),
+    }
+
+    try {
+      const response = await axios.post(`${BASE_URL}/api/accounts`, userProfile, {
+        headers: {
+          Authorization: token,
+        },
+      })
+      Alert.alert("Success", "Account created successfully")
+      setModalVisible(false)
+    } catch (error) {
+      console.error("Error creating account", error)
+      Alert.alert("Error", "Failed to create account")
+    }
+  }
 
   const TermsPage = async () => {
     try {
-      await Linking.openURL(`https://milestono.com/terms-condition`);
+      await Linking.openURL(`https://milestono.com/terms-condition`)
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
-  };
+  }
 
-  const buttonScale = useRef(new Animated.Value(1)).current;
-  const buyNowScale = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = (buttonRef: Animated.Value) => {
-    Animated.spring(buttonRef, {
-      toValue: 0.95,
-      friction: 5,
-      tension: 300,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = (buttonRef: Animated.Value) => {
-    Animated.spring(buttonRef, {
-      toValue: 1,
-      friction: 3,
-      tension: 400,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const openModal = (plan: string) => {
-    setSelectedPlan(plan);
-    setModalVisible(true);
-
-    // Reset the animation values
-    modalSlideAnim.setValue(height);
-    modalBackdropAnim.setValue(0);
-
-    // Animate the modal in
-    Animated.parallel([
-      Animated.timing(modalBackdropAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-        easing: Easing.out(Easing.cubic),
-      }),
-      Animated.spring(modalSlideAnim, {
-        toValue: 0,
-        friction: 8,
-        tension: 65,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
+  const openModal = (planId: string) => {
+    setSelectedPlan(planId)
+    setModalVisible(true)
+  }
 
   const closeModal = () => {
-    // Animate the modal out
-    Animated.parallel([
-      Animated.timing(modalBackdropAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-        easing: Easing.in(Easing.cubic),
-      }),
-      Animated.timing(modalSlideAnim, {
-        toValue: height,
-        duration: 300,
-        useNativeDriver: true,
-        easing: Easing.in(Easing.cubic),
-      }),
-    ]).start(() => {
-      setModalVisible(false);
-      setSelectedPlan(null);
-    });
-  };
+    setModalVisible(false)
+  }
 
-  const renderPricingCard = (plan: string, index: number) => {
-    const planData = PLANS[plan];
-    const colors = getCardColor(planData.color);
-
-    const inputRange = [
-      (index - 1) * width * 0.8,
-      index * width * 0.8,
-      (index + 1) * width * 0.8,
-    ];
-
-    const scale = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.9, 1, 0.9],
-      extrapolate: "clamp",
-    });
-
-    const opacity = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.7, 1, 0.7],
-      extrapolate: "clamp",
-    });
-
-    const translateY = scrollX.interpolate({
-      inputRange,
-      outputRange: [10, 0, 10],
-      extrapolate: "clamp",
-    });
-
-    const animatedStyle = {
-      opacity: cardAnims[index],
-      transform: [
-        {
-          translateY: cardAnims[index].interpolate({
-            inputRange: [0, 1],
-            outputRange: [100, 0],
-          }),
-        },
-        { scale },
-      ],
-    };
-
-    const rotate = scrollX.interpolate({
-      inputRange,
-      outputRange: ["0deg", "0deg", "0deg"],
-      extrapolate: "clamp",
-    });
+  const renderPricingCard = (planId: string, index: number) => {
+    const planData = plans[planId]
+    const colors = getCardColor(planData.color)
 
     return (
-      <Animated.View
-        key={plan}
+      <View
+        key={planId}
         style={[
           styles.card,
           {
             backgroundColor: colors.bg,
             borderColor: colors.border,
-            marginLeft: index === 0 ? 20 : 10,
-            marginRight: index === planKeys.length - 1 ? 20 : 10,
-            width: width * 0.82,
-            transform: [...animatedStyle.transform, { translateY }, { rotate }],
-            opacity: Animated.multiply(animatedStyle.opacity, opacity),
           },
         ]}
       >
         {/* Background pattern */}
         <View style={styles.patternContainer}>
-          <SvgXml
-            xml={patternSvg}
-            width={width * 0.8}
-            height="100%"
-            color={colors.pattern}
-            style={styles.patternSvg}
-          />
+          <SvgXml xml={patternSvg} width={width * 0.9} height="100%" color={colors.pattern} style={styles.patternSvg} />
         </View>
 
-        {/* Popular tag for Silver plan */}
-        {plan === "silver" && (
+        {/* Popular tag for Smart Seller plan */}
+        {planId === "smartSeller" && (
           <View style={[styles.popularTag, { backgroundColor: colors.accent }]}>
             <Text style={styles.popularTagText}>POPULAR</Text>
           </View>
         )}
 
         <View style={styles.cardHeader}>
-          <Text style={[styles.planName, { color: colors.header }]}>
-            {planData.name}
-          </Text>
-          <Text style={[styles.planSubtitle, { color: colors.header }]}>
-            {planData.subtitle}
-          </Text>
+          <Text style={[styles.planName, { color: colors.header }]}>{planData.name}</Text>
+          <Text style={[styles.planSubtitle, { color: colors.header }]}>{planData.subtitle}</Text>
         </View>
 
-        <Text style={[styles.responseText, { color: colors.accent }]}>
-          {planData.responseText}
-        </Text>
+        <Text style={[styles.responseText, { color: colors.accent }]}>{planData.responseText}</Text>
 
         <View style={styles.featuresContainer}>
           {planData.features.map((feature, idx) => (
-            <Animated.View
-              key={idx}
-              style={[
-                styles.featureRow,
-                {
-                  opacity: featureAnimations[index][idx],
-                  transform: [
-                    {
-                      translateX: featureAnimations[index][idx].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [-20, 0],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              <SvgXml
-                xml={checkmarkSvg}
-                width={20}
-                height={20}
-                color={colors.accent}
-                style={styles.checkmark}
-              />
+            <View key={idx} style={styles.featureRow}>
+              <SvgXml xml={checkmarkSvg} width={20} height={20} color={colors.accent} style={styles.checkmark} />
               <Text style={styles.featureText}>{feature}</Text>
-            </Animated.View>
+            </View>
           ))}
         </View>
 
         <View style={styles.pricingContainer}>
-          <View
-            style={[styles.periodSelector, { backgroundColor: colors.border }]}
-          >
+          <View style={[styles.periodSelector, { backgroundColor: colors.border }]}>
             <TouchableOpacity
               style={[
                 styles.periodOption,
@@ -502,16 +433,12 @@ const PricingPage: React.FC = () => {
                   borderRadius: 20,
                 },
               ]}
-              onPress={() => setSelectedPeriod("monthly")}
+              onPress={() => {
+                setSelectedPeriod("monthly")
+                handleDurationChange(planId, true)
+              }}
             >
-              <Text
-                style={[
-                  styles.periodText,
-                  selectedPeriod === "monthly" && { color: "white" },
-                ]}
-              >
-                Monthly
-              </Text>
+              <Text style={[styles.periodText, selectedPeriod === "monthly" && { color: "white" }]}>Monthly</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -522,14 +449,12 @@ const PricingPage: React.FC = () => {
                   borderRadius: 20,
                 },
               ]}
-              onPress={() => setSelectedPeriod("yearly")}
+              onPress={() => {
+                setSelectedPeriod("yearly")
+                handleDurationChange(planId, false)
+              }}
             >
-              <Text
-                style={[
-                  styles.periodText,
-                  selectedPeriod === "yearly" && { color: "white" },
-                ]}
-              >
+              <Text style={[styles.periodText, selectedPeriod === "yearly" && { color: "white" }]}>
                 Yearly
                 <Text style={styles.savingsText}> (Save 20%)</Text>
               </Text>
@@ -537,137 +462,109 @@ const PricingPage: React.FC = () => {
           </View>
 
           <View style={styles.priceDisplay}>
-            {selectedPeriod === "yearly" && (
-              <Text style={styles.originalPrice}>
-                ₹
-                {(planData.price * 12)
-                  .toString()
-                  .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-              </Text>
+            {selectedPeriod === "yearly" && planData.price > 0 && (
+              <Text style={styles.originalPrice}>₹{(planData.price * 12).toLocaleString()}</Text>
             )}
             <Text style={styles.currencySymbol}>₹</Text>
             <Text style={styles.priceAmount}>
-              {selectedPeriod === "monthly"
-                ? planData.price
-                    .toString()
-                    .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                : Math.round(planData.price * 12 * 0.8)
-                    .toString()
-                    .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              {selectedPeriod === "monthly" ? planData.price.toLocaleString() : planData.yearPrice.toLocaleString()}
             </Text>
-            <Text style={styles.periodLabel}>
-              /{selectedPeriod === "monthly" ? "mo" : "yr"}
-            </Text>
+            <Text style={styles.periodLabel}>/{selectedPeriod === "monthly" ? "mo" : "yr"}</Text>
           </View>
 
           <Text style={styles.priceSubtext}>{planData.pricePerMonth}</Text>
 
-          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-            <TouchableOpacity
-              style={[styles.ctaButton, { backgroundColor: colors.accent }]}
-              onPressIn={() => handlePressIn(buttonScale)}
-              onPressOut={() => handlePressOut(buttonScale)}
-              activeOpacity={0.9}
-              onPress={() => openModal(plan)}
-            >
-              <Text style={styles.ctaButtonText}>Get Started</Text>
-            </TouchableOpacity>
-          </Animated.View>
+          <TouchableOpacity
+            style={[styles.ctaButton, { backgroundColor: colors.accent }]}
+            onPress={() => openModal(planId)}
+            disabled={loading}
+          >
+            <Text style={styles.ctaButtonText}>{loading ? "Processing..." : "Get Started"}</Text>
+          </TouchableOpacity>
         </View>
-      </Animated.View>
-    );
-  };
+
+        {/* Benefits toggle */}
+        <TouchableOpacity style={styles.benefitsToggle} onPress={() => toggleBenefits(planId)}>
+          <Text style={[styles.benefitsToggleText, { color: colors.accent }]}>
+            ALL BENEFITS {expandedBenefits.includes(planId) ? "▲" : "▼"}
+          </Text>
+        </TouchableOpacity>
+
+        {expandedBenefits.includes(planId) && (
+          <View style={styles.benefitsContent}>
+            {planData.benefits.map((benefit, idx) => (
+              <View key={idx} style={styles.benefitRow}>
+                <SvgXml xml={checkmarkSvg} width={16} height={16} color={colors.accent} style={styles.benefitIcon} />
+                <Text style={styles.benefitText}>{benefit}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    )
+  }
 
   const renderModal = () => {
-    if (!selectedPlan) return null;
+    if (!selectedPlan) return null
 
-    const planData = PLANS[selectedPlan];
-    const colors = getCardColor(planData.color);
+    const planData = plans[selectedPlan]
+    const colors = getCardColor(planData.color)
 
     return (
-      <Modal
-        transparent={true}
-        visible={modalVisible}
-        animationType="none"
-        onRequestClose={closeModal}
-      >
+      <Modal transparent={true} visible={modalVisible} animationType="slide" onRequestClose={closeModal}>
         <TouchableWithoutFeedback onPress={closeModal}>
-          <Animated.View
-            style={[styles.modalOverlay, { opacity: modalBackdropAnim }]}
-          >
+          <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <Animated.View
+              <View
                 style={[
                   styles.modalContainer,
                   {
-                    transform: [{ translateY: modalSlideAnim }],
                     backgroundColor: colors.modalBg,
                     borderColor: colors.border,
                   },
                 ]}
               >
                 {/* Modal Header */}
-                <View
-                  style={[
-                    styles.modalHeader,
-                    { backgroundColor: colors.modalHeader },
-                  ]}
-                >
-                  <Text style={styles.modalTitle}>
-                    {planData.name} Plan Details
-                  </Text>
-                  <TouchableOpacity
-                    onPress={closeModal}
-                    style={styles.closeButton}
-                  >
+                <View style={[styles.modalHeader, { backgroundColor: colors.modalHeader }]}>
+                  <Text style={styles.modalTitle}>{planData.name} Plan Details</Text>
+                  <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
                     <Text style={styles.closeButtonText}>×</Text>
                   </TouchableOpacity>
                 </View>
 
                 {/* Modal Content */}
-                <ScrollView style={styles.modalContent}>
+                <ScrollView
+                  style={styles.modalContent}
+                  contentContainerStyle={styles.modalContentContainer}
+                  showsVerticalScrollIndicator={true}
+                  bounces={true}
+                  scrollEventThrottle={16}
+                >
                   <View style={styles.modalSection}>
                     <Text style={styles.modalSectionTitle}>Plan Overview</Text>
                     <Text style={styles.modalDescription}>
-                      The {planData.name} plan is designed for{" "}
-                      {planData.subtitle.toLowerCase()} real estate
-                      professionals who want to{" "}
-                      {planData.responseText.toLowerCase()}.
+                      The {planData.name} plan is designed for {planData.subtitle.toLowerCase()} real estate
+                      professionals who want to {planData.responseText.toLowerCase()}.
                     </Text>
                   </View>
 
                   <View style={styles.modalPriceSection}>
                     <Text style={styles.modalPriceLabel}>
-                      {selectedPeriod === "monthly"
-                        ? "Monthly Price"
-                        : "Annual Price (20% off)"}
+                      {selectedPeriod === "monthly" ? "Monthly Price" : "Annual Price (20% off)"}
                     </Text>
                     <View style={styles.modalPriceContainer}>
-                      {selectedPeriod === "yearly" && (
-                        <Text style={styles.modalOriginalPrice}>
-                          ₹
-                          {(planData.price * 12)
-                            .toString()
-                            .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                        </Text>
+                      {selectedPeriod === "yearly" && planData.price > 0 && (
+                        <Text style={styles.modalOriginalPrice}>₹{(planData.price * 12).toLocaleString()}</Text>
                       )}
                       <Text style={styles.modalCurrencySymbol}>₹</Text>
                       <Text style={styles.modalPriceAmount}>
                         {selectedPeriod === "monthly"
-                          ? planData.price
-                              .toString()
-                              .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                          : Math.round(planData.price * 12 * 0.8)
-                              .toString()
-                              .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                          ? planData.price.toLocaleString()
+                          : planData.yearPrice.toLocaleString()}
                       </Text>
-                      <Text style={styles.modalPeriodLabel}>
-                        /{selectedPeriod === "monthly" ? "mo" : "yr"}
-                      </Text>
+                      <Text style={styles.modalPeriodLabel}>/{selectedPeriod === "monthly" ? "mo" : "yr"}</Text>
                     </View>
-                    <Text style={styles.modalPriceSubtext}>
-                      {planData.pricePerMonth}
-                    </Text>
+                    <Text style={styles.modalPriceSubtext}>{planData.pricePerMonth}</Text>
                   </View>
 
                   <View style={styles.modalSection}>
@@ -675,208 +572,76 @@ const PricingPage: React.FC = () => {
                     {planData.benefits.map((benefit, idx) => (
                       <View key={idx} style={styles.modalBenefitRow}>
                         <SvgXml
-                          xml={
-                            idx % 3 === 0
-                              ? crownSvg
-                              : idx % 2 === 0
-                                ? shieldSvg
-                                : checkmarkSvg
-                          }
+                          xml={idx % 3 === 0 ? crownSvg : idx % 2 === 0 ? shieldSvg : checkmarkSvg}
                           width={20}
                           height={20}
                           color={colors.accent}
                           style={styles.modalBenefitIcon}
                         />
-                        <Text style={styles.modalBenefitText}>
-                          {benefit.replace(/<br\/>.*?:/g, "\n")}
-                        </Text>
+                        <Text style={styles.modalBenefitText}>{benefit.replace(/<br\/>.*?:/g, "\n")}</Text>
                       </View>
                     ))}
                   </View>
 
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalSectionTitle}>
-                      Billing Details
-                    </Text>
-                    <Text style={styles.modalBillingText}>
-                      • You will be billed{" "}
-                      {selectedPeriod === "monthly" ? "monthly" : "annually"}.
-                    </Text>
-                    <Text style={styles.modalBillingText}>
-                      • Cancel anytime. No hidden fees.
-                    </Text>
-                    <Text style={styles.modalBillingText}>
-                      • Automatic renewal unless canceled.
-                    </Text>
-                    <Text style={styles.modalBillingText}>
-                      • 7-day money-back guarantee.
-                    </Text>
-                  </View>
-
                   <View style={styles.modalButtonContainer}>
-                    <Animated.View
-                      style={{
-                        transform: [{ scale: buyNowScale }],
-                        width: "100%",
-                      }}
-                    >
-                      <TouchableOpacity
-                        style={[
-                          styles.buyNowButton,
-                          { backgroundColor: colors.accent },
-                        ]}
-                        onPressIn={() => handlePressIn(buyNowScale)}
-                        onPressOut={() => handlePressOut(buyNowScale)}
-                        activeOpacity={0.9}
-                      >
-                        <Text style={styles.buyNowButtonText}>Buy Now</Text>
-                      </TouchableOpacity>
-                    </Animated.View>
-
                     <TouchableOpacity
-                      style={styles.termsButton}
-                      onPress={() => TermsPage()}
+                      style={[styles.buyNowButton, { backgroundColor: colors.accent }]}
+                      onPress={() => {
+                        handlePayment({
+                          amount: plans[selectedPlan].current
+                            ? Number.parseInt(plans[selectedPlan].price.toString())
+                            : Number.parseInt(plans[selectedPlan].yearPrice.toString()),
+                          callback: () => handleBuyNow(),
+                          description: "Payment for " + plans[selectedPlan].name + " Taken",
+                        })
+                      }}
+                      disabled={loading || Number.parseInt(plans[selectedPlan].price.toString()) <= 0}
                     >
-                      <Text
-                        style={[
-                          styles.termsButtonText,
-                          { color: colors.accent },
-                        ]}
-                      >
-                        Terms & Conditions
-                      </Text>
+                      <Text style={styles.buyNowButtonText}>{loading ? "Processing..." : "Buy Now"}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.termsButton} onPress={TermsPage}>
+                      <Text style={[styles.termsButtonText, { color: colors.accent }]}>Terms & Conditions</Text>
                     </TouchableOpacity>
                   </View>
                 </ScrollView>
-              </Animated.View>
+              </View>
             </TouchableWithoutFeedback>
-          </Animated.View>
+          </View>
         </TouchableWithoutFeedback>
       </Modal>
-    );
-  };
+    )
+  }
 
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-    { useNativeDriver: false }
-  );
+  const statusBarHeight = StatusBar.currentHeight || 0
 
-  const handleScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const position = event.nativeEvent.contentOffset.x;
-    const index = Math.round(position / (width * 0.8 + 20));
-    setActivePlanIndex(index);
-  };
-
-  const statusBarHeight = StatusBar.currentHeight || 0;
-  const router = useRouter();
+  // Don't render the component if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
+        <View style={styles.loadingContainer}>
+          <Text>Checking authentication...</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
       <Header />
-      {/* Animated background */}
-      <Animated.View
-        style={[
-          styles.backgroundPattern,
-          {
-            transform: [{ translateX: backgroundTranslateX }],
-          },
-        ]}
-      >
-        <SvgXml
-          xml={patternSvg}
-          width={width * 2}
-          height={height}
-          color="rgba(0, 0, 0, 0.02)"
-        />
-      </Animated.View>
+
+      {/* Background pattern */}
+      <View style={styles.backgroundPattern}>
+        <SvgXml xml={patternSvg} width={width * 2} height={height} color="rgba(0, 0, 0, 0.02)" />
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Animated.View
-          style={[
-            styles.header,
-            {
-              opacity: headerAnimation,
-              transform: [
-                {
-                  translateY: headerAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-20, 0],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
+        <View style={styles.header}>
           <Text style={styles.headerTitle}>Premium Plans</Text>
-          <Text style={styles.headerSubtitle}>
-            Choose the perfect plan for your real estate business
-          </Text>
-        </Animated.View>
-
-        <Animated.ScrollView
-          ref={scrollViewRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollViewContent}
-          decelerationRate="fast"
-          snapToInterval={width * 0.8 + 20}
-          snapToAlignment="center"
-          onScroll={handleScroll}
-          onMomentumScrollEnd={handleScrollEnd}
-          scrollEventThrottle={16}
-        >
-          {planKeys.map((plan, index) => renderPricingCard(plan, index))}
-        </Animated.ScrollView>
-
-        <View style={styles.pagination}>
-          {planKeys.map((plan, i) => {
-            const dotOpacity = scrollX.interpolate({
-              inputRange: [
-                (i - 1) * width * 0.8,
-                i * width * 0.8,
-                (i + 1) * width * 0.8,
-              ],
-              outputRange: [0.3, 1, 0.3],
-              extrapolate: "clamp",
-            });
-
-            const dotScale = scrollX.interpolate({
-              inputRange: [
-                (i - 1) * width * 0.8,
-                i * width * 0.8,
-                (i + 1) * width * 0.8,
-              ],
-              outputRange: [0.8, 1.4, 0.8],
-              extrapolate: "clamp",
-            });
-
-            const colors = getCardColor(PLANS[plan].color);
-
-            return (
-              <TouchableOpacity
-                key={i}
-                onPress={() => {
-                  scrollViewRef.current?.scrollTo({
-                    x: i * (width * 0.8 + 20),
-                    animated: true,
-                  });
-                }}
-              >
-                <Animated.View
-                  style={[
-                    styles.paginationDot,
-                    {
-                      opacity: dotOpacity,
-                      transform: [{ scale: dotScale }],
-                      backgroundColor: colors.accent,
-                    },
-                  ]}
-                />
-              </TouchableOpacity>
-            );
-          })}
+          <Text style={styles.headerSubtitle}>Choose the perfect plan for your real estate business</Text>
         </View>
+
+        <View style={styles.cardsContainer}>{planKeys.map((planId, index) => renderPricingCard(planId, index))}</View>
 
         {/* Bottom gradient */}
         {Platform.OS === "ios" ? (
@@ -889,13 +654,18 @@ const PricingPage: React.FC = () => {
       {/* Modal */}
       {renderModal()}
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   backgroundPattern: {
     position: "absolute",
@@ -921,10 +691,9 @@ const styles = StyleSheet.create({
     color: "#64748b",
     lineHeight: 22,
   },
-  scrollViewContent: {
+  cardsContainer: {
+    paddingHorizontal: 20,
     paddingVertical: 20,
-    paddingBottom: 40,
-    paddingRight: 30,
   },
   card: {
     borderRadius: 24,
@@ -1086,22 +855,41 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 5,
+    marginBottom: 16,
   },
   ctaButtonText: {
     color: "white",
     fontSize: 14,
     fontWeight: "700",
   },
-  pagination: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 30,
+  benefitsToggle: {
+    alignItems: "center",
+    paddingVertical: 8,
   },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 6,
+  benefitsToggleText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  benefitsContent: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 0, 0, 0.1)",
+  },
+  benefitRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+  benefitIcon: {
+    marginRight: 8,
+    marginTop: 2,
+  },
+  benefitText: {
+    fontSize: 13,
+    color: "#4b5563",
+    flex: 1,
+    lineHeight: 20,
   },
   bottomGradient: {
     position: "absolute",
@@ -1125,6 +913,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderBottomWidth: 0,
     overflow: "hidden",
+    flex: 1,
+    maxHeight: height * 0.85,
   },
   modalHeader: {
     flexDirection: "row",
@@ -1154,7 +944,12 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   modalContent: {
+    flex: 1,
+  },
+  modalContentContainer: {
     padding: 20,
+    paddingBottom: 100,
+    flexGrow: 1,
   },
   modalSection: {
     marginBottom: 24,
@@ -1238,15 +1033,9 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 24,
   },
-  modalBillingText: {
-    fontSize: 13,
-    color: "#4b5563",
-    marginBottom: 8,
-    lineHeight: 22,
-  },
   modalButtonContainer: {
-    marginTop: 16,
-    marginBottom: 40,
+    marginTop: 24,
+    marginBottom: 20,
     alignItems: "center",
   },
   buyNowButton: {
@@ -1275,6 +1064,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     textDecorationLine: "underline",
   },
-});
+})
 
-export default PricingPage;
+export default PremiumAccountPage

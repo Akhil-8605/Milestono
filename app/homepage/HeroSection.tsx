@@ -14,6 +14,7 @@ import {
   Alert,
 } from "react-native"
 import Svg, { G, Path } from "react-native-svg"
+import MenuModal from "../components/HeroModel"
 import { useNavigation, useRouter } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
@@ -249,6 +250,12 @@ const HeroSection: React.FC = () => {
           </View>
         </View>
       </ImageBackground>
+
+      <MenuModal
+        isVisible={isMenuVisible}
+        onClose={() => setIsMenuVisible(false)}
+      />
+
     </View>
   )
 }
