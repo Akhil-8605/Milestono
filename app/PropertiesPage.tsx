@@ -35,6 +35,7 @@ interface Property {
   sellType: string
   bedrooms: string
   areaSqft: string
+  builtUpArea?: string
   expectedPrice: string
   pricePerMonth?: string
   landmark: string
@@ -43,6 +44,7 @@ interface Property {
   uploadedPhotos: string[]
   propertyImages?: string[]
   amenities: string[]
+  furnitures?: string[]
   propertyContains: string
   sellerType: string
   oldProperty: string
@@ -50,6 +52,7 @@ interface Property {
   updatedAt: string
   latitude?: number
   longitude?: number
+  propertyType?: string
 }
 
 const PropertyCard = ({ property }: { property: Property }) => {
@@ -76,11 +79,34 @@ const PropertyCard = ({ property }: { property: Property }) => {
     return "Price on request"
   }
 
+  // Fixed image handling function
   const getPropertyImage = () => {
-    const images = property.uploadedPhotos || property.propertyImages
-    if (images && images.length > 0) {
-      return { uri: images[0] }
+    try {
+      const images = property.uploadedPhotos || property.propertyImages || []
+
+      // Filter out invalid URIs and ensure they are strings
+      const validImages = images
+        .filter((img) => {
+          if (!img) return false
+          if (typeof img === "number") return false
+          if (typeof img !== "string") return false
+          if (img.trim() === "") return false
+          return true
+        })
+        .map((img) => String(img).trim())
+
+      if (validImages.length > 0) {
+        // Validate the first image URL
+        const firstImage = validImages[0]
+        if (firstImage.startsWith("http") || firstImage.startsWith("file://") || firstImage.startsWith("/")) {
+          return { uri: firstImage }
+        }
+      }
+    } catch (error) {
+      console.warn("Error processing property image:", error)
     }
+
+    // Return dummy image as fallback
     return dummyImg
   }
 
@@ -105,11 +131,63 @@ const PropertyCard = ({ property }: { property: Property }) => {
 
   const navigateToDetails = () => {
     try {
-      // Use the same navigation pattern as Properties.tsx
+      // Clean and validate image arrays
+      const cleanImages = (images: any[]) => {
+        if (!Array.isArray(images)) return []
+        return images
+          .filter((img) => {
+            if (!img) return false
+            if (typeof img === "number") return false
+            if (typeof img !== "string") return false
+            if (img.trim() === "") return false
+            return true
+          })
+          .map((img) => String(img).trim())
+      }
+
+      // Ensure all required fields are present and properly formatted
+      const propertyForNavigation = {
+        _id: String(property._id || ""),
+        heading: String(property.heading || "Property"),
+        propertyCategory: String(property.propertyCategory || ""),
+        sellType: String(property.sellType || ""),
+        bedrooms: String(property.bedrooms || ""),
+        areaSqft: String(property.areaSqft || "0"),
+        builtUpArea: String(property.builtUpArea || property.areaSqft || "0"),
+        expectedPrice: String(property.expectedPrice || "0"),
+        pricePerMonth: property.pricePerMonth ? String(property.pricePerMonth) : undefined,
+        landmark: String(property.landmark || ""),
+        city: String(property.city || ""),
+        propertyLocation: String(
+          property.propertyLocation || `${property.landmark || ""}, ${property.city || ""}`.trim(),
+        ),
+        uploadedPhotos: cleanImages(property.uploadedPhotos || []),
+        propertyImages: cleanImages(property.propertyImages || []),
+        amenities: Array.isArray(property.amenities) ? property.amenities : [],
+        furnitures: Array.isArray(property.furnitures) ? property.furnitures : [],
+        propertyContains: String(property.propertyContains || ""),
+        sellerType: String(property.sellerType || ""),
+        oldProperty: String(property.oldProperty || ""),
+        createdAt: String(property.createdAt || ""),
+        updatedAt: String(property.updatedAt || ""),
+        latitude: property.latitude || 0,
+        longitude: property.longitude || 0,
+        propertyType: String(property.propertyType || property.propertyCategory || ""),
+      }
+
+      console.log("Navigating with property data:", {
+        id: propertyForNavigation._id,
+        heading: propertyForNavigation.heading,
+        price: propertyForNavigation.expectedPrice,
+        area: propertyForNavigation.builtUpArea,
+        location: propertyForNavigation.propertyLocation,
+      })
+
+      // Navigate using the correct route structure
       router.push({
-        pathname: "/PropertyDetailsPage",
+        pathname: "/PropertyDetailsPage" as any,
         params: {
-          property: JSON.stringify(property),
+          propertyData: JSON.stringify(propertyForNavigation),
         },
       })
     } catch (error) {
@@ -135,6 +213,23 @@ const PropertyCard = ({ property }: { property: Property }) => {
     return sellType === "Sell" ? "#E91E63" : "#9C27B0"
   }
 
+  // Get image count safely
+  const getImageCount = () => {
+    try {
+      const images = property.uploadedPhotos || property.propertyImages || []
+      const validImages = images.filter((img) => {
+        if (!img) return false
+        if (typeof img === "number") return false
+        if (typeof img !== "string") return false
+        if (img.trim() === "") return false
+        return true
+      })
+      return validImages.length
+    } catch (error) {
+      return 0
+    }
+  }
+
   return (
     <View style={styles.card}>
       {/* Image Container with Enhanced Overlay */}
@@ -156,12 +251,10 @@ const PropertyCard = ({ property }: { property: Property }) => {
         </View>
 
         {/* Image Count Badge */}
-        {(property.uploadedPhotos || property.propertyImages || []).length > 1 && (
+        {getImageCount() > 1 && (
           <View style={styles.imageCountBadge}>
             <Icon name="images" size={12} color="#fff" />
-            <Text style={styles.imageCountText}>
-              {(property.uploadedPhotos || property.propertyImages || []).length}
-            </Text>
+            <Text style={styles.imageCountText}>{getImageCount()}</Text>
           </View>
         )}
       </View>
@@ -318,6 +411,20 @@ const PropertyListingScreen = () => {
   const amenitiesOptions = ["Car Parking", "CCTV", "Guard", "Gym", "Club House", "Water Supply", "Lift"]
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
 
+  // Clean image arrays helper function
+  const cleanImageArray = (images: any[]): string[] => {
+    if (!Array.isArray(images)) return []
+    return images
+      .filter((img) => {
+        if (!img) return false
+        if (typeof img === "number") return false
+        if (typeof img !== "string") return false
+        if (img.trim() === "") return false
+        return true
+      })
+      .map((img) => String(img).trim())
+  }
+
   // Load filters from saved data
   const loadFiltersFromData = useCallback((filters: any) => {
     setSelectedBedrooms(filters.bedrooms || [])
@@ -334,94 +441,113 @@ const PropertyListingScreen = () => {
   }, [])
 
   // Apply filters to search results - Enhanced filter logic
-  const applyFiltersToResults = useCallback((properties: Property[], filters?: any) => {
-    const currentFilters = filters || {
-      bedrooms: selectedBedrooms,
+  const applyFiltersToResults = useCallback(
+    (properties: Property[], filters?: any) => {
+      const currentFilters = filters || {
+        bedrooms: selectedBedrooms,
+        areaRange,
+        priceRange,
+        propertyTypes: selectedPropertyTypes,
+        constructionStatus: selectedConstructionStatus,
+        postedBy: selectedPostedBy,
+        amenities: selectedAmenities,
+      }
+
+      return properties.filter((property) => {
+        // Bedrooms filter
+        if (currentFilters.bedrooms && currentFilters.bedrooms.length > 0) {
+          const propertyBedrooms = property.bedrooms
+          const matchesBedroom = currentFilters.bedrooms.some((filterBedroom: string) => {
+            if (filterBedroom === "1RK" && propertyBedrooms === "1RK") return true
+            if (filterBedroom === "1BHK" && propertyBedrooms === "1BHK") return true
+            if (filterBedroom === "2BHK" && propertyBedrooms === "2BHK") return true
+            if (filterBedroom === "3BHK" && propertyBedrooms === "3BHK") return true
+            if (filterBedroom === "4BHK" && propertyBedrooms === "4BHK") return true
+            if (
+              filterBedroom === "5+BHK" &&
+              (propertyBedrooms === "5BHK" ||
+                propertyBedrooms === "6BHK" ||
+                propertyBedrooms === "7BHK" ||
+                propertyBedrooms === "8BHK" ||
+                propertyBedrooms === "9BHK" ||
+                propertyBedrooms === "10BHK")
+            )
+              return true
+            return false
+          })
+          if (!matchesBedroom) return false
+        }
+
+        // Area filter
+        if (currentFilters.areaRange) {
+          const areaSqft = Number.parseInt(property.areaSqft) || 0
+          if (areaSqft < currentFilters.areaRange[0] || areaSqft > currentFilters.areaRange[1]) {
+            return false
+          }
+        }
+
+        // Price filter
+        if (currentFilters.priceRange) {
+          const expectedPrice = Number.parseInt(property.expectedPrice) || 0
+          const minPriceValue = currentFilters.priceRange[0] * 10000000
+          const maxPriceValue = currentFilters.priceRange[1] * 10000000
+          if (expectedPrice < minPriceValue || expectedPrice > maxPriceValue) {
+            return false
+          }
+        }
+
+        // Property types filter
+        if (currentFilters.propertyTypes && currentFilters.propertyTypes.length > 0) {
+          const propertyCategory = property.propertyCategory || ""
+          const propertyContains = property.propertyContains || ""
+          const matchesPropertyType = currentFilters.propertyTypes.some(
+            (filterType: string) =>
+              propertyCategory.toLowerCase().includes(filterType.toLowerCase()) ||
+              propertyContains.toLowerCase().includes(filterType.toLowerCase()),
+          )
+          if (!matchesPropertyType) return false
+        }
+
+        // Amenities filter
+        if (currentFilters.amenities && currentFilters.amenities.length > 0) {
+          const propertyAmenities = property.amenities || []
+          const matchesAmenity = currentFilters.amenities.some((filterAmenity: string) =>
+            propertyAmenities.some((amenity: string) => amenity.toLowerCase().includes(filterAmenity.toLowerCase())),
+          )
+          if (!matchesAmenity) return false
+        }
+
+        // Construction status filter
+        if (currentFilters.constructionStatus && currentFilters.constructionStatus.length > 0) {
+          const oldProperty = property.oldProperty || ""
+          const matchesStatus = currentFilters.constructionStatus.some((filterStatus: string) =>
+            oldProperty.toLowerCase().includes(filterStatus.toLowerCase()),
+          )
+          if (!matchesStatus) return false
+        }
+
+        // Posted by filter
+        if (currentFilters.postedBy && currentFilters.postedBy.length > 0) {
+          const sellerType = property.sellerType || ""
+          const matchesPostedBy = currentFilters.postedBy.some((filterPostedBy: string) =>
+            sellerType.toLowerCase().includes(filterPostedBy.toLowerCase()),
+          )
+          if (!matchesPostedBy) return false
+        }
+
+        return true
+      })
+    },
+    [
+      selectedBedrooms,
       areaRange,
       priceRange,
-      propertyTypes: selectedPropertyTypes,
-      constructionStatus: selectedConstructionStatus,
-      postedBy: selectedPostedBy,
-      amenities: selectedAmenities,
-    }
-
-    return properties.filter((property) => {
-      // Bedrooms filter
-      if (currentFilters.bedrooms && currentFilters.bedrooms.length > 0) {
-        const propertyBedrooms = property.bedrooms
-        const matchesBedroom = currentFilters.bedrooms.some((filterBedroom: string) => {
-          if (filterBedroom === "1RK" && propertyBedrooms === "1RK") return true
-          if (filterBedroom === "1BHK" && propertyBedrooms === "1BHK") return true
-          if (filterBedroom === "2BHK" && propertyBedrooms === "2BHK") return true
-          if (filterBedroom === "3BHK" && propertyBedrooms === "3BHK") return true
-          if (filterBedroom === "4BHK" && propertyBedrooms === "4BHK") return true
-          if (filterBedroom === "5+BHK" && (propertyBedrooms === "5BHK" || propertyBedrooms === "6BHK" || propertyBedrooms === "7BHK" || propertyBedrooms === "8BHK" || propertyBedrooms === "9BHK" || propertyBedrooms === "10BHK")) return true
-          return false
-        })
-        if (!matchesBedroom) return false
-      }
-
-      // Area filter
-      if (currentFilters.areaRange) {
-        const areaSqft = Number.parseInt(property.areaSqft) || 0
-        if (areaSqft < currentFilters.areaRange[0] || areaSqft > currentFilters.areaRange[1]) {
-          return false
-        }
-      }
-
-      // Price filter
-      if (currentFilters.priceRange) {
-        const expectedPrice = Number.parseInt(property.expectedPrice) || 0
-        const minPriceValue = currentFilters.priceRange[0] * 10000000
-        const maxPriceValue = currentFilters.priceRange[1] * 10000000
-        if (expectedPrice < minPriceValue || expectedPrice > maxPriceValue) {
-          return false
-        }
-      }
-
-      // Property types filter
-      if (currentFilters.propertyTypes && currentFilters.propertyTypes.length > 0) {
-        const propertyCategory = property.propertyCategory || ""
-        const propertyContains = property.propertyContains || ""
-        const matchesPropertyType = currentFilters.propertyTypes.some((filterType: string) =>
-          propertyCategory.toLowerCase().includes(filterType.toLowerCase()) ||
-          propertyContains.toLowerCase().includes(filterType.toLowerCase())
-        )
-        if (!matchesPropertyType) return false
-      }
-
-      // Amenities filter
-      if (currentFilters.amenities && currentFilters.amenities.length > 0) {
-        const propertyAmenities = property.amenities || []
-        const matchesAmenity = currentFilters.amenities.some((filterAmenity: string) =>
-          propertyAmenities.some((amenity: string) =>
-            amenity.toLowerCase().includes(filterAmenity.toLowerCase())
-          )
-        )
-        if (!matchesAmenity) return false
-      }
-
-      // Construction status filter
-      if (currentFilters.constructionStatus && currentFilters.constructionStatus.length > 0) {
-        const oldProperty = property.oldProperty || ""
-        const matchesStatus = currentFilters.constructionStatus.some((filterStatus: string) =>
-          oldProperty.toLowerCase().includes(filterStatus.toLowerCase())
-        )
-        if (!matchesStatus) return false
-      }
-
-      // Posted by filter
-      if (currentFilters.postedBy && currentFilters.postedBy.length > 0) {
-        const sellerType = property.sellerType || ""
-        const matchesPostedBy = currentFilters.postedBy.some((filterPostedBy: string) =>
-          sellerType.toLowerCase().includes(filterPostedBy.toLowerCase())
-        )
-        if (!matchesPostedBy) return false
-      }
-
-      return true
-    })
-  }, [selectedBedrooms, areaRange, priceRange, selectedPropertyTypes, selectedConstructionStatus, selectedPostedBy, selectedAmenities])
+      selectedPropertyTypes,
+      selectedConstructionStatus,
+      selectedPostedBy,
+      selectedAmenities,
+    ],
+  )
 
   // Search properties with backend API
   const searchProperties = useCallback(
@@ -442,38 +568,56 @@ const PropertyListingScreen = () => {
           radius: parsedLocation.radius || 5,
         })
 
-        // Transform the data if needed to match the expected structure
+        // Transform the data to ensure compatibility with PropertyDetailsPage
         const transformedProperties = Array.isArray(response.data)
           ? response.data.map((property: any) => {
-            const heading = property?.heading || property?.propertyTitle || "Untitled"
-            const uploadedPhotos = Array.isArray(property?.uploadedPhotos)
-              ? property.uploadedPhotos
-              : Array.isArray(property?.propertyImages)
-                ? property.propertyImages
-                : []
+            const heading = String(property?.heading || property?.propertyTitle || "Untitled")
 
-            const landmark = property?.landmark || ""
-            const city = property?.city || ""
-            const propertyLocation =
-              typeof property?.propertyLocation === "string"
-                ? property.propertyLocation
-                : `${landmark}, ${city}`.trim().replace(/^,\s*/, "")
+            // Clean image arrays
+            const uploadedPhotos = cleanImageArray(property?.uploadedPhotos || [])
+            const propertyImages = cleanImageArray(property?.propertyImages || [])
+
+            const landmark = String(property?.landmark || "")
+            const city = String(property?.city || "")
+            const propertyLocation = String(
+              property?.propertyLocation ||
+              `${landmark}, ${city}`.trim().replace(/^,\s*/, "") ||
+              "Location not specified",
+            )
 
             return {
-              ...property,
+              _id: String(property._id || ""),
               heading,
-              uploadedPhotos,
+              propertyCategory: String(property.propertyCategory || ""),
+              sellType: String(property.sellType || ""),
+              bedrooms: String(property.bedrooms || ""),
+              areaSqft: String(property.areaSqft || "0"),
+              builtUpArea: String(property.builtUpArea || property.areaSqft || "0"),
+              expectedPrice: String(property.expectedPrice || "0"),
+              pricePerMonth: property.pricePerMonth ? String(property.pricePerMonth) : undefined,
               landmark,
               city,
               propertyLocation,
-            }
+              uploadedPhotos,
+              propertyImages,
+              amenities: Array.isArray(property.amenities) ? property.amenities : [],
+              furnitures: Array.isArray(property.furnitures) ? property.furnitures : [],
+              propertyContains: String(property.propertyContains || ""),
+              sellerType: String(property.sellerType || ""),
+              oldProperty: String(property.oldProperty || ""),
+              createdAt: String(property.createdAt || ""),
+              updatedAt: String(property.updatedAt || ""),
+              latitude: property.latitude || 0,
+              longitude: property.longitude || 0,
+              propertyType: String(property.propertyType || property.propertyCategory || ""),
+            } as Property
           })
           : []
 
-        setOriginalProperties(transformedProperties as Property[])
+        setOriginalProperties(transformedProperties)
 
         // Apply current filters to the results
-        const filteredResults = applyFiltersToResults(transformedProperties as Property[])
+        const filteredResults = applyFiltersToResults(transformedProperties)
         setProperties(filteredResults)
       } catch (error) {
         console.error("Error searching properties:", error)
@@ -497,8 +641,39 @@ const PropertyListingScreen = () => {
         if (params?.properties) {
           const propertiesData =
             typeof params.properties === "string" ? JSON.parse(params.properties) : params.properties
-          setProperties(propertiesData)
-          setOriginalProperties(propertiesData)
+
+          // Transform properties to ensure compatibility
+          const transformedProperties = propertiesData.map((property: any) => ({
+            _id: String(property._id || ""),
+            heading: String(property.heading || property.propertyTitle || "Property"),
+            propertyCategory: String(property.propertyCategory || ""),
+            sellType: String(property.sellType || ""),
+            bedrooms: String(property.bedrooms || ""),
+            areaSqft: String(property.areaSqft || "0"),
+            builtUpArea: String(property.builtUpArea || property.areaSqft || "0"),
+            expectedPrice: String(property.expectedPrice || "0"),
+            pricePerMonth: property.pricePerMonth ? String(property.pricePerMonth) : undefined,
+            landmark: String(property.landmark || ""),
+            city: String(property.city || ""),
+            propertyLocation: String(
+              property.propertyLocation || `${property.landmark || ""}, ${property.city || ""}`.trim(),
+            ),
+            uploadedPhotos: cleanImageArray(property.uploadedPhotos || []),
+            propertyImages: cleanImageArray(property.propertyImages || []),
+            amenities: Array.isArray(property.amenities) ? property.amenities : [],
+            furnitures: Array.isArray(property.furnitures) ? property.furnitures : [],
+            propertyContains: String(property.propertyContains || ""),
+            sellerType: String(property.sellerType || ""),
+            oldProperty: String(property.oldProperty || ""),
+            createdAt: String(property.createdAt || ""),
+            updatedAt: String(property.updatedAt || ""),
+            latitude: property.latitude || 0,
+            longitude: property.longitude || 0,
+            propertyType: String(property.propertyType || property.propertyCategory || ""),
+          }))
+
+          setProperties(transformedProperties)
+          setOriginalProperties(transformedProperties)
           setHeaderCity((params.searchQuery as string) || "")
           setSearchText((params.searchQuery as string) || "")
 

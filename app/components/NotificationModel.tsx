@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+"use client"
+
+import type React from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   View,
   TouchableOpacity,
@@ -11,89 +14,176 @@ import {
   Dimensions,
   PanResponder,
   StatusBar,
-} from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
+  Alert,
+} from "react-native"
+import { FontAwesome5 } from "@expo/vector-icons"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import { io, type Socket } from "socket.io-client"
+import { BASE_URL } from "@env"
 
-const WINDOW_HEIGHT = Dimensions.get("window").height;
-const WINDOW_WIDTH = Dimensions.get("window").width;
-const DRAG_THRESHOLD = 50;
-const DEFAULT_HEIGHT = WINDOW_HEIGHT * 0.8;
+const WINDOW_HEIGHT = Dimensions.get("window").height
+const WINDOW_WIDTH = Dimensions.get("window").width
+const DRAG_THRESHOLD = 50
+const DEFAULT_HEIGHT = WINDOW_HEIGHT;
 
-interface NotificationModalProps {
-  visible: boolean;
-  onClose: () => void;
+interface Notification {
+  _id: string
+  text: string
+  image?: string
+  redirect: string
+  createdAt: string
 }
 
-const NotificationModal: React.FC<NotificationModalProps> = ({
-  visible,
-  onClose,
-}) => {
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const [modalHeight, setModalHeight] = useState(DEFAULT_HEIGHT);
+interface NotificationModalProps {
+  visible: boolean
+  onClose: () => void
+}
+
+const NotificationModal: React.FC<NotificationModalProps> = ({ visible, onClose }) => {
+  const slideAnim = useRef(new Animated.Value(0)).current
+  const [modalHeight, setModalHeight] = useState(DEFAULT_HEIGHT)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [activeTab, setActiveTab] = useState("Inbox")
+  const socketRef = useRef<Socket | null>(null)
 
   const panResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) =>
-        Math.abs(gestureState.dy) > 5,
+      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dy) > 5,
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
-          // Dragging down—animate the modal downwards
-          slideAnim.setValue(gestureState.dy);
+          slideAnim.setValue(gestureState.dy)
         } else {
-          // Dragging upward—calculate new height starting at default height
-          // and clamp it so it does not exceed full screen height.
-          const newHeight = Math.min(
-            WINDOW_HEIGHT,
-            DEFAULT_HEIGHT - gestureState.dy
-          );
-          setModalHeight(newHeight);
+          const newHeight = Math.min(WINDOW_HEIGHT, DEFAULT_HEIGHT - gestureState.dy)
+          setModalHeight(newHeight)
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        // Define a threshold between default and full screen.
-        const thresholdHeight =
-          DEFAULT_HEIGHT + (WINDOW_HEIGHT - DEFAULT_HEIGHT) / 2;
+        const thresholdHeight = DEFAULT_HEIGHT + (WINDOW_HEIGHT - DEFAULT_HEIGHT) / 2
         if (gestureState.dy > DRAG_THRESHOLD) {
-          // If dragged downward enough, close the modal.
-          closeModal();
+          closeModal()
         } else if (gestureState.dy < -DRAG_THRESHOLD) {
-          // If dragged upward significantly, snap to full screen.
           Animated.spring(slideAnim, {
             toValue: 0,
             useNativeDriver: false,
-          }).start();
-          setModalHeight(WINDOW_HEIGHT);
+          }).start()
+          setModalHeight(WINDOW_HEIGHT)
         } else {
-          // Snap to the nearest state based on current modal height.
           if (modalHeight >= thresholdHeight) {
             Animated.spring(slideAnim, {
               toValue: 0,
               useNativeDriver: false,
-            }).start();
-            setModalHeight(WINDOW_HEIGHT);
+            }).start()
+            setModalHeight(WINDOW_HEIGHT)
           } else {
             Animated.spring(slideAnim, {
               toValue: 0,
               useNativeDriver: false,
-            }).start();
-            setModalHeight(DEFAULT_HEIGHT);
+            }).start()
+            setModalHeight(DEFAULT_HEIGHT)
           }
         }
       },
-    })
-  ).current;
+    }),
+  ).current
+
+  // Initialize Socket.IO connection
+  useEffect(() => {
+    const initializeSocket = async () => {
+      try {
+        const token = await AsyncStorage.getItem("auth")
+        if (!token) return
+
+        socketRef.current = io(BASE_URL, {
+          transports: ["websocket"],
+        })
+
+        socketRef.current.emit("register", { token })
+
+        socketRef.current.on("new-notification", (notification: Notification) => {
+          setNotifications((prev) => [notification, ...prev])
+        })
+
+        socketRef.current.on("notification-read-confirmed", (updated: Notification) => {
+          setNotifications((prev) => prev.filter((n) => n._id !== updated._id))
+        })
+
+        return () => {
+          socketRef.current?.disconnect()
+        }
+      } catch (error) {
+        console.error("Error initializing socket:", error)
+      }
+    }
+
+    if (visible) {
+      initializeSocket()
+    }
+
+    return () => {
+      socketRef.current?.disconnect()
+    }
+  }, [visible, BASE_URL])
+
+  // Fetch notifications from API
+  const fetchNotifications = async () => {
+    try {
+      const token = await AsyncStorage.getItem("auth")
+      if (!token) {
+        console.error("No auth token found")
+        return
+      }
+
+      const response = await fetch(`${BASE_URL}/api/notification`, {
+        headers: {
+          Authorization: token,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setNotifications(data)
+      } else {
+        console.error("Failed to fetch notifications")
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error)
+    }
+  }
+
+  // Handle marking notification as read
+  const handleMarkAsRead = (notificationId: string) => {
+    if (socketRef.current) {
+      socketRef.current.emit("mark-notification-read", { notificationId })
+    }
+  }
+
+  // Handle opening notification
+  const handleOpenNotification = (notification: Notification) => {
+    // Here you would typically navigate to the notification's target
+    // For now, we'll show an alert
+    Alert.alert("Notification", `Opening: ${notification.text}`, [
+      {
+        text: "OK",
+        onPress: () => {
+          // You can add navigation logic here
+          // Example: navigation.navigate(notification.redirect);
+        },
+      },
+    ])
+  }
 
   useEffect(() => {
     if (visible) {
-      setModalHeight(DEFAULT_HEIGHT);
+      setModalHeight(DEFAULT_HEIGHT)
+      fetchNotifications()
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: false,
         tension: 65,
         friction: 11,
-      }).start();
+      }).start()
     }
-  }, [visible, slideAnim]);
+  }, [visible, slideAnim])
 
   const closeModal = () => {
     Animated.timing(slideAnim, {
@@ -101,60 +191,49 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
       duration: 300,
       useNativeDriver: false,
     }).start(() => {
-      onClose();
-      setModalHeight(DEFAULT_HEIGHT);
-    });
-  };
+      onClose()
+      setModalHeight(DEFAULT_HEIGHT)
+    })
+  }
 
-  const notifications = [
-    {
-      id: 1,
-      avatar: require("../../assets/images/PersonDummy.png"),
-      name: "Hailey Garza",
-      action: "added new tags",
-      target: "🔥 Ease Design System",
-      time: "1 min ago",
-    },
-    {
-      id: 2,
-      avatar: require("../../assets/images/PersonDummy.png"),
-      name: "Emily",
-      action: "asked to join",
-      target: "🔥 Ease Design System",
-      time: "1 hour ago",
-    },
-    {
-      id: 3,
-      avatar: require("../../assets/images/PersonDummy.png"),
-      name: "Kamron",
-      action: "asked to join",
-      target: "🔥 Ease Design System",
-      time: "1 hour ago",
-    },
-    // Additional notifications for scrolling
-    ...Array(10)
-      .fill(0)
-      .map((_, i) => ({
-        id: i + 4,
-        avatar: require("../../assets/images/PersonDummy.png"),
-        name: `User ${i + 1}`,
-        action: "performed an action",
-        target: "🔥 Ease Design System",
-        time: `${i + 2} hours ago`,
-      })),
-  ];
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+
+    if (diffInMinutes < 1) return "Just now"
+    if (diffInMinutes < 60) return `${diffInMinutes} min ago`
+    if (diffInMinutes < 1440)
+      return `${Math.floor(diffInMinutes / 60)} hour${Math.floor(diffInMinutes / 60) > 1 ? "s" : ""} ago`
+    return `${Math.floor(diffInMinutes / 1440)} day${Math.floor(diffInMinutes / 1440) > 1 ? "s" : ""} ago`
+  }
+
+  const renderNotification = (notification: Notification) => {
+    return (
+      <View key={notification._id} style={styles.notificationItem}>
+        <Image
+          source={notification.image ? { uri: notification.image } : require("../../assets/images/PersonDummy.png")}
+          style={styles.avatar}
+        />
+        <View style={styles.notificationContent}>
+          <Text style={styles.notificationText}>{notification.text}</Text>
+          <Text style={styles.timeText}>{formatTime(notification.createdAt)}</Text>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity style={styles.acceptButton} onPress={() => handleOpenNotification(notification)}>
+              <Text style={styles.acceptButtonText}>Open</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.declineButton} onPress={() => handleMarkAsRead(notification._id)}>
+              <Text style={styles.declineButtonText}>Mark as read</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    )
+  }
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      onRequestClose={closeModal}
-    >
-      <StatusBar
-        backgroundColor="rgba(0, 0, 0, 0.5)"
-        barStyle="light-content"
-      />
+    <Modal visible={visible} transparent animationType="none" onRequestClose={closeModal}>
+      <StatusBar backgroundColor="rgba(0, 0, 0, 0.5)" barStyle="light-content" />
       <View style={styles.overlay}>
         <Animated.View
           style={[
@@ -175,41 +254,32 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
           </View>
 
           <View style={styles.tabContainer}>
-            <Text style={styles.tabText}>Inbox ({notifications.length})</Text>
-            <View style={styles.tabUnderline} />
+            <TouchableOpacity
+              onPress={() => setActiveTab("Inbox")}
+              style={[styles.tabButton, activeTab === "Inbox" && styles.activeTab]}
+            >
+              <Text style={[styles.tabText, activeTab === "Inbox" && styles.activeTabText]}>
+                Inbox ({notifications.length})
+              </Text>
+            </TouchableOpacity>
+            {activeTab === "Inbox" && <View style={styles.tabUnderline} />}
           </View>
 
-          <ScrollView
-            style={styles.notificationList}
-            showsVerticalScrollIndicator={false}
-          >
-            {notifications.map((notification) => (
-              <View key={notification.id} style={styles.notificationItem}>
-                <Image source={notification.avatar} style={styles.avatar} />
-                <View style={styles.notificationContent}>
-                  <Text style={styles.notificationText}>
-                    <Text style={styles.boldText}>{notification.name}</Text>{" "}
-                    {notification.action} to{" "}
-                    <Text style={styles.boldText}>{notification.target}</Text>
-                  </Text>
-                  <Text style={styles.timeText}>{notification.time}</Text>
-                  <View style={styles.actionButtons}>
-                    <TouchableOpacity style={styles.acceptButton}>
-                      <Text style={styles.acceptButtonText}>Accept</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.declineButton}>
-                      <Text style={styles.declineButtonText}>Decline</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
+          <ScrollView style={styles.notificationList} showsVerticalScrollIndicator={false}>
+            {notifications.length > 0 ? (
+              notifications.map(renderNotification)
+            ) : (
+              <View style={styles.emptyState}>
+                <FontAwesome5 name="bell-slash" size={50} color="#9CA3AF" />
+                <Text style={styles.emptyStateText}>No notifications yet</Text>
               </View>
-            ))}
+            )}
           </ScrollView>
         </Animated.View>
       </View>
     </Modal>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   overlay: {
@@ -258,9 +328,18 @@ const styles = StyleSheet.create({
   tabContainer: {
     paddingVertical: 15,
   },
+  tabButton: {
+    paddingVertical: 5,
+  },
   tabText: {
     fontSize: 18,
     fontWeight: "600",
+    color: "#9CA3AF",
+  },
+  activeTab: {
+    // Add any active tab styling here
+  },
+  activeTabText: {
     color: "#232761",
   },
   tabUnderline: {
@@ -329,6 +408,16 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
   },
-});
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 50,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: "#9CA3AF",
+    marginTop: 10,
+  },
+})
 
-export default NotificationModal;
+export default NotificationModal

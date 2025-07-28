@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useEffect, useState, useRef } from "react"
+import type React from "react"
+import { useEffect, useState, useRef } from "react"
 import {
   StyleSheet,
   View,
@@ -19,11 +20,22 @@ import { useNavigation, useRouter } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import * as Location from "expo-location"
-import { BASE_URL ,GOOGLE_API_KEY} from "@env";
+import { BASE_URL, GOOGLE_API_KEY } from "@env"
 
 const cities = [
-  "Pune", "Mumbai", "Solapur", "Satara", "Amravati", "Nashik",
-  "Delhi", "Hyderabad", "Noida", "Bangalore", "Chennai", "Kolkata", "Ahmedabad",
+  "Pune",
+  "Mumbai",
+  "Solapur",
+  "Satara",
+  "Amravati",
+  "Nashik",
+  "Delhi",
+  "Hyderabad",
+  "Noida",
+  "Bangalore",
+  "Chennai",
+  "Kolkata",
+  "Ahmedabad",
 ]
 
 interface UserData {
@@ -75,7 +87,11 @@ const HeroSection: React.FC = () => {
   const authenticateUser = async () => {
     try {
       const token = await AsyncStorage.getItem("auth")
-      if (!token) return
+      if (!token) {
+        setIsAuthenticated(false)
+        setUserData({ premiumEndDate: "", userFullName: "" })
+        return
+      }
       const response = await axios.get(`${BASE_URL}/api/authenticate`, {
         headers: { Authorization: token },
       })
@@ -84,6 +100,7 @@ const HeroSection: React.FC = () => {
     } catch (error) {
       console.error("Authentication error:", error)
       setIsAuthenticated(false)
+      setUserData({ premiumEndDate: "", userFullName: "" })
     }
   }
 
@@ -97,19 +114,20 @@ const HeroSection: React.FC = () => {
       setUserData(response.data as UserData)
     } catch (error) {
       console.error("Error fetching user data:", error)
+      setUserData({ premiumEndDate: "", userFullName: "" })
     }
   }
 
   const getCityName = async (latitude: number, longitude: number) => {
-    const apiKey = GOOGLE_API_KEY;
+    const apiKey = GOOGLE_API_KEY
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
 
     try {
       const response = await fetch(url)
       const data = await response.json()
       if (data.status === "OK" && data.results.length > 0) {
-        const cityComponent = data.results[0].address_components.find(
-          (component: any) => component.types.includes("locality")
+        const cityComponent = data.results[0].address_components.find((component: any) =>
+          component.types.includes("locality"),
         )
         setCity(cityComponent ? cityComponent.long_name : "Unknown Location")
       } else {
@@ -122,7 +140,7 @@ const HeroSection: React.FC = () => {
   }
 
   const getAreaName = async () => {
-    const apiKey = GOOGLE_API_KEY;
+    const apiKey = GOOGLE_API_KEY
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLong[0]},${latLong[1]}&key=${apiKey}`
 
     try {
@@ -148,9 +166,16 @@ const HeroSection: React.FC = () => {
       setIsAuthenticated(false)
       setUserData({ premiumEndDate: "", userFullName: "" })
       Alert.alert("Success", "Logged out successfully")
+      // Optionally navigate to home or login page after logout
+      // navigation.navigate("HomePage" as never);
     } catch (error) {
       console.error("Logout error:", error)
     }
+  }
+
+  const handleLogin = () => {
+    // Navigate to your login page
+    navigation.navigate("LoginPage" as never) // Replace "LoginPage" with your actual login route
   }
 
   useEffect(() => {
@@ -175,7 +200,8 @@ const HeroSection: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    getCityName(latLong[0], latLong[1])
+    // This useEffect is redundant as getCityName is called in the first useEffect
+    // getCityName(latLong[0], latLong[1])
   }, [])
 
   useEffect(() => {
@@ -254,8 +280,11 @@ const HeroSection: React.FC = () => {
       <MenuModal
         isVisible={isMenuVisible}
         onClose={() => setIsMenuVisible(false)}
+        isAuthenticated={isAuthenticated}
+        userFullName={userData.userFullName}
+        onLogout={handleLogout}
+        onLogin={handleLogin}
       />
-
     </View>
   )
 }
@@ -267,7 +296,7 @@ const stylesHero = StyleSheet.create({
   },
   backgroundImage: {
     width: "100%",
-    height: 300,
+    height: 325,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+"use client"
+
+import type React from "react"
+import { useState, useEffect, useCallback } from "react" // Import useCallback
 import {
   StyleSheet,
   View,
@@ -8,144 +11,57 @@ import {
   TouchableOpacity,
   SafeAreaView,
   FlatList,
-  Dimensions,
   StatusBar,
-} from "react-native";
+  ActivityIndicator,
+  Alert,
+  RefreshControl, // Import RefreshControl
+} from "react-native"
+import AsyncStorage from "@react-native-async-storage/async-storage" // Import AsyncStorage
+// import { BASE_URL } from "@env" // Removed as @env is not supported in v0 preview
 
-const { width } = Dimensions.get("window");
+// Define BASE_URL directly as @env is not supported in this environment
+const BASE_URL = "https://your-backend-api.com" // IMPORTANT: Replace with your actual backend URL
+
+// Local image imports
+const recentActivityHouse = require("../assets/images/recentActivityHouse.png")
+const recentActivityPhone = require("../assets/images/recentActivityPhone.png")
+const recentActivityNothingHere = require("../assets/images/recentActivitynothing.png")
 
 const TABS = [
   { id: "viewed", title: "Recently Viewed" },
   { id: "posted", title: "Posted Properties" },
   { id: "shortlisted", title: "Shortlisted" },
   { id: "contacted", title: "Contacted" },
-];
+]
 
-const dummyViewedProperties = [
-  {
-    id: "1",
-    image: require("../assets/images/dummyImg.webp"),
-    heading: "Luxury Apartment",
-    landmark: "Near Park",
-    city: "New York",
-  },
-  {
-    id: "2",
-    image: require("../assets/images/dummyImg.webp"),
-    heading: "Cozy Studio",
-    landmark: "Downtown",
-    city: "Los Angeles",
-  },
-  {
-    id: "3",
-    image: require("../assets/images/dummyImg.webp"),
-    heading: "Spacious Villa",
-    landmark: "Beachfront",
-    city: "Miami",
-  },
-];
-
-const dummyPostedProperties = [
-  {
-    id: "4",
-    image: require("../assets/images/dummyImg.webp"),
-    bedrooms: "2",
-    sellType: "Sale",
-    city: "Chicago",
-    uniqueFeatures: "Modern design",
-    areaSqft: 1200,
-    pricePerSqFt: 250,
-    expectedPrice: 300000,
-    propertyCategory: "Apartment",
-  },
-  {
-    id: "5",
-    image: require("../assets/images/dummyImg.webp"),
-    bedrooms: "1RK",
-    sellType: "Rent",
-    city: "San Francisco",
-    uniqueFeatures: "Great location",
-    areaSqft: 600,
-    pricePerSqFt: 50,
-    expectedPrice: 30000,
-    propertyCategory: "Studio",
-  },
-  {
-    id: "6",
-    image: require("../assets/images/dummyImg.webp"),
-    bedrooms: "3",
-    sellType: "Sale",
-    city: "Houston",
-    uniqueFeatures: "Large garden",
-    areaSqft: 2000,
-    pricePerSqFt: 150,
-    expectedPrice: 300000,
-    propertyCategory: "House",
-  },
-];
-
-const dummyShortlistedProperties = [
-  {
-    id: "7",
-    image: require("../assets/images/dummyImg.webp"),
-    heading: "Charming Cottage",
-    city: "Boston",
-    date: new Date(),
-    expectedPrice: 250000,
-  },
-  {
-    id: "8",
-    image: require("../assets/images/dummyImg.webp"),
-    heading: "Elegant Townhouse",
-    city: "Philadelphia",
-    date: new Date(),
-    expectedPrice: 400000,
-  },
-  {
-    id: "9",
-    image: require("../assets/images/dummyImg.webp"),
-    heading: "Rustic Cabin",
-    city: "Denver",
-    date: new Date(),
-    expectedPrice: 180000,
-  },
-];
-
-const dummyContactedProperties = [
-  {
-    id: "10",
-    image: require("../assets/images/dummyImg.webp"),
-    heading: "Seaside Condo",
-    city: "Seattle",
-    dateContacted: new Date(),
-  },
-  {
-    id: "11",
-    image: require("../assets/images/dummyImg.webp"),
-    heading: "Mountain View Home",
-    city: "Phoenix",
-    dateContacted: new Date(),
-  },
-  {
-    id: "12",
-    image: require("../assets/images/dummyImg.webp"),
-    heading: "Lakefront Estate",
-    city: "Austin",
-    dateContacted: new Date(),
-  },
-];
-
-interface ViewedProperty {
-  id: string;
-  image: any;
-  heading: string;
-  landmark: string;
-  city: string;
+interface Property {
+  _id: string
+  uploadedPhotos?: string[]
+  heading?: string
+  landmark?: string
+  city: string
+  bedrooms?: string
+  sellType?: string
+  uniqueFeatures?: string
+  areaSqft?: number
+  pricePerSqFt?: number
+  expectedPrice: number
+  propertyCategory?: string
+  date?: string // For shortlisted
+  dateContacted?: string // For contacted
 }
 
-const ViewedPropertyCard = ({ item }: { item: ViewedProperty }) => (
-  <TouchableOpacity style={styles.viewedCard}>
-    <Image source={item.image} style={styles.viewedImage} />
+interface ViewedPropertyCardProps {
+  item: Property
+  onViewDetails: (id: string) => void
+}
+
+const ViewedPropertyCard = ({ item, onViewDetails }: ViewedPropertyCardProps) => (
+  <TouchableOpacity style={styles.viewedCard} onPress={() => onViewDetails(item._id)}>
+    <Image
+      source={{ uri: item.uploadedPhotos?.[0] || "/placeholder.svg?height=120&width=300" }}
+      style={styles.viewedImage}
+    />
     <View style={styles.viewedContent}>
       <Text style={styles.viewedTitle}>{item.heading}</Text>
       <Text style={styles.viewedLocation}>
@@ -153,237 +69,400 @@ const ViewedPropertyCard = ({ item }: { item: ViewedProperty }) => (
       </Text>
     </View>
   </TouchableOpacity>
-);
+)
 
-interface PostedProperty {
-  id: string;
-  image: any;
-  bedrooms: string;
-  sellType: string;
-  city: string;
-  uniqueFeatures: string;
-  areaSqft: number;
-  pricePerSqFt: number;
-  expectedPrice: number;
-  propertyCategory: string;
+interface PostedPropertyCardProps {
+  item: Property
+  onViewDetails: (id: string) => void
 }
 
-const PostedPropertyCard = ({ item }: { item: PostedProperty }) => (
+const PostedPropertyCard = ({ item, onViewDetails }: PostedPropertyCardProps) => (
   <View style={styles.postedCard}>
-    <Image source={item.image} style={styles.postedImage} />
+    <Image
+      source={{ uri: item.uploadedPhotos?.[0] || "/placeholder.svg?height=125&width=300" }}
+      style={styles.postedImage}
+    />
     <View style={styles.postedContent}>
       <Text style={styles.postedTitle}>
         {item.bedrooms}
-        {item.bedrooms !== "1RK" ? "BHK" : ""} Flat for {item.sellType} in{" "}
-        {item.city}
+        {item.bedrooms !== "1RK" ? "BHK" : ""} Flat for {item.sellType} in {item.city}
       </Text>
       <Text style={styles.postedDescription}>{item.uniqueFeatures}</Text>
       <View style={styles.tagContainer}>
         {[
           item.city,
           item.propertyCategory,
-          `Built-up Area: ${item.areaSqft} sq.ft`,
-          `₹${item.pricePerSqFt}/sq.ft`,
-        ].map((tag, index) => (
-          <View key={index} style={styles.tag}>
-            <Text style={styles.tagText}>{tag}</Text>
-          </View>
-        ))}
+          item.areaSqft ? `Built-up Area: ${item.areaSqft} sq.ft` : null,
+          item.pricePerSqFt ? `₹${item.pricePerSqFt}/sq.ft` : null,
+        ]
+          .filter(Boolean)
+          .map((tag, index) => (
+            <View key={index} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
       </View>
       <Text style={styles.price}>Price: ₹{item.expectedPrice}</Text>
-      <TouchableOpacity style={styles.viewButton}>
+      <TouchableOpacity style={styles.viewButton} onPress={() => onViewDetails(item._id)}>
         <Text style={styles.viewButtonText}>View Details</Text>
       </TouchableOpacity>
     </View>
   </View>
-);
+)
 
-const ShortlistedPropertyCard = ({
-  item,
-  onRemove,
-}: {
-  item: any;
-  onRemove: (id: string) => void;
-}) => (
+interface ShortlistedPropertyCardProps {
+  item: Property
+  onRemove: (id: string) => void
+  onViewDetails: (id: string) => void
+}
+
+const ShortlistedPropertyCard = ({ item, onRemove, onViewDetails }: ShortlistedPropertyCardProps) => (
   <View style={styles.shortlistedCard}>
-    <Image source={item.image} style={styles.shortlistedImage} />
+    <Image
+      source={{ uri: item.uploadedPhotos?.[0] || "/placeholder.svg?height=120&width=300" }}
+      style={styles.shortlistedImage}
+    />
     <View style={styles.shortlistedContent}>
       <Text style={styles.shortlistedTitle}>{item.heading}</Text>
       <Text style={styles.shortlistedLocation}>{item.city}</Text>
       <Text style={styles.dateText}>
-        Added on: {new Date(item.date).toLocaleDateString("en-GB")}
+        Added on: {item.date ? new Date(item.date).toLocaleDateString("en-GB") : "N/A"}
       </Text>
       <Text style={styles.shortlistedPrice}>₹{item.expectedPrice}</Text>
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.viewButton}>
+        <TouchableOpacity style={styles.viewButton} onPress={() => onViewDetails(item._id)}>
           <Text style={styles.viewButtonText}>View Details</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => onRemove(item.id)}
-        >
+        <TouchableOpacity style={styles.removeButton} onPress={() => onRemove(item._id)}>
           <Text style={styles.removeButtonText}>Remove</Text>
         </TouchableOpacity>
       </View>
     </View>
   </View>
-);
+)
 
-interface ContactedProperty {
-  id: string;
-  image: any;
-  heading: string;
-  city: string;
-  dateContacted: Date;
+interface ContactedPropertyCardProps {
+  item: Property
+  onViewDetails: (id: string) => void
 }
 
-const ContactedPropertyCard = ({ item }: { item: ContactedProperty }) => (
+const ContactedPropertyCard = ({ item, onViewDetails }: ContactedPropertyCardProps) => (
   <View style={styles.contactedCard}>
-    <Image source={item.image} style={styles.contactedImage} />
+    <Image
+      source={{ uri: item.uploadedPhotos?.[0] || "/placeholder.svg?height=100&width=125" }}
+      style={styles.contactedImage}
+    />
     <View style={styles.contactedContent}>
       <Text style={styles.contactedTitle}>{item.heading}</Text>
       <Text style={styles.contactedLocation}>{item.city}</Text>
       <Text style={styles.dateText}>
-        Contacted on: {new Date(item.dateContacted).toLocaleDateString("en-GB")}
+        Contacted on: {item.dateContacted ? new Date(item.dateContacted).toLocaleDateString("en-GB") : "N/A"}
       </Text>
       <Text style={styles.contactedStatus}>Contacted</Text>
-      <TouchableOpacity style={styles.viewButton}>
+      <TouchableOpacity style={styles.viewButton} onPress={() => onViewDetails(item._id)}>
         <Text style={styles.viewButtonText}>View Details</Text>
       </TouchableOpacity>
     </View>
   </View>
-);
+)
 
 export default function PropertyActivities() {
-  const [activeTab, setActiveTab] = useState("viewed");
+  const [activeTab, setActiveTab] = useState("viewed")
+  const [loading, setLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false) // State for pull-to-refresh
+  const [postedProperties, setPostedProperties] = useState<Property[]>([])
+  const [recentProperties, setRecentProperties] = useState<Property[]>([])
+  const [savedProperties, setSavedProperties] = useState<Property[]>([])
+  const [contactedProperties, setContactedProperties] = useState<Property[]>([])
+
+  // Dummy navigation function for React Native context
+  const handleViewDetails = (id: string) => {
+    Alert.alert("Navigate to Details", `Would navigate to property details for ID: ${id}`)
+    // In a real Expo app, you would use navigation like:
+    // navigation.navigate("PropertyDetails", { id });
+  }
+
+  const fetchData = useCallback(
+    async (url: string, setter: React.Dispatch<React.SetStateAction<Property[]>>) => {
+      setLoading(true)
+      const token = await AsyncStorage.getItem("auth") // Get token from AsyncStorage
+      if (!token) {
+        console.error("No auth token found")
+        setLoading(false)
+        setRefreshing(false) // Stop refreshing if no token
+        Alert.alert("Authentication Required", "Please log in to view your activities.")
+        return
+      }
+      try {
+        const response = await fetch(`${BASE_URL}${url}`, {
+          headers: {
+            Authorization: token,
+          },
+        })
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const data = await response.json()
+        // Adjusting for different response structures
+        if (url.includes("shared-property")) {
+          setter(data.properties || [])
+        } else if (url.includes("get-recent-property")) {
+          setter(data || []) // Assuming data is directly the array
+        } else if (url.includes("saved-property")) {
+          setter(data || [])
+        } else if (url.includes("unlocked-property")) {
+          setter(data || [])
+        } else {
+          setter(data || [])
+        }
+      } catch (error) {
+        console.error(`Error fetching data from ${url}:`, error)
+        Alert.alert("Error", `Failed to load data. Please check your network and try again.`)
+      } finally {
+        setLoading(false)
+        setRefreshing(false) // Stop refreshing after fetch attempt
+      }
+    },
+    [], // Dependencies for useCallback
+  )
+
+  const handleUnSaveClick = async (id: string) => {
+    const token = await AsyncStorage.getItem("auth") // Get token from AsyncStorage
+    if (!token) {
+      Alert.alert("Login Required", "Please log in to unsave properties.")
+      return
+    }
+    try {
+      const response = await fetch(`${BASE_URL}/api/unsave-property`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: JSON.stringify({ property_id: id }),
+      })
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      Alert.alert("Success", "Property unsaved successfully!")
+      fetchData("/api/saved-property", setSavedProperties) // Refresh saved properties
+    } catch (error) {
+      console.error("Error unsaving property:", error)
+      Alert.alert("Error", "Failed to unsave property. Please try again.")
+    }
+  }
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true)
+    // Re-fetch data for the current active tab
+    switch (activeTab) {
+      case "viewed":
+        fetchData("/api/get-recent-property", setRecentProperties)
+        break
+      case "posted":
+        fetchData("/api/shared-property", setPostedProperties)
+        break
+      case "shortlisted":
+        fetchData("/api/saved-property", setSavedProperties)
+        break
+      case "contacted":
+        fetchData("/api/unlocked-property", setContactedProperties)
+        break
+      default:
+        setRefreshing(false) // If no active tab, stop refreshing
+        break
+    }
+  }, [activeTab, fetchData]) // Dependencies for onRefresh
+
+  useEffect(() => {
+    // Initial fetch for the active tab
+    onRefresh()
+  }, [activeTab, onRefresh]) // Re-fetch when activeTab changes or onRefresh changes
 
   const renderTabContent = () => {
+    const NoActivityFound = ({
+      imageSource,
+      title,
+      description,
+    }: {
+      imageSource: any // Use 'any' for local require images
+      title: string
+      description: string
+    }) => (
+      <View style={styles.noFoundContainer}>
+        <Image source={imageSource} style={styles.noFoundImage} />
+        <Text style={styles.noFoundTitle}>{title}</Text>
+        <Text style={styles.noFoundDescription}>{description}</Text>
+      </View>
+    )
+
+    const commonFlatListProps = {
+      keyExtractor: (item: Property) => item._id,
+      showsVerticalScrollIndicator: false,
+      refreshControl: <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#232761" />,
+    }
+
     switch (activeTab) {
       case "viewed":
         return (
           <View style={styles.sectionContainer}>
-            <Text style={{ fontSize: 22, fontWeight: 700, color: "#333333" }}>
-              Viewed Properties
-            </Text>
-            <Text style={styles.sectionSubtitle}>
-              Contact now to close the deal
-            </Text>
-            <FlatList
-              data={dummyViewedProperties}
-              renderItem={({ item }) => <ViewedPropertyCard item={item} />}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-            />
+            <Text style={styles.sectionTitle}>Viewed Properties</Text>
+            <Text style={styles.sectionSubtitle}>Contact now to close the deal</Text>
+            {recentProperties.length > 0 ? (
+              <FlatList
+                data={recentProperties}
+                renderItem={({ item }) => <ViewedPropertyCard item={item} onViewDetails={handleViewDetails} />}
+                {...commonFlatListProps}
+              />
+            ) : (
+              <NoActivityFound
+                imageSource={recentActivityNothingHere}
+                title="You haven’t viewed anything yet!"
+                description="All the properties and projects that you have viewed will start appearing here. Search or explore cities now."
+              />
+            )}
           </View>
-        );
+        )
       case "posted":
         return (
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Posted Properties</Text>
-            <FlatList
-              data={dummyPostedProperties}
-              renderItem={({ item }) => <PostedPropertyCard item={item} />}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-            />
+            {postedProperties.length > 0 ? (
+              <FlatList
+                data={postedProperties}
+                renderItem={({ item }) => <PostedPropertyCard item={item} onViewDetails={handleViewDetails} />}
+                {...commonFlatListProps}
+              />
+            ) : (
+              <NoActivityFound
+                imageSource={recentActivityHouse}
+                title="You haven’t posted anything yet!"
+                description="You will see your posted properties here, once you start listing properties."
+              />
+            )}
           </View>
-        );
+        )
       case "shortlisted":
         return (
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Shortlisted Properties</Text>
-            <FlatList
-              data={dummyShortlistedProperties}
-              renderItem={({ item }) => (
-                <ShortlistedPropertyCard
-                  item={item}
-                  onRemove={(id) => console.log("Remove:", id)}
-                />
-              )}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-            />
+            {savedProperties.length > 0 ? (
+              <FlatList
+                data={savedProperties}
+                renderItem={({ item }) => (
+                  <ShortlistedPropertyCard item={item} onRemove={handleUnSaveClick} onViewDetails={handleViewDetails} />
+                )}
+                {...commonFlatListProps}
+              />
+            ) : (
+              <NoActivityFound
+                imageSource={recentActivityHouse}
+                title="You haven’t shortlisted anything yet!"
+                description="In case you have shortlisted something on another device/account, Login / Register to view them here."
+              />
+            )}
           </View>
-        );
+        )
       case "contacted":
         return (
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Contacted Properties</Text>
-            <FlatList
-              data={dummyContactedProperties}
-              renderItem={({ item }) => <ContactedPropertyCard item={item} />}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-            />
+            {contactedProperties.length > 0 ? (
+              <FlatList
+                data={contactedProperties}
+                renderItem={({ item }) => <ContactedPropertyCard item={item} onViewDetails={handleViewDetails} />}
+                {...commonFlatListProps}
+              />
+            ) : (
+              <NoActivityFound
+                imageSource={recentActivityPhone}
+                title="You haven’t contacted anyone lately!"
+                description="You will see the list of properties / projects here, where you have contacted the advertiser."
+              />
+            )}
           </View>
-        );
+        )
       default:
-        return null;
+        return null
     }
-  };
+  }
 
-  const statusBarHeight = StatusBar.currentHeight || 0;
+  const statusBarHeight = StatusBar.currentHeight || 0
 
   return (
-    <SafeAreaView style={[styles.container,{marginTop: statusBarHeight}]}>
+    <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
       <View style={styles.tabContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabScroll}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScroll}>
           {TABS.map((tab) => (
             <TouchableOpacity
               key={tab.id}
               style={[styles.tab, activeTab === tab.id && styles.activeTab]}
               onPress={() => setActiveTab(tab.id)}
             >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab.id && styles.activeTabText,
-                ]}
-              >
-                {tab.title}
+              <Text style={[styles.tabText, activeTab === tab.id && styles.activeTabText]}>
+                {tab.title} (
+                {tab.id === "viewed"
+                  ? recentProperties.length
+                  : tab.id === "posted"
+                    ? postedProperties.length
+                    : tab.id === "shortlisted"
+                      ? savedProperties.length
+                      : contactedProperties.length}
+                )
               </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
-      <View style={styles.content}>{renderTabContent()}</View>
+      <View style={styles.content}>
+        {loading && !refreshing ? ( // Show full loading indicator only on initial load, not during refresh
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#232761" />
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+        ) : (
+          renderTabContent()
+        )}
+      </View>
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f0f2f5", // Light grey background
   },
   tabContainer: {
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   tabScroll: {
     paddingHorizontal: 16,
+    alignItems: "center",
   },
   tab: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    marginRight: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    marginRight: 12,
   },
   activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#2563eb",
+    borderBottomWidth: 3,
+    borderBottomColor: "#232761", // Primary brand color
   },
   tabText: {
-    fontSize: 12,
-    color: "#666",
+    fontSize: 13,
+    color: "#666666",
     fontWeight: "500",
   },
   activeTabText: {
-    color: "#2563eb",
+    color: "#232761",
     fontWeight: "600",
   },
   content: {
@@ -394,123 +473,172 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionTitle: {
-    fontSize: 22,
-    fontWeight: 700,
+    fontSize: 24,
+    fontWeight: "700",
     color: "#333333",
-    marginBottom: 16,
+    marginBottom: 8,
   },
   sectionSubtitle: {
-    fontSize: 12,
-    color: "#666",
-    fontWeight: "500",
+    fontSize: 14,
+    color: "#666666",
+    fontWeight: "400",
     marginBottom: 16,
   },
-  // Viewed Property Card Styles
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#666666",
+  },
+  noFoundContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    marginTop: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  noFoundImage: {
+    width: 150,
+    height: 150,
+    resizeMode: "contain",
+    marginBottom: 20,
+  },
+  noFoundTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333333",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  noFoundDescription: {
+    fontSize: 14,
+    color: "#666666",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  // Card Styles (Common Base properties applied directly)
   viewedCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     borderRadius: 12,
     marginBottom: 16,
     overflow: "hidden",
-    elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: "lightgrey",
+    borderColor: "#f0f0f0",
   },
   viewedImage: {
     width: "100%",
     height: 120,
     borderBottomWidth: 1,
-    borderColor: "lightgrey",
+    borderColor: "#f0f0f0",
+    resizeMode: "cover",
   },
   viewedContent: {
-    padding: 14,
+    padding: 16, // Original padding was 14, adjusted to 16 for consistency
+    paddingVertical: 12,
   },
   viewedTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
     marginBottom: 4,
+    color: "#333333",
   },
   viewedLocation: {
     fontSize: 12,
-    color: "#666",
+    color: "#666666",
+    marginBottom: 8,
   },
-  // Posted Property Card Styles
   postedCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     borderRadius: 12,
     marginBottom: 16,
     overflow: "hidden",
-    elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: "lightgrey",
+    borderColor: "#f0f0f0",
   },
   postedImage: {
     width: "100%",
-    height: 125,
+    height: 140,
     borderBottomWidth: 1,
-    borderColor: "lightgrey",
+    borderColor: "#f0f0f0",
+    resizeMode: "cover",
   },
   postedContent: {
     padding: 16,
   },
   postedTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600",
-    marginBottom: 8,
+    marginBottom: 4,
+    color: "#333333",
   },
   postedDescription: {
-    fontSize: 12,
-    color: "#666",
+    fontSize: 13,
+    color: "#666666",
     marginBottom: 12,
   },
   tagContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     marginBottom: 12,
+    gap: 8, // Spacing between tags
   },
   tag: {
-    backgroundColor: "#f3f4f6",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginRight: 8,
-    marginBottom: 8,
+    backgroundColor: "#e6f0ff", // Light blue for tags
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
   },
   tagText: {
-    fontSize: 10,
-    color: "#666",
+    fontSize: 11,
+    color: "#232761", // Darker blue for tag text
+    fontWeight: "500",
   },
   price: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 12,
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 16,
+    color: "#333333",
   },
-  // Shortlisted Property Card Styles
   shortlistedCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     borderRadius: 12,
     marginBottom: 16,
     overflow: "hidden",
-    elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: "lightgrey",
+    borderColor: "#f0f0f0",
   },
   shortlistedImage: {
     width: "100%",
     height: 120,
     borderBottomWidth: 1,
-    borderColor: "lightgrey",
+    borderColor: "#f0f0f0",
+    resizeMode: "cover",
   },
   shortlistedContent: {
     padding: 16,
@@ -519,89 +647,99 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 4,
+    color: "#333333",
   },
   shortlistedLocation: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 4,
+    fontSize: 13,
+    color: "#666666",
+    marginBottom: 8,
   },
   shortlistedPrice: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "700",
     marginVertical: 8,
+    color: "#333333",
   },
   buttonRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: 10, // Spacing between buttons
+    marginTop: 8,
   },
-  // Contacted Property Card Styles
   contactedCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     borderRadius: 12,
     marginBottom: 16,
-    padding: 16,
-    flexDirection: "row",
-    elevation: 2,
+    overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+    flexDirection: "row", // Specific to contacted card
+    padding: 12, // Specific to contacted card
+    alignItems: "center", // Specific to contacted card
   },
   contactedImage: {
-    width: 125,
-    height: "100%",
+    width: 100,
+    height: 100,
     borderRadius: 8,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+    resizeMode: "cover",
   },
   contactedContent: {
     flex: 1,
-    marginLeft: 16,
   },
   contactedTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
     marginBottom: 4,
+    color: "#333333",
   },
   contactedLocation: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 4,
+    fontSize: 13,
+    color: "#666666",
+    marginBottom: 8,
   },
   contactedStatus: {
-    color: "#10b981",
+    color: "#10b981", // Green for contacted status
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
     marginVertical: 4,
   },
   dateText: {
     fontSize: 12,
-    color: "#666",
-    marginVertical: 4,
+    color: "#888888",
+    marginBottom: 4,
   },
   // Common Button Styles
   viewButton: {
-    backgroundColor: "#232761",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 6,
+    backgroundColor: "#232761", // Primary brand color
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
     alignItems: "center",
     flex: 1,
   },
   viewButtonText: {
     color: "#fff",
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: 13,
+    fontWeight: "600",
   },
   removeButton: {
-    backgroundColor: "#ef4444",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 6,
+    backgroundColor: "#ef4444", // Red for remove
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
     alignItems: "center",
     flex: 1,
   },
   removeButtonText: {
     color: "#fff",
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: 13,
+    fontWeight: "600",
   },
-});
+})

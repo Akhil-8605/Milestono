@@ -176,7 +176,7 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
                       style={[
                         styles.menuHeader,
                         expandedSubSections[item.title] &&
-                          styles.menuHeaderActive,
+                        styles.menuHeaderActive,
                       ]}
                       onPress={() =>
                         setExpandedSubSections((prev) => ({
@@ -232,11 +232,11 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
                             onPress={
                               subItem.linkto
                                 ? () => {
-                                    onClose();
-                                    navigation.navigate(
-                                      subItem.linkto as never
-                                    );
-                                  }
+                                  onClose();
+                                  navigation.navigate(
+                                    subItem.linkto as never
+                                  );
+                                }
                                 : undefined
                             }
                           >
@@ -265,9 +265,9 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
                   onPress={
                     item.linkto
                       ? () => {
-                          onClose();
-                          navigation.navigate(item.linkto as never);
-                        }
+                        onClose();
+                        navigation.navigate(item.linkto as never);
+                      }
                       : undefined
                   }
                 >
@@ -291,7 +291,8 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.menuHeader]}
           activeOpacity={0.7}
-          onPress={() => {onClose(); 
+          onPress={() => {
+            onClose();
             navigation.navigate("FaqsPage" as never);
           }}
         >
@@ -308,7 +309,10 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.menuHeader]}
           activeOpacity={0.7}
-          onPress={() => {}}
+         onPress={() => {
+            onClose();
+            navigation.navigate("ProfilePage" as never);
+          }}
         >
           <View style={styles.menuTitleContainer}>
             <FontAwesome5
@@ -323,7 +327,7 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.menuHeader]}
           activeOpacity={0.7}
-          onPress={() => {onClose(); navigation.navigate("PremiumAccountPage" as never)}}
+          onPress={() => { onClose(); navigation.navigate("PremiumAccountPage" as never) }}
         >
           <View style={styles.menuTitleContainer}>
             <FontAwesome5
@@ -338,7 +342,7 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.menuHeader]}
           activeOpacity={0.7}
-          onPress={() => {}}
+          onPress={() => { }}
         >
           <View style={styles.menuTitleContainer}>
             <FontAwesome5 name={"envelope"} size={18} color="#232761" solid />
@@ -348,7 +352,7 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.menuHeader]}
           activeOpacity={0.7}
-          onPress={() => {}}
+          onPress={() => { }}
         >
           <View style={styles.menuTitleContainer}>
             <FontAwesome5
@@ -376,7 +380,7 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.menuHeader]}
           activeOpacity={0.7}
-          onPress={() => {}}
+          onPress={() => { }}
         >
           <View style={styles.menuTitleContainer}>
             <FontAwesome5

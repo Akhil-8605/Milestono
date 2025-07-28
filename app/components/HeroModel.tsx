@@ -18,9 +18,20 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 interface MenuModalProps {
   isVisible: boolean;
   onClose: () => void;
+  isAuthenticated: boolean;
+  userFullName: string;
+  onLogout: () => void;
+  onLogin: () => void;
 }
 
-const MenuModal: React.FC<MenuModalProps> = ({ isVisible, onClose }) => {
+const MenuModal: React.FC<MenuModalProps> = ({
+  isVisible,
+  onClose,
+  isAuthenticated,
+  userFullName,
+  onLogout,
+  onLogin,
+}) => {
   const navigation = useNavigation();
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
@@ -455,14 +466,34 @@ const MenuModal: React.FC<MenuModalProps> = ({ isVisible, onClose }) => {
                 </View>
               </View>
               <View style={styles.headerText}>
-                <Text style={styles.greeting}>Hello User 👋</Text>
-                <TouchableOpacity
-                  style={styles.loginButton}
-                  activeOpacity={0.7}
-                >
-                  <FontAwesome5 name="sign-in-alt" size={14} color="#232761" />
-                  <Text style={styles.loginText}>Login</Text>
-                </TouchableOpacity>
+                <Text style={styles.greeting}>
+                  {isAuthenticated ? `Hello ${userFullName} 👋` : "Hello User 👋"}
+                </Text>
+                {isAuthenticated ? (
+                  <TouchableOpacity
+                    style={styles.loginButton}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      handleClose();
+                      onLogout();
+                    }}
+                  >
+                    <FontAwesome5 name="sign-out-alt" size={14} color="#232761" />
+                    <Text style={styles.loginText}>Logout</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.loginButton}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      handleClose();
+                      onLogin();
+                    }}
+                  >
+                    <FontAwesome5 name="sign-in-alt" size={14} color="#232761" />
+                    <Text style={styles.loginText}>Login</Text>
+                  </TouchableOpacity>
+                )}
               </View>
               <TouchableOpacity
                 style={styles.closeButton}
