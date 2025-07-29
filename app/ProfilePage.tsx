@@ -11,6 +11,7 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  StatusBar,
 } from "react-native"
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5"
 import { useNavigation } from "expo-router" // Import NavigationProp
@@ -381,8 +382,10 @@ export default function ProfilePage() {
     gcheck()
   }, [])
 
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { marginTop: statusBarHeight }]} showsVerticalScrollIndicator={false}>
       {loading ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#232761" />

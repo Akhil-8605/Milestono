@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useCallback } from "react" // Import useCallback
+import { useState, useEffect, useCallback } from "react"
 import {
   StyleSheet,
   View,
@@ -14,13 +14,11 @@ import {
   StatusBar,
   ActivityIndicator,
   Alert,
-  RefreshControl, // Import RefreshControl
+  RefreshControl,
 } from "react-native"
-import AsyncStorage from "@react-native-async-storage/async-storage" // Import AsyncStorage
-// import { BASE_URL } from "@env" // Removed as @env is not supported in v0 preview
-
-// Define BASE_URL directly as @env is not supported in this environment
-const BASE_URL = "https://your-backend-api.com" // IMPORTANT: Replace with your actual backend URL
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import { useRoute, RouteProp } from "@react-navigation/native" // Import route hooks
+import { BASE_URL } from "@env"
 
 // Local image imports
 const recentActivityHouse = require("../assets/images/recentActivityHouse.png")
@@ -33,6 +31,13 @@ const TABS = [
   { id: "shortlisted", title: "Shortlisted" },
   { id: "contacted", title: "Contacted" },
 ]
+
+// Define route params type
+type RouteParams = {
+  MyActivityPage: {
+    initialTab?: string;
+  };
+};
 
 interface Property {
   _id: string
@@ -167,13 +172,23 @@ const ContactedPropertyCard = ({ item, onViewDetails }: ContactedPropertyCardPro
 )
 
 export default function PropertyActivities() {
-  const [activeTab, setActiveTab] = useState("viewed")
+  const route = useRoute<RouteProp<RouteParams, 'MyActivityPage'>>()
+  const initialTab = route.params?.initialTab || "viewed" // Get initial tab from params
+  
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [loading, setLoading] = useState(false)
-  const [refreshing, setRefreshing] = useState(false) // State for pull-to-refresh
+  const [refreshing, setRefreshing] = useState(false)
   const [postedProperties, setPostedProperties] = useState<Property[]>([])
   const [recentProperties, setRecentProperties] = useState<Property[]>([])
   const [savedProperties, setSavedProperties] = useState<Property[]>([])
   const [contactedProperties, setContactedProperties] = useState<Property[]>([])
+
+  // Update active tab when route params change
+  useEffect(() => {
+    if (route.params?.initialTab) {
+      setActiveTab(route.params.initialTab)
+    }
+  }, [route.params?.initialTab])
 
   // Dummy navigation function for React Native context
   const handleViewDetails = (id: string) => {

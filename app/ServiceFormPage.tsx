@@ -11,6 +11,7 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  StatusBar,
 } from "react-native"
 import { Picker } from "@react-native-picker/picker"
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5"
@@ -694,8 +695,10 @@ export default function ServiceForm() {
     }
   }
 
+   const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { marginTop: statusBarHeight ,}]} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={styles.title}>Service Provider Registration</Text>
         <Text style={styles.subtitle}>Join our network of trusted professionals</Text>

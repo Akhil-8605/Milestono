@@ -1,4 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+"use client"
+
+import type React from "react"
+import { useState, useRef, useEffect } from "react"
 import {
   View,
   Text,
@@ -10,55 +13,186 @@ import {
   Pressable,
   Platform,
   Modal,
-} from "react-native";
-import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
-import { useNavigation } from "expo-router";
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+} from "react-native"
+import FontAwesome5 from "react-native-vector-icons/FontAwesome5"
+import { useNavigation } from "expo-router"
+import ToggledMenus from "./ToggleMenus"
+import axios from "axios"
+import * as SecureStore from "expo-secure-store"
+
+const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL || "http://localhost:3000"
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window")
 
 interface MenuModalProps {
-  isVisible: boolean;
-  onClose: () => void;
-  isAuthenticated: boolean;
-  userFullName: string;
-  onLogout: () => void;
-  onLogin: () => void;
+  isVisible: boolean
+  onClose: () => void
 }
 
-const MenuModal: React.FC<MenuModalProps> = ({
-  isVisible,
-  onClose,
-  isAuthenticated,
-  userFullName,
-  onLogout,
-  onLogin,
-}) => {
-  const navigation = useNavigation();
-  const [expandedSections, setExpandedSections] = useState<
-    Record<string, boolean>
-  >({});
-  const [expandedSubSections, setExpandedSubSections] = useState<
-    Record<string, boolean>
-  >({});
+interface IUserData {
+  userFullName: string
+  premiumEndDate: string
+  countOfContactedProperty: number
+  countOfSavedProperty: number
+  countOfPostedProperty: number
+  countOfRequestedService: number
+  countOfProvidedService: number
+}
 
-  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+const MenuModal: React.FC<MenuModalProps> = ({ isVisible, onClose }) => {
+  const navigation = useNavigation()
+
+  // Authentication and user data states
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  const [crmAccess, setCrmAccess] = useState<boolean>(false)
+  const [userData, setUserData] = useState<IUserData>({
+    userFullName: "",
+    premiumEndDate: "",
+    countOfContactedProperty: 0,
+    countOfSavedProperty: 0,
+    countOfPostedProperty: 0,
+    countOfRequestedService: 0,
+    countOfProvidedService: 0,
+  })
+  const [loading, setLoading] = useState<boolean>(false)
+
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current
+
+  // Authentication function
+  const authenticateUser = async (): Promise<void> => {
+    try {
+      const token = await SecureStore.getItemAsync("auth")
+      if (!token) {
+        setIsAuthenticated(false)
+        return
+      }
+
+      const response = await axios.get(`${BASE_URL}/api/authenticate`, {
+        headers: { Authorization: token },
+      }) as any
+
+      setIsAuthenticated(response.data.role === "user")
+    } catch (error) {
+      console.error("Authentication error:", error)
+      setIsAuthenticated(false)
+    }
+  }
+
+  // Agent/CRM access check
+  const authenticateAgent = async (): Promise<void> => {
+    try {
+      const token = await SecureStore.getItemAsync("auth")
+      if (!token) {
+        setCrmAccess(false)
+        return
+      }
+
+      const response = await axios.get(`${BASE_URL}/api/crm-access`, {
+        headers: { Authorization: token },
+      }) as any
+
+      setCrmAccess(response.data.crmAccess === true)
+    } catch (error) {
+      console.error("CRM access check error:", error)
+      setCrmAccess(false)
+    }
+  }
+
+  // Fetch user data
+  const getUserData = async (): Promise<void> => {
+    try {
+      const token = await SecureStore.getItemAsync("auth")
+      if (!token) return
+
+      const response = await axios.get(`${BASE_URL}/api/user-data`, {
+        headers: { Authorization: token },
+      })
+
+      setUserData(response.data as IUserData)
+    } catch (error) {
+      console.error("Error fetching user data:", error)
+    }
+  }
+
+  // Google logout function
+  const handleGoogleLogout = async (): Promise<void> => {
+    try {
+      await axios.get(`${BASE_URL}/auth/logout`)
+    } catch (error) {
+      console.error("Google logout error:", error)
+    }
+  }
+
+  // Complete logout function
+  const handleLogout = async (): Promise<void> => {
+    try {
+      setLoading(true)
+
+      // Remove local tokens
+      await SecureStore.deleteItemAsync("auth")
+      await SecureStore.deleteItemAsync("user_id")
+
+      // Call Google logout
+      await handleGoogleLogout()
+
+      // Reset states
+      setIsAuthenticated(false)
+      setCrmAccess(false)
+      setUserData({
+        userFullName: "",
+        premiumEndDate: "",
+        countOfContactedProperty: 0,
+        countOfSavedProperty: 0,
+        countOfPostedProperty: 0,
+        countOfRequestedService: 0,
+        countOfProvidedService: 0,
+      })
+
+      // Close modal and navigate
+      handleClose()
+      navigation.navigate("index" as never)
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle login navigation
+  const handleLogin = (): void => {
+    handleClose()
+    navigation.navigate("LoginPage" as never)
+  }
+
+  // Initialize data when modal opens
+  const initializeData = async (): Promise<void> => {
+    setLoading(true)
+    try {
+      await Promise.all([authenticateUser(), authenticateAgent(), getUserData()])
+    } catch (error) {
+      console.error("Failed to initialize data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Disable body scroll for web when modal is visible
   useEffect(() => {
     if (Platform.OS === "web") {
       if (isVisible) {
-        document.body.style.overflow = "hidden";
+        document.body.style.overflow = "hidden"
       } else {
-        document.body.style.overflow = "";
+        document.body.style.overflow = ""
       }
     }
     return () => {
       if (Platform.OS === "web") {
-        document.body.style.overflow = "";
+        document.body.style.overflow = ""
       }
-    };
-  }, [isVisible]);
+    }
+  }, [isVisible])
 
-  // Handle opening animation
+  // Handle opening animation and data initialization
   useEffect(() => {
     if (isVisible) {
       Animated.spring(slideAnim, {
@@ -66,343 +200,21 @@ const MenuModal: React.FC<MenuModalProps> = ({
         useNativeDriver: true,
         tension: 50,
         friction: 8,
-      }).start();
+      }).start()
+      initializeData()
     }
-  }, [isVisible]);
+  }, [isVisible])
 
-  // New function to handle close animation (up-to-down)
+  // Handle close animation
   const handleClose = () => {
     Animated.timing(slideAnim, {
       toValue: SCREEN_HEIGHT,
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      onClose();
-    });
-  };
-
-  const toggleSection = (section: string) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
-  // Menu data structure with icons
-  const menuItems = {
-    "My Activities": {
-      icon: "tasks",
-      items: [
-        { title: "Recently Viewed", icon: "eye", linkto: "MyActivityPage" },
-        {
-          title: "Posted Property",
-          icon: "building",
-          linkto: "MyActivityPage",
-        },
-        { title: "Shortlisted", icon: "bookmark", linkto: "MyActivityPage" },
-        { title: "Contacted", icon: "phone-alt", linkto: "MyActivityPage" },
-      ],
-    },
-    "For Buyers": {
-      icon: "home",
-      items: [
-        {
-          title: "Buy a Home",
-          icon: "home",
-          linkto: "BuyAHomePage",
-          subItems: [
-            { title: "Flats", icon: "building", linkto: "SearchPage" },
-            {
-              title: "Builder Floors",
-              icon: "hammer",
-              linkto: "SearchPage",
-            },
-            {
-              title: "Independent House",
-              icon: "home",
-              linkto: "SearchPage",
-            },
-            {
-              title: "Plots in Pune",
-              icon: "map-marked-alt",
-              linkto: "SearchPage",
-            },
-            {
-              title: "Serviced Apartments",
-              icon: "hotel",
-              linkto: "SearchPage",
-            },
-            { title: "Houses", icon: "house-user", linkto: "SearchPage" },
-          ],
-        },
-        {
-          title: "Popular Areas",
-          icon: "map-marked-alt",
-          linkto: "PopularAreasPage",
-          subItems: [
-            {
-              title: "Property in Kharadi",
-              icon: "",
-              linkto: "SearchPage"
-            },
-            {
-              title: "Property in Baner",
-              icon: "",
-              linkto: "SearchPage"
-            },
-            {
-              title: "Property in Hinjewadi",
-              icon: "",
-              linkto: "SearchPage"
-            },
-            {
-              title: "Property in Wakad",
-              icon: "",
-              linkto: "SearchPage"
-            },
-            {
-              title: "Property in Ravet",
-              icon: "",
-              linkto: "SearchPage"
-            },
-            {
-              title: "Property in Punawale",
-              icon: "",
-              linkto: "SearchPage"
-            },
-            {
-              title: "Property in Wagholi",
-              icon: "",
-              linkto: "SearchPage"
-            },
-          ],
-        },
-        { title: "Home Loan", icon: "money-check", linkto: "HomeLoanPage" },
-        { title: "Insights", icon: "lightbulb", linkto: "InsightPage" },
-        {
-          title: "Articles & News",
-          icon: "newspaper",
-          linkto: "NewsArticalsPage",
-        },
-      ],
-    },
-    "For Owners": {
-      icon: "building",
-      items: [
-        { title: "Post Property", icon: "pen", linkto: "PostPropertyPage" },
-        { title: "Owner Services", icon: "tools", linkto: "OwnerServicesPage" },
-        {
-          title: "About Milestono",
-          icon: "info-circle",
-          linkto: "AboutMilestonoPage",
-        },
-        { title: "View Properties", icon: "eye", linkto: "ViewPropertiesPage" },
-        { title: "About Us", icon: "user", linkto: "AboutUsPage" },
-      ],
-    },
-    "For Dealers / Builders": {
-      icon: "briefcase",
-      items: [
-        {
-          title: "Property Calculator",
-          icon: "calculator",
-          linkto: "PropertyCalculatorPage",
-        },
-        {
-          title: "Explore our Service",
-          icon: "search-plus",
-          linkto: "ExploreServicePage",
-        },
-        {
-          title: "Register to Property",
-          icon: "clipboard-check",
-          linkto: "RegisterPropertyPage",
-        },
-        {
-          title: "View Video about Milestono",
-          icon: "play-circle",
-          linkto: "MilestonoVideoPage",
-        },
-      ],
-    },
-    Insight: {
-      icon: "chart-bar",
-      items: [
-        {
-          title: "Delhi Overview",
-          icon: "location-arrow",
-          linkto: "SearchPage",
-        },
-        {
-          title: "Mumbai Overview",
-          icon: "landmark",
-          linkto: "SearchPage",
-        },
-        {
-          title: "Pune Road Overview",
-          icon: "road",
-          linkto: "SearchPage",
-        },
-        {
-          title: "Hydrabad Overview",
-          icon: "city",
-          linkto: "SearchPage",
-        },
-        {
-          title: "Kolkata Overview",
-          icon: "search-plus",
-          linkto: "SearchPage",
-        },
-        {
-          title: "Bangalore Overview",
-          icon: "building",
-          linkto: "SearchPage",
-        },
-      ],
-    },
-  };
-
-  // Render menu item with expandable sections
-  const renderMenuItem = (title: string, section: any) => {
-    return (
-      <View key={title} style={styles.menuSection}>
-        {/* Top-level header toggle */}
-        <TouchableOpacity
-          style={[
-            styles.menuHeader,
-            expandedSections[title] && styles.menuHeaderActive,
-          ]}
-          onPress={() => toggleSection(title)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.menuTitleContainer}>
-            <FontAwesome5 name={section.icon} size={18} color="#232761" solid />
-            <Text style={styles.menuTitle}>{title}</Text>
-          </View>
-          {section.items.length > 0 &&
-            (expandedSections[title] ? (
-              <FontAwesome5 name="chevron-up" size={16} color="#232761" />
-            ) : (
-              <FontAwesome5 name="chevron-down" size={16} color="#232761" />
-            ))}
-        </TouchableOpacity>
-
-        {/* Render sub-items if expanded */}
-        {expandedSections[title] && section.items.length > 0 && (
-          <View style={styles.submenu}>
-            {section.items.map((item: any, index: number) => {
-              if (item.subItems && item.subItems.length) {
-                return (
-                  <View key={index} style={styles.menuSection}>
-                    <TouchableOpacity
-                      style={[
-                        styles.menuHeader,
-                        expandedSubSections[item.title] &&
-                          styles.menuHeaderActive,
-                      ]}
-                      onPress={() =>
-                        setExpandedSubSections((prev) => ({
-                          ...prev,
-                          [item.title]: !prev[item.title],
-                        }))
-                      }
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.menuTitleContainer}>
-                        <FontAwesome5
-                          name={item.icon}
-                          size={14}
-                          color="#666"
-                          solid
-                        />
-                        <View style={{ marginLeft: 14 }}>
-                          <Text style={styles.submenuText}>{item.title}</Text>
-                          {item.subtitle && (
-                            <Text
-                              style={[
-                                styles.submenuText,
-                                { fontSize: 13, color: "#999" },
-                              ]}
-                            >
-                              {item.subtitle}
-                            </Text>
-                          )}
-                        </View>
-                      </View>
-                      {expandedSubSections[item.title] ? (
-                        <FontAwesome5
-                          name="chevron-up"
-                          size={16}
-                          color="#232761"
-                        />
-                      ) : (
-                        <FontAwesome5
-                          name="chevron-down"
-                          size={16}
-                          color="#232761"
-                        />
-                      )}
-                    </TouchableOpacity>
-
-                    {expandedSubSections[item.title] && (
-                      <View style={styles.submenu}>
-                        {item.subItems.map((subItem: any, subIndex: number) => (
-                          <TouchableOpacity
-                            key={subIndex}
-                            style={styles.submenuItem}
-                            activeOpacity={0.6}
-                            onPress={
-                              subItem.linkto
-                                ? () => {
-                                    handleClose();
-                                    navigation.navigate(
-                                      subItem.linkto as never
-                                    );
-                                  }
-                                : undefined
-                            }
-                          >
-                            <FontAwesome5
-                              name={subItem.icon}
-                              size={14}
-                              color="#666"
-                              solid
-                            />
-                            <Text style={styles.submenuText}>
-                              {subItem.title}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                );
-              }
-
-              return (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.submenuItem}
-                  activeOpacity={0.6}
-                  onPress={
-                    item.linkto
-                      ? () => {
-                          handleClose();
-                          navigation.navigate(item.linkto as never);
-                        }
-                      : undefined
-                  }
-                >
-                  <FontAwesome5 name={item.icon} size={14} color="#666" solid />
-                  <Text style={styles.submenuText}>{item.title}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
-      </View>
-    );
-  };
+      onClose()
+    })
+  }
 
   // Action buttons data
   const actionButtons = [
@@ -428,7 +240,7 @@ const MenuModal: React.FC<MenuModalProps> = ({
       icon: "plus-circle",
       color: "#e8f5e9",
       iconBg: "#2e7d32",
-      linkto: "",
+      linkto: "PostService",
     },
     {
       title: "Use Service",
@@ -436,28 +248,27 @@ const MenuModal: React.FC<MenuModalProps> = ({
       icon: "tools",
       color: "#fce4ec",
       iconBg: "#c2185b",
-      linkto: "",
+      linkto: "RequestServiceForm",
     },
-  ];
+  ]
+
+  // Get display name for greeting
+  const getDisplayName = (): string => {
+    if (!isAuthenticated || !userData.userFullName) {
+      return "User"
+    }
+    return userData.userFullName.split(" ")[0]
+  }
 
   return (
-    <Modal
-      animationType="none"
-      transparent
-      visible={isVisible}
-      onRequestClose={handleClose}
-    >
+    <Modal animationType="none" transparent visible={isVisible} onRequestClose={handleClose}>
       <View style={styles.rootContainer}>
         <Pressable style={styles.backdrop} onPress={handleClose} />
-        <Animated.View
-          style={[
-            styles.modalContainer,
-            { transform: [{ translateY: slideAnim }] },
-          ]}
-        >
+        <Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
           <View style={styles.handleBarContainer}>
             <View style={styles.handleBar} />
           </View>
+
           <View style={styles.header}>
             <View style={styles.profileSection}>
               <View style={styles.avatarContainer}>
@@ -466,75 +277,88 @@ const MenuModal: React.FC<MenuModalProps> = ({
                 </View>
               </View>
               <View style={styles.headerText}>
-                <Text style={styles.greeting}>
-                  {isAuthenticated ? `Hello ${userFullName} 👋` : "Hello User 👋"}
-                </Text>
+                <Text style={styles.greeting}>Hello {getDisplayName()} 👋</Text>
                 {isAuthenticated ? (
                   <TouchableOpacity
                     style={styles.loginButton}
                     activeOpacity={0.7}
-                    onPress={() => {
-                      handleClose();
-                      onLogout();
-                    }}
+                    onPress={handleLogout}
+                    disabled={loading}
                   >
                     <FontAwesome5 name="sign-out-alt" size={14} color="#232761" />
-                    <Text style={styles.loginText}>Logout</Text>
+                    <Text style={styles.loginText}>{loading ? "Logging out..." : "Logout"}</Text>
                   </TouchableOpacity>
                 ) : (
-                  <TouchableOpacity
-                    style={styles.loginButton}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      handleClose();
-                      onLogin();
-                    }}
-                  >
+                  <TouchableOpacity style={styles.loginButton} activeOpacity={0.7} onPress={handleLogin}>
                     <FontAwesome5 name="sign-in-alt" size={14} color="#232761" />
                     <Text style={styles.loginText}>Login</Text>
                   </TouchableOpacity>
                 )}
               </View>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={handleClose}
-                activeOpacity={0.7}
-              >
+              <TouchableOpacity style={styles.closeButton} onPress={handleClose} activeOpacity={0.7}>
                 <FontAwesome5 name="times" size={22} color="#666" />
               </TouchableOpacity>
             </View>
           </View>
+
           <ScrollView
             style={styles.scrollView}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollViewContent}
           >
+            {/* Display user stats if authenticated */}
+            {isAuthenticated && (
+              <View style={styles.userStatsContainer}>
+                <View style={styles.statsRow}>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{userData.countOfSavedProperty}</Text>
+                    <Text style={styles.statLabel}>Saved</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{userData.countOfContactedProperty}</Text>
+                    <Text style={styles.statLabel}>Contacted</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{userData.countOfPostedProperty}</Text>
+                    <Text style={styles.statLabel}>Posted</Text>
+                  </View>
+                </View>
+                <View style={styles.statsRow}>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{userData.countOfRequestedService}</Text>
+                    <Text style={styles.statLabel}>Used Services</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{userData.countOfProvidedService}</Text>
+                    <Text style={styles.statLabel}>Provided Services</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
             <View style={styles.actionButtons}>
               {actionButtons.map((action, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={[
-                    styles.actionButton,
-                    { backgroundColor: action.color },
-                  ]}
+                  style={[styles.actionButton, { backgroundColor: action.color }]}
                   activeOpacity={0.8}
                   onPress={() => {
-                    handleClose();
-                    navigation.navigate(action.linkto as never);
+                    if (
+                      action.linkto === "PostPropertyPage" ||
+                      action.linkto === "MyActivityPage" ||
+                      action.linkto === "RequestServiceForm"
+                    ) {
+                      if (!isAuthenticated) {
+                        handleLogin()
+                        return
+                      }
+                    }
+                    handleClose()
+                    navigation.navigate(action.linkto as never)
                   }}
                 >
-                  <View
-                    style={[
-                      styles.actionIcon,
-                      { backgroundColor: action.iconBg },
-                    ]}
-                  >
-                    <FontAwesome5
-                      name={action.icon}
-                      size={18}
-                      color="white"
-                      solid
-                    />
+                  <View style={[styles.actionIcon, { backgroundColor: action.iconBg }]}>
+                    <FontAwesome5 name={action.icon} size={18} color="white" solid />
                   </View>
                   <View style={styles.actionTextContainer}>
                     <Text style={styles.actionTitle}>{action.title}</Text>
@@ -544,40 +368,18 @@ const MenuModal: React.FC<MenuModalProps> = ({
                 </TouchableOpacity>
               ))}
             </View>
-            <View style={styles.menuContainer}>
-              {Object.entries(menuItems).map(([title, section]) =>
-                renderMenuItem(title, section)
-              )}
-              <TouchableOpacity
-                style={[styles.menuHeader]}
-                activeOpacity={0.7}
-                onPress={() => {
-                  handleClose();
-                  navigation.navigate("FaqsPage" as never);
-                }}
-              >
-                <View style={styles.menuTitleContainer}>
-                  <FontAwesome5
-                    name={"question-circle"}
-                    size={18}
-                    color="#232761"
-                    solid
-                  />
-                  <Text style={styles.menuTitle}>FAQs</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
+
+            <ToggledMenus onClose={onClose} />
+
             <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                © 2024 Milestono. All rights reserved.
-              </Text>
+              <Text style={styles.footerText}>© 2024 Milestono. All rights reserved.</Text>
             </View>
           </ScrollView>
         </Animated.View>
       </View>
     </Modal>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   rootContainer: {
@@ -688,6 +490,32 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#f5f5f5",
   },
+  userStatsContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "#f8f9fa",
+    marginBottom: 10,
+  },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 10,
+  },
+  statItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#232761",
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+  },
   actionButtons: {
     padding: 16,
   },
@@ -724,56 +552,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#666",
   },
-  menuContainer: {
-    padding: 16,
-  },
-  menuSection: {
-    marginBottom: 12,
-  },
-  menuHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: "#f9f9f9",
-  },
-  menuHeaderActive: {
-    backgroundColor: "#f0f4ff",
-    borderLeftWidth: 4,
-    borderLeftColor: "#232761",
-  },
-  menuTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  menuTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#232761",
-    marginLeft: 14,
-  },
-  submenu: {
-    paddingLeft: 16,
-    marginTop: 6,
-    marginBottom: 6,
-    borderLeftWidth: 1,
-    borderLeftColor: "#e0e0e0",
-    marginLeft: 16,
-  },
-  submenuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  submenuText: {
-    fontSize: 14,
-    color: "#444",
-    marginLeft: 14,
-  },
   footer: {
     padding: 16,
     alignItems: "center",
@@ -782,6 +560,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
   },
-});
+})
 
-export default MenuModal;
+export default MenuModal

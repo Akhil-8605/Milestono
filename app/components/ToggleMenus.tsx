@@ -8,15 +8,36 @@ import {
   ScrollView,
 } from "react-native";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+import { NavigationProp } from "@react-navigation/native";
 
 const menuItems = {
   "My Activities": {
     icon: "tasks",
     items: [
-      { title: "Recently Viewed", icon: "eye", linkto: "MyActivityPage" },
-      { title: "Posted Property", icon: "building", linkto: "MyActivityPage" },
-      { title: "Shortlisted", icon: "bookmark", linkto: "MyActivityPage" },
-      { title: "Contacted", icon: "phone-alt", linkto: "MyActivityPage" },
+      { 
+        title: "Recently Viewed", 
+        icon: "eye", 
+        linkto: "MyActivityPage",
+        tabParam: "viewed" // Add tab parameter
+      },
+      { 
+        title: "Posted Property", 
+        icon: "building", 
+        linkto: "MyActivityPage",
+        tabParam: "posted" // Add tab parameter
+      },
+      { 
+        title: "Shortlisted", 
+        icon: "bookmark", 
+        linkto: "MyActivityPage",
+        tabParam: "shortlisted" // Add tab parameter
+      },
+      { 
+        title: "Contacted", 
+        icon: "phone-alt", 
+        linkto: "MyActivityPage",
+        tabParam: "contacted" // Add tab parameter
+      },
     ],
   },
   "For Buyers": {
@@ -119,7 +140,7 @@ interface ToggledMenusProps {
 }
 
 const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<any>>();
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({});
@@ -139,6 +160,18 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
       ...prev,
       [subSection]: !prev[subSection],
     }));
+  };
+
+  // Helper function to handle navigation with parameters
+  const handleNavigation = (item: any) => {
+    onClose();
+    if (item.linkto === "MyActivityPage" && item.tabParam) {
+      // Navigate with tab parameter for MyActivityPage
+      navigation.navigate(item.linkto, { initialTab: item.tabParam });
+    } else {
+      // Regular navigation for other pages
+      navigation.navigate(item.linkto);
+    }
   };
 
   const renderMenuItem = (title: string, section: any) => {
@@ -262,14 +295,7 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
                   key={index}
                   style={styles.submenuItem}
                   activeOpacity={0.6}
-                  onPress={
-                    item.linkto
-                      ? () => {
-                        onClose();
-                        navigation.navigate(item.linkto as never);
-                      }
-                      : undefined
-                  }
+                  onPress={item.linkto ? () => handleNavigation(item) : undefined}
                 >
                   <FontAwesome5 name={item.icon} size={14} color="#666" solid />
                   <Text style={styles.submenuText}>{item.title}</Text>
@@ -291,24 +317,6 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.menuHeader]}
           activeOpacity={0.7}
-          onPress={() => {
-            onClose();
-            navigation.navigate("FaqsPage" as never);
-          }}
-        >
-          <View style={styles.menuTitleContainer}>
-            <FontAwesome5
-              name={"question-circle"}
-              size={18}
-              color="#232761"
-              solid
-            />
-            <Text style={styles.menuTitle}>FAQs</Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.menuHeader]}
-          activeOpacity={0.7}
          onPress={() => {
             onClose();
             navigation.navigate("ProfilePage" as never);
@@ -322,6 +330,42 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
               solid
             />
             <Text style={styles.menuTitle}>Profile</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.menuHeader]}
+          activeOpacity={0.7}
+         onPress={() => {
+            onClose();
+            navigation.navigate("MyActivityPage" as never);
+          }}
+        >
+          <View style={styles.menuTitleContainer}>
+            <FontAwesome5
+              name={"building"}
+              size={18}
+              color="#232761"
+              solid
+            />
+            <Text style={styles.menuTitle}>My Property</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.menuHeader]}
+          activeOpacity={0.7}
+         onPress={() => {
+            onClose();
+            navigation.navigate("MyServicesPage" as never);
+          }}
+        >
+          <View style={styles.menuTitleContainer}>
+            <FontAwesome5
+              name={"tools"}
+              size={18}
+              color="#232761"
+              solid
+            />
+            <Text style={styles.menuTitle}>My Services</Text>
           </View>
         </TouchableOpacity>
         <TouchableOpacity
@@ -380,16 +424,19 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.menuHeader]}
           activeOpacity={0.7}
-          onPress={() => { }}
+          onPress={() => {
+            onClose();
+            navigation.navigate("FaqsPage" as never);
+          }}
         >
           <View style={styles.menuTitleContainer}>
             <FontAwesome5
-              name={"sign-out-alt"}
+              name={"question-circle"}
               size={18}
               color="#232761"
               solid
             />
-            <Text style={styles.menuTitle}>Log Out</Text>
+            <Text style={styles.menuTitle}>FAQs</Text>
           </View>
         </TouchableOpacity>
       </View>
