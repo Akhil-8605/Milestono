@@ -1,6 +1,6 @@
 import { Alert } from "react-native"
 import axios from "axios"
-
+import { BASE_URL } from "@env"
 interface PaymentOptions {
     amount: number
     callback?: () => void
@@ -24,7 +24,6 @@ export const handlePayment = async ({
     description = "Test Transaction",
     themeColor = "#3399cc",
 }: PaymentOptions) => {
-    const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL
 
     try {
         // Create order on backend - exactly like website

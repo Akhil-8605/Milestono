@@ -5,9 +5,9 @@ type Props = {
   onFinish: () => void;
 };
 
-export default function SplashScreen2({ onFinish }: Props) {
+export default function SplashScreen1({ onFinish }: Props) {
   useEffect(() => {
-    const timer = setTimeout(onFinish, 1000); // 1 second
+    const timer = setTimeout(onFinish, 2000); // 2 seconds
     return () => clearTimeout(timer);
   }, []);
 
@@ -18,7 +18,7 @@ export default function SplashScreen2({ onFinish }: Props) {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={styles.subtitle}>MyApp</Text>
+      <Text style={styles.title}>Welcome!</Text>
     </View>
   );
 }
@@ -31,13 +31,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 80,
-    height: 80,
-    marginBottom: 12,
+    width: 120,
+    height: 120,
+    marginBottom: 16,
   },
-  subtitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#555555',
+  title: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#333333',
   },
 });

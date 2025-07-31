@@ -2,6 +2,7 @@ import React,{useState} from "react";
 import { View, Text, TouchableOpacity, FlexAlignType } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import UserModel from "./UserModel";
+import { goBack } from "expo-router/build/global-state/routing";
 function Header() {
   const [showUserModel, setShowUserModel] = useState(false);
 
@@ -9,7 +10,7 @@ function Header() {
     <>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
-          <Text style={styles.headerTitlePurple}>milestono</Text>
+          <Text style={styles.headerTitlePurple} onPress={() => goBack()}>milestono</Text>
         </Text>
 
         <View style={styles.headerActions}>

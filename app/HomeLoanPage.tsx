@@ -1,4 +1,7 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+"use client"
+
+import type React from "react"
+import { useState, useRef, useEffect } from "react"
 import {
   View,
   Text,
@@ -14,40 +17,60 @@ import {
   Animated,
   Platform,
   KeyboardAvoidingView,
-  Easing,
-  FlatList,
-  Pressable,
-  LayoutChangeEvent,
-} from "react-native";
-import {
-  Svg,
-  Path,
-  Defs,
-  LinearGradient as SvgGradient,
-  Stop,
-  Circle,
-  Rect,
-} from "react-native-svg";
-import Header from "./components/Header";
-import HomeLoanFaq from "./faqs/homeloanfaq";
-// Get screen dimensions
-const { width, height } = Dimensions.get("window");
+  type FlatList,
+  Alert,
+  ActivityIndicator,
+} from "react-native"
+import { Svg, Path } from "react-native-svg"
+import axios from "axios"
+import { BASE_URL } from "@env"
 
-// Custom Input Component
-interface CustomInputProps {
-  label?: React.ReactNode;
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder?: string;
-  keyboardType?: "default" | "numeric" | "email-address" | "phone-pad";
-  prefix?: string;
-  suffix?: string;
-  style?: object;
-  error?: string;
-  containerStyle?: object;
+import Header from "./components/Header"
+import HomeLoanFaq from "./faqs/homeloanfaq"
+
+// Get screen dimensions
+const { width, height } = Dimensions.get("window")
+
+// Types
+interface Bank {
+  id: string
+  bankName: string
+  bankImage: string
+  interestRate: number
+  processingFees: string
+  emi: string
+  maxLoanAmount: string
+  featured?: boolean
 }
 
-const CustomInput: React.FC<CustomInputProps> = ({
+interface LoanFormData {
+  propertyIdentified: string
+  propertyCity: string
+  propertyCost: string
+  employmentType: string
+  income: string
+  currentEmi: string
+  fullName: string
+  email: string
+  loanAmount: string
+  tenure: string
+  age: string
+  mobile: string
+  acceptTerms: boolean
+}
+
+const CustomInput: React.FC<{
+  label?: string
+  value: string
+  onChangeText: (text: string) => void
+  placeholder?: string
+  keyboardType?: "default" | "numeric" | "email-address" | "phone-pad"
+  prefix?: string
+  suffix?: string
+  style?: object
+  error?: string
+  containerStyle?: object
+}> = ({
   label,
   value,
   onChangeText,
@@ -59,197 +82,139 @@ const CustomInput: React.FC<CustomInputProps> = ({
   error,
   containerStyle = {},
 }) => {
-  const [isFocused, setIsFocused] = useState(false);
-  const animatedValue = useRef(new Animated.Value(0)).current;
+    const [isFocused, setIsFocused] = useState(false)
 
-  useEffect(() => {
-    Animated.timing(animatedValue, {
-      toValue: isFocused || value ? 1 : 0,
-      duration: 150,
-      useNativeDriver: false,
-    }).start();
-  }, [isFocused, value]);
+    const borderColor = error ? "#EF4444" : isFocused ? "#3B82F6" : "#E5E7EB"
 
-  const labelStyle = {
-    top: animatedValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [16, -8],
-    }),
-    fontSize: animatedValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [16, 12],
-    }),
-    color: animatedValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: ["#6B7280", "#3B82F6"],
-    }),
-  };
-
-  const borderColor = error ? "#EF4444" : isFocused ? "#3B82F6" : "#E5E7EB";
-
-  return (
-    <View style={[styles.inputContainer, containerStyle]}>
-      {label && <Text style={styles.inputLabelStatic}>{label}</Text>}
-      <View
-        style={[
-          styles.inputWrapper,
-          {
-            borderColor,
-            borderWidth: 1,
-            backgroundColor: isFocused ? "rgba(59, 130, 246, 0.05)" : "white",
-          },
-          style,
-        ]}
-      >
-        {prefix && <Text style={styles.inputPrefix}>{prefix}</Text>}
-
-        <TextInput
+    return (
+      <View style={[styles.inputContainer, containerStyle]}>
+        {label && <Text style={styles.inputLabelStatic}>{label}</Text>}
+        <View
           style={[
-            styles.input,
-            prefix ? { paddingLeft: 30 } : {},
-            suffix ? { paddingRight: 60 } : {},
+            styles.inputWrapper,
+            {
+              borderColor,
+              borderWidth: 1,
+              backgroundColor: isFocused ? "rgba(59, 130, 246, 0.05)" : "white",
+            },
+            style,
           ]}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
-          keyboardType={keyboardType}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-        />
+        >
+          {prefix && <Text style={styles.inputPrefix}>{prefix}</Text>}
 
-        {suffix && <Text style={styles.inputSuffix}>{suffix}</Text>}
+          <TextInput
+            style={[styles.input, prefix ? { paddingLeft: 30 } : {}, suffix ? { paddingRight: 60 } : {}]}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor="#9CA3AF"
+            keyboardType={keyboardType}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+          />
+
+          {suffix && <Text style={styles.inputSuffix}>{suffix}</Text>}
+        </View>
+
+        {error && <Text style={styles.inputError}>{error}</Text>}
       </View>
+    )
+  }
 
-      {error && <Text style={styles.inputError}>{error}</Text>}
-    </View>
-  );
-};
-
-// Custom Button Component
-interface CustomButtonProps {
-  title: string;
-  onPress: () => void;
-  primary?: boolean;
-  icon?: React.ReactNode;
-  style?: object;
-  disabled?: boolean;
-}
-
-const CustomButton: React.FC<CustomButtonProps> = ({
-  title,
-  onPress,
-  primary = true,
-  icon,
-  style = {},
-  disabled = false,
-}) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+const CustomButton: React.FC<{
+  title: string
+  onPress: () => void
+  primary?: boolean
+  style?: object
+  disabled?: boolean
+  loading?: boolean
+}> = ({ title, onPress, primary = true, style = {}, disabled = false, loading = false }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current
 
   const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.97,
-      friction: 8,
-      tension: 100,
-      useNativeDriver: true,
-    }).start();
-  };
+    if (!disabled && !loading) {
+      Animated.spring(scaleAnim, {
+        toValue: 0.97,
+        friction: 8,
+        tension: 100,
+        useNativeDriver: true,
+      }).start()
+    }
+  }
 
   const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 5,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
-  };
+    if (!disabled && !loading) {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 5,
+        tension: 40,
+        useNativeDriver: true,
+      }).start()
+    }
+  }
 
   return (
     <Animated.View
-      style={[
-        styles.buttonContainer,
-        { transform: [{ scale: scaleAnim }], opacity: disabled ? 0.6 : 1 },
-      ]}
+      style={[styles.buttonContainer, { transform: [{ scale: scaleAnim }], opacity: disabled || loading ? 0.6 : 1 }]}
     >
       <TouchableOpacity
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         activeOpacity={0.9}
-        disabled={disabled}
-        style={[
-          styles.button,
-          primary ? styles.primaryButton : styles.secondaryButton,
-          style,
-        ]}
+        disabled={disabled || loading}
+        style={[styles.button, primary ? styles.primaryButton : styles.secondaryButton, style]}
       >
         <View style={styles.buttonContent}>
-          {icon && <View style={styles.buttonIcon}>{icon}</View>}
-          <Text
-            style={[
-              styles.buttonText,
-              primary ? styles.primaryButtonText : styles.secondaryButtonText,
-            ]}
-          >
-            {title}
+          {loading && <ActivityIndicator size="small" color="white" style={{ marginRight: 8 }} />}
+          <Text style={[styles.buttonText, primary ? styles.primaryButtonText : styles.secondaryButtonText]}>
+            {loading ? "Loading..." : title}
           </Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
-  );
-};
-
-// Custom Dropdown Component
-interface CustomDropdownProps {
-  label?: string;
-  value: string;
-  onValueChange: (value: string) => void;
-  options: string[];
-  style?: object;
-  error?: string;
-  containerStyle?: object;
-  placeholder?: string;
+  )
 }
 
-const CustomDropdown: React.FC<CustomDropdownProps> = ({
-  label,
-  value,
-  onValueChange,
-  options,
-  style = {},
-  error,
-  containerStyle = {},
-  placeholder = "Select",
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const heightAnim = useRef(new Animated.Value(0)).current;
+const CustomDropdown: React.FC<{
+  label?: string
+  value: string
+  onValueChange: (value: string) => void
+  options: string[]
+  style?: object
+  error?: string
+  containerStyle?: object
+  placeholder?: string
+}> = ({ label, value, onValueChange, options, style = {}, error, containerStyle = {}, placeholder = "Select" }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const rotateAnim = useRef(new Animated.Value(0)).current
+  const heightAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     Animated.timing(rotateAnim, {
       toValue: isOpen ? 1 : 0,
       duration: 200,
       useNativeDriver: true,
-    }).start();
+    }).start()
 
     Animated.timing(heightAnim, {
       toValue: isOpen ? 1 : 0,
       duration: 200,
       useNativeDriver: false,
-    }).start();
-  }, [isOpen]);
+    }).start()
+  }, [isOpen])
 
   const rotate = rotateAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "180deg"],
-  });
+  })
 
   const menuHeight = heightAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, Math.min(options.length * 50, 200)],
-  });
+  })
 
-  const borderColor = error ? "#EF4444" : isOpen ? "#3B82F6" : "#E5E7EB";
+  const borderColor = error ? "#EF4444" : isOpen ? "#3B82F6" : "#E5E7EB"
 
   return (
     <View style={[styles.dropdownContainer, containerStyle]}>
@@ -268,13 +233,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         onPress={() => setIsOpen(!isOpen)}
         activeOpacity={0.9}
       >
-        <Text
-          style={[
-            styles.dropdownButtonText,
-            !value && styles.dropdownPlaceholder,
-            isOpen && { color: "#3B82F6" },
-          ]}
-        >
+        <Text style={[styles.dropdownButtonText, !value && styles.dropdownPlaceholder, isOpen && { color: "#3B82F6" }]}>
           {value || placeholder}
         </Text>
 
@@ -297,21 +256,13 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
             {options.map((option, index) => (
               <TouchableOpacity
                 key={option}
-                style={[
-                  styles.dropdownItem,
-                  index === options.length - 1 && { borderBottomWidth: 0 },
-                ]}
+                style={[styles.dropdownItem, index === options.length - 1 && { borderBottomWidth: 0 }]}
                 onPress={() => {
-                  onValueChange(option);
-                  setIsOpen(false);
+                  onValueChange(option)
+                  setIsOpen(false)
                 }}
               >
-                <Text
-                  style={[
-                    styles.dropdownItemText,
-                    value === option && styles.dropdownItemTextSelected,
-                  ]}
-                >
+                <Text style={[styles.dropdownItemText, value === option && styles.dropdownItemTextSelected]}>
                   {option}
                 </Text>
 
@@ -334,24 +285,16 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
       {error && <Text style={styles.inputError}>{error}</Text>}
     </View>
-  );
-};
-
-// Custom Checkbox Component
-interface CustomCheckboxProps {
-  checked: boolean;
-  onPress: () => void;
-  label?: React.ReactNode;
-  style?: object;
+  )
 }
 
-const CustomCheckbox: React.FC<CustomCheckboxProps> = ({
-  checked,
-  onPress,
-  label,
-  style = {},
-}) => {
-  const scaleAnim = useRef(new Animated.Value(checked ? 1 : 0)).current;
+const CustomCheckbox: React.FC<{
+  checked: boolean
+  onPress: () => void
+  label?: React.ReactNode
+  style?: object
+}> = ({ checked, onPress, label, style = {} }) => {
+  const scaleAnim = useRef(new Animated.Value(checked ? 1 : 0)).current
 
   useEffect(() => {
     Animated.spring(scaleAnim, {
@@ -359,15 +302,11 @@ const CustomCheckbox: React.FC<CustomCheckboxProps> = ({
       friction: 8,
       tension: 300,
       useNativeDriver: true,
-    }).start();
-  }, [checked]);
+    }).start()
+  }, [checked])
 
   return (
-    <TouchableOpacity
-      style={[styles.checkboxContainer, style]}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
+    <TouchableOpacity style={[styles.checkboxContainer, style]} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.checkboxWrapper}>
         <View
           style={[
@@ -388,13 +327,7 @@ const CustomCheckbox: React.FC<CustomCheckboxProps> = ({
             ]}
           >
             <Svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M5 13L9 17L19 7"
-                stroke="white"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+              <Path d="M5 13L9 17L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
             </Svg>
           </Animated.View>
         </View>
@@ -402,269 +335,242 @@ const CustomCheckbox: React.FC<CustomCheckboxProps> = ({
 
       {label && <Text style={styles.checkboxLabel}>{label}</Text>}
     </TouchableOpacity>
-  );
-};
-
-// Custom Card Component
-interface CustomCardProps {
-  children: React.ReactNode;
-  style?: object;
-  onPress?: () => void;
+  )
 }
 
-const CustomCard: React.FC<CustomCardProps> = ({
-  children,
-  style = {},
-  onPress,
-}) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+// Loan Calculator Component
+const LoanCalculator: React.FC<{
+  onCalculate: (results: { loanAmount: string; tenure: string }) => void
+}> = ({ onCalculate }) => {
+  const [age, setAge] = useState("35")
+  const [occupation, setOccupation] = useState("Salaried")
+  const [income, setIncome] = useState("100000")
+  const [existingEmi, setExistingEmi] = useState("10000")
+  const [interestRate, setInterestRate] = useState("8.5")
+  const [tenure, setTenure] = useState("20")
 
-  const handlePressIn = () => {
-    Animated.timing(scaleAnim, {
-      toValue: 0.98,
-      duration: 100,
-      useNativeDriver: true,
-    }).start();
-  };
+  const [maxLoanAmount, setMaxLoanAmount] = useState("₹0")
+  const [totalPayable, setTotalPayable] = useState("₹0")
+  const [monthlyEmi, setMonthlyEmi] = useState("₹0")
+  const [isCalculating, setIsCalculating] = useState(false)
+  const [showResults, setShowResults] = useState(false)
 
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 5,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
-  };
+  const calculateLoan = () => {
+    setIsCalculating(true)
 
-  const CardContent = () => <View style={styles.card}>{children}</View>;
+    setTimeout(() => {
+      const incomeNum = Number.parseFloat(income.replace(/,/g, ""))
+      const emiNum = Number.parseFloat(existingEmi.replace(/,/g, ""))
+      const rateNum = Number.parseFloat(interestRate)
+      const tenureNum = Number.parseFloat(tenure)
 
-  if (onPress) {
-    return (
-      <Animated.View
-        style={[
-          styles.cardShadow,
-          { transform: [{ scale: scaleAnim }] },
-          style,
-        ]}
-      >
-        <TouchableOpacity
-          activeOpacity={0.95}
-          onPress={onPress}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-        >
-          <CardContent />
-        </TouchableOpacity>
-      </Animated.View>
-    );
+      if (isNaN(incomeNum) || isNaN(emiNum) || isNaN(rateNum) || isNaN(tenureNum)) {
+        Alert.alert("Error", "Please enter valid numbers for all fields")
+        setIsCalculating(false)
+        return
+      }
+
+      const eligibleIncome = incomeNum - emiNum
+      const eligibleLoanMultiplier = 50 - Number.parseFloat(age) / 10
+      const maxLoan = eligibleIncome * eligibleLoanMultiplier
+
+      const monthlyRate = rateNum / 12 / 100
+      const totalMonths = tenureNum * 12
+      const emi =
+        (maxLoan * monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1)
+      const totalPayableAmount = emi * totalMonths
+
+      const formatCurrency = (amount: number) => {
+        if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)} Cr`
+        if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)} L`
+        return `₹${Math.round(amount).toLocaleString()}`
+      }
+
+      setMaxLoanAmount(formatCurrency(maxLoan))
+      setTotalPayable(formatCurrency(totalPayableAmount))
+      setMonthlyEmi(formatCurrency(emi))
+      setShowResults(true)
+      setIsCalculating(false)
+
+      if (onCalculate) {
+        onCalculate({
+          loanAmount: maxLoan.toString(),
+          tenure,
+        })
+      }
+    }, 1000)
   }
 
   return (
-    <View style={[styles.cardShadow, style]}>
-      <CardContent />
+    <View style={styles.calculatorSection}>
+      <View style={styles.calculatorHeader}>
+        <Text style={styles.calculatorTitle}>Calculate housing loan eligibility</Text>
+        <Text style={styles.calculatorSubtitle}>
+          Calculate your borrowing eligibility by submitting your details below
+        </Text>
+      </View>
+
+      <View style={styles.calculatorCard}>
+        <View style={styles.calculatorForm}>
+          <CustomInput label="Your Age" value={age} onChangeText={setAge} keyboardType="numeric" />
+
+          <CustomDropdown
+            label="Occupation"
+            value={occupation}
+            onValueChange={setOccupation}
+            options={["Salaried", "Self-employed", "Business"]}
+          />
+
+          <CustomInput
+            label="Net Income (₹)"
+            value={income}
+            onChangeText={setIncome}
+            keyboardType="numeric"
+            prefix="₹"
+          />
+
+          <CustomInput
+            label="Existing Monthly EMI (₹)"
+            value={existingEmi}
+            onChangeText={setExistingEmi}
+            keyboardType="numeric"
+            prefix="₹"
+          />
+
+          <View style={styles.twoColumnInputs}>
+            <CustomInput
+              label="Rate of Interest (%)"
+              value={interestRate}
+              onChangeText={setInterestRate}
+              keyboardType="numeric"
+              style={{ flex: 1, marginRight: 8 }}
+            />
+
+            <CustomInput
+              label="Tenure (Years)"
+              value={tenure}
+              onChangeText={setTenure}
+              keyboardType="numeric"
+              style={{ flex: 1, marginLeft: 8 }}
+            />
+          </View>
+
+          <CustomButton title="Calculate" onPress={calculateLoan} style={{ marginTop: 16 }} loading={isCalculating} />
+        </View>
+
+        {showResults && (
+          <View style={styles.calculatorResults}>
+            <View style={styles.resultsRow}>
+              <View style={styles.resultItem}>
+                <Text style={styles.resultLabel}>You could borrow up to:</Text>
+                <Text style={styles.resultValue}>{maxLoanAmount}</Text>
+              </View>
+
+              <View style={styles.resultItem}>
+                <Text style={styles.resultLabelGreen}>Total Payable Amount:</Text>
+                <Text style={styles.resultValueGreen}>{totalPayable}</Text>
+              </View>
+            </View>
+
+            <View style={styles.emiContainer}>
+              <Text style={styles.emiLabel}>Monthly EMI:</Text>
+              <Text style={styles.emiValue}>{monthlyEmi}</Text>
+            </View>
+
+            <CustomButton
+              title="Apply for Loan"
+              onPress={() => Alert.alert("Success", "Loan application initiated!")}
+              style={{ backgroundColor: "#10B981" }}
+            />
+          </View>
+        )}
+      </View>
     </View>
-  );
-};
+  )
+}
 
 // Banks Table Component
-const BanksTable = ({
-  onGetDeal,
-  loanAmount,
-  tenure,
-}: {
-  onGetDeal: (bankName: string) => void;
-  loanAmount: string;
-  tenure: string;
-}) => {
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const [activeIndex, setActiveIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+const BanksTable: React.FC<{
+  banks: Bank[]
+  onGetDeal: (bankName: string) => void
+  loading: boolean
+}> = ({ banks, onGetDeal, loading }) => {
+  const scrollX = useRef(new Animated.Value(0)).current
+  const [activeIndex, setActiveIndex] = useState(0)
+  const flatListRef = useRef<FlatList>(null)
 
-  const banks = [
-    {
-      id: "sbi",
-      name: "SBI",
-      logo: require("../assets/images/SBIBank.png"),
-      interestRate: 8.5,
-      processingFees: "₹3 + GST",
-      emi: calculateEMI(loanAmount, 8.5, tenure),
-      maxLoanAmount: "2000000",
-      featured: true,
-      color: "#EC4899",
-    },
-    {
-      id: "bank-of-india",
-      name: "Bank Of India",
-      logo: require("../assets/images/BOI.png"),
-      interestRate: 10,
-      processingFees: "₹10 + GST",
-      emi: calculateEMI(loanAmount, 10, tenure),
-      maxLoanAmount: "99985",
-      color: "#3B82F6",
-    },
-    {
-      id: "hdfc",
-      name: "HDFC Bank",
-      logo: require("../assets/images/hdfcbank.png"),
-      interestRate: 8.5,
-      processingFees: "₹15 + GST",
-      emi: calculateEMI(loanAmount, 8.5, tenure),
-      maxLoanAmount: "1500000",
-      color: "#8B5CF6",
-    },
-    {
-      id: "icici",
-      name: "ICICI Bank",
-      logo: require("../assets/images/ICICIBank.png"),
-      interestRate: 9,
-      processingFees: "₹12 + GST",
-      emi: calculateEMI(loanAmount, 9, tenure),
-      maxLoanAmount: "1800000",
-      color: "#6366F1",
-    },
-    {
-      id: "axis",
-      name: "Axis Bank",
-      logo: require("../assets/images/AXISBank.png"),
-      interestRate: 8.75,
-      processingFees: "₹8 + GST",
-      emi: calculateEMI(loanAmount, 8.75, tenure),
-      maxLoanAmount: "1600000",
-      color: "#0EA5E9",
-    },
-  ];
-
-  function calculateEMI(
-    principal: string,
-    rate: number,
-    years: string
-  ): string {
-    if (!principal || !rate || !years) return "₹0";
-
-    const p = parseFloat(principal.replace(/,/g, ""));
-    const r = parseFloat(rate.toString()) / 12 / 100;
-    const n = parseFloat(years) * 12;
-
-    if (isNaN(p) || isNaN(r) || isNaN(n) || r === 0 || n === 0) return "₹0";
-
-    const emi = (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-    return `₹${Math.round(emi).toLocaleString()}`;
-  }
-
-  // Auto scroll banks every 5 seconds
   useEffect(() => {
     const listener = scrollX.addListener(({ value }) => {
-      const index = Math.round(value / width);
-      setActiveIndex(index);
-    });
-
-    const autoScrollInterval = setInterval(() => {
-      if (flatListRef.current) {
-        const nextIndex = (activeIndex + 1) % banks.length;
-        flatListRef.current.scrollToIndex({
-          index: nextIndex,
-          animated: true,
-        });
-      }
-    }, 5000);
+      const index = Math.round(value / width)
+      setActiveIndex(index)
+    })
 
     return () => {
-      scrollX.removeListener(listener);
-      clearInterval(autoScrollInterval);
-    };
-  }, [activeIndex, banks.length]);
+      scrollX.removeListener(listener)
+    }
+  }, [])
 
-  const renderBankCard = ({
-    item,
-    index,
-  }: {
-    item: (typeof banks)[0];
-    index: number;
-  }) => {
-    const inputRange = [
-      (index - 1) * width,
-      index * width,
-      (index + 1) * width,
-    ];
+  const renderBankCard = ({ item, index }: { item: Bank; index: number }) => {
+    const inputRange = [(index - 1) * width, index * width, (index + 1) * width]
 
     const scale = scrollX.interpolate({
       inputRange,
       outputRange: [0.9, 1, 0.9],
       extrapolate: "clamp",
-    });
+    })
 
     const opacity = scrollX.interpolate({
       inputRange,
       outputRange: [0.6, 1, 0.6],
       extrapolate: "clamp",
-    });
-
-    const translateY = scrollX.interpolate({
-      inputRange,
-      outputRange: [20, 0, 20],
-      extrapolate: "clamp",
-    });
+    })
 
     return (
       <Animated.View
         style={[
           styles.bankCardContainer,
           {
-            transform: [{ scale }, { translateY }],
+            transform: [{ scale }],
             opacity,
           },
         ]}
       >
-        <CustomCard>
+        <View style={styles.bankCard}>
           <View style={styles.bankCardContent}>
             {item.featured && (
-              <View
-                style={[styles.featuredBadge, { backgroundColor: "#3B82F6" }]}
-              >
+              <View style={styles.featuredBadge}>
                 <Text style={styles.featuredBadgeText}>FEATURED</Text>
               </View>
             )}
 
             <View style={styles.bankCardHeader}>
-              <View
-                style={[styles.bankLogoContainer, { borderColor: "#3B82F6" }]}
-              >
-                <Image source={item.logo} style={styles.bankLogo} />
+              <View style={styles.bankLogoContainer}>
+                <Image source={{ uri: item.bankImage }} style={styles.bankLogo} />
               </View>
-              <Text style={styles.bankName}>{item.name}</Text>
+              <Text style={styles.bankName}>{item.bankName}</Text>
             </View>
 
             <View style={styles.bankDetailsGrid}>
               <View style={styles.bankDetailItem}>
                 <Text style={styles.bankDetailLabel}>Rate of interest</Text>
-                <Text style={[styles.bankDetailValue, { color: "#3B82F6" }]}>
-                  {item.interestRate}%
-                </Text>
+                <Text style={[styles.bankDetailValue, { color: "#3B82F6" }]}>{item.interestRate}%</Text>
               </View>
 
               <View style={styles.bankDetailItem}>
                 <Text style={styles.bankDetailLabel}>Processing fees</Text>
-                <Text style={styles.bankDetailValue}>
-                  {item.processingFees}
-                </Text>
+                <Text style={styles.bankDetailValue}>{item.processingFees}</Text>
               </View>
 
               <View style={styles.bankDetailItem}>
                 <Text style={styles.bankDetailLabel}>EMI</Text>
-                <Text style={[styles.bankDetailValue, { color: "#3B82F6" }]}>
-                  {item.emi}
-                </Text>
+                <Text style={[styles.bankDetailValue, { color: "#3B82F6" }]}>{item.emi}</Text>
               </View>
 
               <View style={styles.bankDetailItem}>
                 <Text style={styles.bankDetailLabel}>Max. loan amount</Text>
                 <View>
-                  <Text style={[styles.bankDetailValue, { color: "#3B82F6" }]}>
-                    ₹{parseInt(item.maxLoanAmount).toLocaleString()}
-                  </Text>
-                  <Text style={styles.bankDetailSubtext}>
-                    Loan to value ratio
-                  </Text>
+                  <Text style={[styles.bankDetailValue, { color: "#3B82F6" }]}>{item.maxLoanAmount}</Text>
+                  <Text style={styles.bankDetailSubtext}>Loan to value ratio</Text>
                 </View>
               </View>
             </View>
@@ -685,39 +591,33 @@ const BanksTable = ({
 
               <CustomButton
                 title="Get me this deal"
-                onPress={() => onGetDeal(item.name)}
-                style={{ backgroundColor: "#3B82F6" }}
+                onPress={() => onGetDeal(item.bankName)}
+                style={{ backgroundColor: "#3B82F6", flex: 1, marginLeft: 8 }}
               />
             </View>
           </View>
-        </CustomCard>
+        </View>
       </Animated.View>
-    );
-  };
+    )
+  }
 
-  const onScrollToIndexFailed = (info: {
-    index: number;
-    highestMeasuredFrameIndex: number;
-    averageItemLength: number;
-  }) => {
-    const wait = new Promise((resolve) => setTimeout(resolve, 500));
-    wait.then(() => {
-      if (flatListRef.current) {
-        flatListRef.current.scrollToIndex({
-          index: info.index,
-          animated: true,
-        });
-      }
-    });
-  };
+  if (loading) {
+    return (
+      <View style={styles.banksSection}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3B82F6" />
+          <Text style={styles.loadingText}>Loading bank offers...</Text>
+        </View>
+      </View>
+    )
+  }
 
   return (
     <View style={styles.banksSection}>
       <View style={styles.banksSectionHeader}>
         <Text style={styles.banksSectionTitle}>
-          Hi! We have{" "}
-          <Text style={{ color: "#3B82F6" }}>{banks.length} offers</Text> for
-          you to compare and choose the best
+          Hi! We have <Text style={{ color: "#3B82F6" }}>{banks.length} offers</Text> for you to compare and choose the
+          best
         </Text>
 
         <View style={styles.pagination}>
@@ -729,7 +629,7 @@ const BanksTable = ({
                   flatListRef.current.scrollToIndex({
                     index,
                     animated: true,
-                  });
+                  })
                 }
               }}
             >
@@ -737,8 +637,7 @@ const BanksTable = ({
                 style={[
                   styles.paginationDot,
                   {
-                    backgroundColor:
-                      activeIndex === index ? "#3B82F6" : "#D1D5DB",
+                    backgroundColor: activeIndex === index ? "#3B82F6" : "#D1D5DB",
                     width: activeIndex === index ? 20 : 8,
                   },
                 ]}
@@ -756,533 +655,100 @@ const BanksTable = ({
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: true }
-        )}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+          useNativeDriver: true,
+        })}
         scrollEventThrottle={16}
         contentContainerStyle={styles.banksList}
-        onScrollToIndexFailed={onScrollToIndexFailed}
       />
     </View>
-  );
-};
-
-// Loan Calculator Component with Dynamic Chart
-interface LoanCalculatorProps {
-  onCalculate: (results: { loanAmount: string; tenure: string }) => void;
+  )
 }
 
-const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onCalculate }) => {
-  const [age, setAge] = useState("35");
-  const [occupation, setOccupation] = useState("Salaried");
-  const [income, setIncome] = useState("100000");
-  const [existingEmi, setExistingEmi] = useState("10000");
-  const [interestRate, setInterestRate] = useState("8.5");
-  const [tenure, setTenure] = useState("20");
-
-  const [maxLoanAmount, setMaxLoanAmount] = useState("₹0");
-  const [totalPayable, setTotalPayable] = useState("₹0");
-  const [monthlyEmi, setMonthlyEmi] = useState("₹0");
-  interface ChartData {
-    year: number;
-    amount: number;
-    principal: number;
-    interest: number;
-  }
-
-  const [chartData, setChartData] = useState<ChartData[]>([]);
-
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const resultsAnim = useRef(new Animated.Value(0)).current;
-  const chartAnim = useRef(new Animated.Value(0)).current;
-
-  // Calculate loan whenever form values change
-  useEffect(() => {
-    if (showResults) {
-      calculateLoan();
-    }
-  }, [interestRate, tenure]);
-
-  const calculateLoan = () => {
-    setIsCalculating(true);
-
-    if (showResults) {
-      // If already showing results, just update without animation
-      updateCalculations();
-      setIsCalculating(false);
-      return;
-    }
-
-    // First time calculation with animation
-    setShowResults(false);
-
-    Animated.timing(resultsAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-
-    // Simulate calculation delay
-    setTimeout(() => {
-      updateCalculations();
-
-      setShowResults(true);
-
-      Animated.parallel([
-        Animated.timing(resultsAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(chartAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: false,
-        }),
-      ]).start();
-
-      setIsCalculating(false);
-
-      // Notify parent component
-      if (onCalculate) {
-        onCalculate({
-          loanAmount: maxLoanAmount.replace("₹", "").replace(/,/g, ""),
-          tenure,
-        });
-      }
-    }, 800);
-  };
-
-  const updateCalculations = () => {
-    const incomeNum = parseFloat(income.replace(/,/g, ""));
-    const emiNum = parseFloat(existingEmi.replace(/,/g, ""));
-    const rateNum = parseFloat(interestRate);
-    const tenureNum = parseFloat(tenure);
-
-    if (
-      isNaN(incomeNum) ||
-      isNaN(emiNum) ||
-      isNaN(rateNum) ||
-      isNaN(tenureNum)
-    ) {
-      return;
-    }
-
-    const eligibleIncome = incomeNum - emiNum;
-    const eligibleLoanMultiplier = 50 - parseFloat(age) / 10;
-    const maxLoan = eligibleIncome * eligibleLoanMultiplier;
-
-    const monthlyRate = rateNum / 12 / 100;
-    const totalMonths = tenureNum * 12;
-    const emi =
-      (maxLoan * monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) /
-      (Math.pow(1 + monthlyRate, totalMonths) - 1);
-    const totalPayableAmount = emi * totalMonths;
-
-    // Format currency values
-    const formattedMaxLoan =
-      maxLoan >= 10000000
-        ? `₹${(maxLoan / 10000000).toFixed(1)} Cr`
-        : `₹${Math.round(maxLoan).toLocaleString()}`;
-
-    const formattedTotalPayable =
-      totalPayableAmount >= 10000000
-        ? `₹${(totalPayableAmount / 10000000).toFixed(1)} Cr`
-        : `₹${Math.round(totalPayableAmount).toLocaleString()}`;
-
-    const formattedEmi =
-      emi >= 100000
-        ? `₹${(emi / 100000).toFixed(1)} L`
-        : `₹${Math.round(emi).toLocaleString()}`;
-
-    setMaxLoanAmount(formattedMaxLoan);
-    setTotalPayable(formattedTotalPayable);
-    setMonthlyEmi(formattedEmi);
-
-    // Generate chart data
-    generateChartData(maxLoan, totalPayableAmount, tenureNum);
-  };
-
-  const generateChartData = (
-    principal: number,
-    totalAmount: number,
-    years: number
-  ) => {
-    const interestAmount = totalAmount - principal;
-    const newChartData = [];
-
-    // Create data points for the chart
-    for (
-      let year = 0;
-      year <= years;
-      year += Math.max(1, Math.floor(years / 8))
-    ) {
-      const progress = year / years;
-      const remainingPrincipal = principal * (1 - progress);
-      const remainingInterest = interestAmount * (1 - Math.pow(progress, 1.5));
-      const totalRemaining = remainingPrincipal + remainingInterest;
-
-      newChartData.push({
-        year,
-        amount: totalRemaining / 1000000, // Convert to millions for better display
-        principal: remainingPrincipal / 1000000,
-        interest: remainingInterest / 1000000,
-      });
-    }
-
-    // Ensure the last point is at exactly the final year
-    if (newChartData[newChartData.length - 1].year !== years) {
-      newChartData.push({
-        year: years,
-        amount: 0,
-        principal: 0,
-        interest: 0,
-      });
-    }
-
-    setChartData(newChartData);
-  };
-
-  // Create path for chart
-  const createPath = () => {
-    if (chartData.length === 0) return "";
-
-    const maxAmount = Math.max(...chartData.map((d) => d.amount)) * 1.1;
-    let path = `M0,${200 - (chartData[0].amount * 200) / maxAmount}`;
-
-    chartData.forEach((point, index) => {
-      const x = (index * width * 0.9) / (chartData.length - 1);
-      const y = 200 - (point.amount * 200) / maxAmount;
-      path += ` L${x},${y}`;
-    });
-
-    return path;
-  };
-
-  // Create area path for chart
-  const createAreaPath = () => {
-    if (chartData.length === 0) return "";
-    let path = createPath();
-    path += ` L${width * 0.9},200 L0,200 Z`;
-    return path;
-  };
-
-  // Create principal area path
-  const createPrincipalPath = () => {
-    if (chartData.length === 0) return "";
-
-    const maxAmount = Math.max(...chartData.map((d) => d.amount)) * 1.1;
-    let path = `M0,${200 - (chartData[0].principal * 200) / maxAmount}`;
-
-    chartData.forEach((point, index) => {
-      const x = (index * width * 0.9) / (chartData.length - 1);
-      const y = 200 - (point.principal * 200) / maxAmount;
-      path += ` L${x},${y}`;
-    });
-
-    path += ` L${width * 0.9},200 L0,200 Z`;
-    return path;
-  };
-
-  const pathLength = useRef(0);
-  const setPathLength = (event: LayoutChangeEvent) => {
-    pathLength.current = event.nativeEvent.layout.width;
-  };
-
-  const animatedPathLength = chartAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
-  });
-
-  return (
-    <View style={styles.calculatorSection}>
-      <View style={styles.calculatorHeader}>
-        <Text style={styles.calculatorTitle}>
-          Calculate housing loan eligibility
-        </Text>
-        <Text style={styles.calculatorSubtitle}>
-          Calculate your borrowing eligibility by submitting your details below
-        </Text>
-      </View>
-
-      <CustomCard>
-        <View style={styles.calculatorContent}>
-          <View style={styles.calculatorForm}>
-            <CustomInput
-              label="Your Age"
-              value={age}
-              onChangeText={setAge}
-              keyboardType="numeric"
-            />
-
-            <CustomDropdown
-              label="Occupation"
-              value={occupation}
-              onValueChange={setOccupation}
-              options={["Salaried", "Self-employed", "Business"]}
-            />
-
-            <CustomInput
-              label="Net Income (₹)"
-              value={income}
-              onChangeText={setIncome}
-              keyboardType="numeric"
-              prefix="₹"
-            />
-
-            <CustomInput
-              label="Existing Monthly EMI (₹)"
-              value={existingEmi}
-              onChangeText={setExistingEmi}
-              keyboardType="numeric"
-              prefix="₹"
-            />
-
-            <View style={styles.twoColumnInputs}>
-              <CustomInput
-                label="Rate of Interest (%)"
-                value={interestRate}
-                onChangeText={setInterestRate}
-                keyboardType="numeric"
-                style={{ flex: 1, marginRight: 8 }}
-              />
-
-              <CustomInput
-                label="Tenure (Years)"
-                value={tenure}
-                onChangeText={setTenure}
-                keyboardType="numeric"
-                style={{ flex: 1, marginLeft: 8 }}
-              />
-            </View>
-
-            <CustomButton
-              title={isCalculating ? "Calculating..." : "Calculate"}
-              onPress={calculateLoan}
-              style={{ marginTop: 16 }}
-              disabled={isCalculating}
-            />
-          </View>
-
-          <View style={styles.calculatorResults}>
-            <View style={styles.chartContainer}>
-              <Svg height="200" width="100%" onLayout={setPathLength}>
-                <Defs>
-                  <SvgGradient
-                    id="principalGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <Stop offset="0%" stopColor="rgba(59, 130, 246, 0.8)" />
-                    <Stop offset="100%" stopColor="rgba(59, 130, 246, 0.2)" />
-                  </SvgGradient>
-                  <SvgGradient
-                    id="interestGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <Stop offset="0%" stopColor="rgba(236, 72, 153, 0.6)" />
-                    <Stop offset="100%" stopColor="rgba(236, 72, 153, 0.1)" />
-                  </SvgGradient>
-                </Defs>
-
-                {/* Principal area */}
-                <Path
-                  d={createPrincipalPath()}
-                  fill="url(#principalGradient)"
-                  opacity={
-                    chartAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 1],
-                    }) as unknown as number
-                  }
-                />
-
-                {/* Total area */}
-                <Path
-                  d={createAreaPath()}
-                  fill="url(#interestGradient)"
-                  opacity={chartAnim as unknown as number}
-                />
-
-                {/* Chart line */}
-                <Path
-                  d={createPath()}
-                  stroke="#3B82F6"
-                  strokeWidth="3"
-                  fill="none"
-                  strokeDasharray={pathLength.current}
-                  strokeDashoffset={
-                    animatedPathLength.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [pathLength.current, 0],
-                    }) as unknown as number
-                  }
-                />
-
-                {/* Data points */}
-                {chartData.map((point, index) => {
-                  const maxAmount =
-                    Math.max(...chartData.map((d) => d.amount)) * 1.1;
-                  const x = (index * width * 0.9) / (chartData.length - 1);
-                  const y = 200 - (point.amount * 200) / maxAmount;
-
-                  return (
-                    <Circle
-                      key={index}
-                      cx={x}
-                      cy={y}
-                      r={4}
-                      fill="white"
-                      stroke="#3B82F6"
-                      strokeWidth="2"
-                      opacity={chartAnim as unknown as number}
-                    />
-                  );
-                })}
-              </Svg>
-
-              {/* X-axis labels */}
-              <View style={styles.chartXAxis}>
-                {chartData.length > 0 &&
-                  chartData
-                    .filter((_, i) => i % 2 === 0 || i === chartData.length - 1)
-                    .map((point, index) => (
-                      <Animated.Text
-                        key={index}
-                        style={[styles.chartXLabel, { opacity: chartAnim }]}
-                      >
-                        {point.year} yrs
-                      </Animated.Text>
-                    ))}
-              </View>
-
-              {/* Chart legend */}
-              {showResults && (
-                <View style={styles.chartLegend}>
-                  <View style={styles.legendItem}>
-                    <View
-                      style={[
-                        styles.legendColor,
-                        { backgroundColor: "#3B82F6" },
-                      ]}
-                    />
-                    <Text style={styles.legendText}>Principal</Text>
-                  </View>
-                  <View style={styles.legendItem}>
-                    <View
-                      style={[
-                        styles.legendColor,
-                        { backgroundColor: "#EC4899" },
-                      ]}
-                    />
-                    <Text style={styles.legendText}>Interest</Text>
-                  </View>
-                </View>
-              )}
-            </View>
-
-            <Animated.View
-              style={[
-                styles.resultsContainer,
-                {
-                  opacity: resultsAnim,
-                  transform: [
-                    {
-                      translateY: resultsAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [20, 0],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              <View style={styles.resultsRow}>
-                <View style={styles.resultItem}>
-                  <Text style={styles.resultLabel}>
-                    You could borrow up to:
-                  </Text>
-                  <Text style={styles.resultValue}>{maxLoanAmount}</Text>
-                </View>
-
-                <View style={styles.resultItem}>
-                  <Text style={styles.resultLabelGreen}>
-                    Total Payable Amount:
-                  </Text>
-                  <Text style={styles.resultValueGreen}>{totalPayable}</Text>
-                </View>
-              </View>
-
-              <View style={styles.emiContainer}>
-                <Text style={styles.emiLabel}>Monthly EMI:</Text>
-                <Text style={styles.emiValue}>{monthlyEmi}</Text>
-              </View>
-
-              <CustomButton
-                title="Apply for Loan"
-                onPress={() => {}}
-                style={{ backgroundColor: "#10B981" }}
-              />
-            </Animated.View>
-          </View>
-        </View>
-      </CustomCard>
-    </View>
-  );
-};
-
 // Main Component
-const HomeLoanPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loanAmount, setLoanAmount] = useState("300000");
-  const [tenure, setTenure] = useState("20");
-  const [age, setAge] = useState("35");
-  const [selectedBank, setSelectedBank] = useState<string | null>(null);
-  const [termsAccepted, setTermsAccepted] = useState(true);
+const HomeLoanPage: React.FC = () => {
+
+  const [banks, setBanks] = useState<Bank[]>([])
+  const [banksLoading, setBanksLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [loanAmount, setLoanAmount] = useState("300000")
+  const [tenure, setTenure] = useState("20")
+  const [age, setAge] = useState("35")
+  const [selectedBank, setSelectedBank] = useState<string | null>(null)
+  const [formSubmitting, setFormSubmitting] = useState(false)
 
   // Form state for modal
-  const [propertyIdentified, setPropertyIdentified] = useState("");
-  const [propertyCity, setPropertyCity] = useState("Delhi");
-  const [propertyCost, setPropertyCost] = useState("37,50,000");
-  const [employment, setEmployment] = useState("Salaried");
-  const [income, setIncome] = useState("1,00,000");
-  const [currentEmi, setCurrentEmi] = useState("10,000");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [mobile, setMobile] = useState("");
+  const [formData, setFormData] = useState<LoanFormData>({
+    propertyIdentified: "",
+    propertyCity: "Delhi",
+    propertyCost: "37,50,000",
+    employmentType: "Salaried",
+    income: "1,00,000",
+    currentEmi: "10,000",
+    fullName: "",
+    email: "",
+    loanAmount: "",
+    tenure: "",
+    age: "",
+    mobile: "",
+    acceptTerms: false,
+  })
 
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const modalScaleAnim = useRef(new Animated.Value(0)).current;
-  const modalBackdropAnim = useRef(new Animated.Value(0)).current;
+  const scrollY = useRef(new Animated.Value(0)).current
+  const modalScaleAnim = useRef(new Animated.Value(0)).current
+  const modalBackdropAnim = useRef(new Animated.Value(0)).current
+
+  // Fetch banks data
+  const fetchBanks = async () => {
+    try {
+      setBanksLoading(true)
+      const response = await axios.get(`${BASE_URL}/api/bank`)
+
+      if (response.data && Array.isArray(response.data)) {
+        setBanks(response.data)
+      } else {
+        throw new Error("Invalid response format")
+      }
+    } catch (error) {
+      console.error("Error fetching banks:", error)
+      Alert.alert("Error", "Failed to load bank offers. Please try again later.")
+      // Fallback to mock data
+    } finally {
+      setBanksLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchBanks()
+  }, [])
 
   // Animated values for hero section
   const heroOpacity = scrollY.interpolate({
     inputRange: [0, 200],
     outputRange: [1, 0.3],
     extrapolate: "clamp",
-  });
+  })
 
   const heroScale = scrollY.interpolate({
     inputRange: [0, 200],
     outputRange: [1, 0.95],
     extrapolate: "clamp",
-  });
+  })
 
   const heroTranslateY = scrollY.interpolate({
     inputRange: [0, 200],
     outputRange: [0, -30],
     extrapolate: "clamp",
-  });
+  })
 
   const handleGetStarted = () => {
-    setIsModalOpen(true);
+    setFormData({
+      ...formData,
+      loanAmount,
+      tenure,
+      age,
+    })
+    setIsModalOpen(true)
     Animated.parallel([
       Animated.spring(modalScaleAnim, {
         toValue: 1,
@@ -1295,12 +761,18 @@ const HomeLoanPage = () => {
         duration: 300,
         useNativeDriver: true,
       }),
-    ]).start();
-  };
+    ]).start()
+  }
 
   const handleGetDeal = (bankName: string) => {
-    setSelectedBank(bankName);
-    setIsModalOpen(true);
+    setSelectedBank(bankName)
+    setFormData({
+      ...formData,
+      loanAmount,
+      tenure,
+      age,
+    })
+    setIsModalOpen(true)
     Animated.parallel([
       Animated.spring(modalScaleAnim, {
         toValue: 1,
@@ -1313,8 +785,8 @@ const HomeLoanPage = () => {
         duration: 300,
         useNativeDriver: true,
       }),
-    ]).start();
-  };
+    ]).start()
+  }
 
   const closeModal = () => {
     Animated.parallel([
@@ -1329,37 +801,82 @@ const HomeLoanPage = () => {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      setIsModalOpen(false);
-    });
-  };
+      setIsModalOpen(false)
+      setSelectedBank(null)
+    })
+  }
 
-  const handleCalculatorResults = (results: {
-    loanAmount: string;
-    tenure: string;
-  }) => {
+  const handleSubmit = async () => {
+    try {
+      if (!formData.acceptTerms) {
+        Alert.alert("Error", "You must accept the terms and conditions.")
+        return
+      }
+
+      if (!formData.fullName || !formData.email || !formData.mobile) {
+        Alert.alert("Error", "Please fill in all required fields.")
+        return
+      }
+
+      setFormSubmitting(true)
+      await axios.post(`${BASE_URL}/api/bank-users`, formData)
+
+      Alert.alert("Success", "Form submitted successfully!", [
+        {
+          text: "OK",
+          onPress: () => {
+            setFormData({
+              propertyIdentified: "",
+              propertyCity: "Delhi",
+              propertyCost: "37,50,000",
+              employmentType: "Salaried",
+              income: "1,00,000",
+              currentEmi: "10,000",
+              fullName: "",
+              email: "",
+              loanAmount: "",
+              tenure: "",
+              age: "",
+              mobile: "",
+              acceptTerms: false,
+            })
+            closeModal()
+          },
+        },
+      ])
+    } catch (error) {
+      console.error("Error submitting form:", error)
+      Alert.alert("Error", "An error occurred while submitting the form. Please try again later.")
+    } finally {
+      setFormSubmitting(false)
+    }
+  }
+
+  const handleCalculatorResults = (results: { loanAmount: string; tenure: string }) => {
     if (results && results.loanAmount) {
-      setLoanAmount(results.loanAmount);
+      setLoanAmount(results.loanAmount)
     }
     if (results && results.tenure) {
-      setTenure(results.tenure);
+      setTenure(results.tenure)
     }
-  };
+  }
 
-  const statusBarHeight = StatusBar.currentHeight || 0;
+  const statusBarHeight = StatusBar.currentHeight || 0
 
   return (
-    <SafeAreaView style={[styles.container, {marginTop: statusBarHeight }]}>
-      {/* Header */}
+    <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f5f7fa" />
+
+      {/* Add Header here */}
       <Header />
 
       <Animated.ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollViewContent}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
-        )}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: true,
+        })}
         scrollEventThrottle={16}
       >
         {/* Hero Section */}
@@ -1372,86 +889,56 @@ const HomeLoanPage = () => {
             },
           ]}
         >
-          <View style={styles.heroGradient}>
-            <View style={styles.heroContent}>
-              <View style={styles.heroTextContainer}>
-                <Text style={styles.heroTitle}>
-                  Let's find you the best{"\n"}
-                  <Text style={styles.heroTitleHighlight}>home loan</Text> deal.
-                </Text>
-                <Text style={styles.heroSubtitle}>
-                  Compare rates from top banks and find your perfect match
-                </Text>
+          <View style={styles.heroContent}>
+            <View style={styles.heroTextContainer}>
+              <Text style={styles.heroTitle}>
+                Let's find you the best{"\n"}
+                <Text style={styles.heroTitleHighlight}>home loan</Text> deal.
+              </Text>
+              <Text style={styles.heroSubtitle}>Compare rates from top banks and find your perfect match</Text>
+            </View>
+
+            <View style={styles.heroFormCard}>
+              <View style={styles.heroForm}>
+                <CustomInput
+                  label="Loan amount"
+                  value={loanAmount}
+                  onChangeText={setLoanAmount}
+                  keyboardType="numeric"
+                  prefix="₹"
+                />
+
+                <CustomInput
+                  label="Tenure"
+                  value={tenure}
+                  onChangeText={setTenure}
+                  keyboardType="numeric"
+                  suffix="Years"
+                />
+
+                <CustomInput label="Your Age" value={age} onChangeText={setAge} keyboardType="numeric" suffix="Years" />
+
+                <CustomButton title="Let's get started" onPress={handleGetStarted} style={{ marginTop: 16 }} />
               </View>
-
-              <CustomCard style={styles.heroFormCard}>
-                <View style={styles.heroForm}>
-                  <CustomInput
-                    label="Loan amount"
-                    value={loanAmount}
-                    onChangeText={setLoanAmount}
-                    keyboardType="numeric"
-                    prefix="₹"
-                  />
-
-                  <CustomInput
-                    label="Tenure"
-                    value={tenure}
-                    onChangeText={setTenure}
-                    keyboardType="numeric"
-                    suffix="Years"
-                  />
-
-                  <CustomInput
-                    label="Your Age"
-                    value={age}
-                    onChangeText={setAge}
-                    keyboardType="numeric"
-                    suffix="Years"
-                  />
-
-                  <CustomButton
-                    title="Let's get started"
-                    onPress={handleGetStarted}
-                    style={{ marginTop: 16 }}
-                  />
-                </View>
-              </CustomCard>
             </View>
           </View>
         </Animated.View>
 
         {/* Banks Section */}
-        <BanksTable
-          onGetDeal={handleGetDeal}
-          loanAmount={loanAmount}
-          tenure={tenure}
-        />
+        <BanksTable banks={banks} onGetDeal={handleGetDeal} loading={banksLoading} />
 
         {/* Loan Calculator Section */}
         <LoanCalculator onCalculate={handleCalculatorResults} />
+
+        {/* FAQ Section - Replace <FAQSection /> with: */}
         <HomeLoanFaq />
       </Animated.ScrollView>
 
       {/* Modal */}
-      <Modal
-        visible={isModalOpen}
-        transparent={true}
-        animationType="none"
-        onRequestClose={closeModal}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.modalContainer}
-        >
-          <Animated.View
-            style={[styles.modalOverlay, { opacity: modalBackdropAnim }]}
-          >
-            <TouchableOpacity
-              style={{ flex: 1 }}
-              activeOpacity={1}
-              onPress={closeModal}
-            />
+      <Modal visible={isModalOpen} transparent={true} animationType="none" onRequestClose={closeModal}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.modalContainer}>
+          <Animated.View style={[styles.modalOverlay, { opacity: modalBackdropAnim }]}>
+            <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={closeModal} />
           </Animated.View>
 
           <Animated.View
@@ -1472,14 +959,10 @@ const HomeLoanPage = () => {
           >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                We just need a few details to match you with the right home loan
-                product
+                We just need a few details to match you with the right home loan product
+                {selectedBank && ` from ${selectedBank}`}
               </Text>
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={closeModal}
-                activeOpacity={0.8}
-              >
+              <TouchableOpacity style={styles.modalCloseButton} onPress={closeModal} activeOpacity={0.8}>
                 <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <Path
                     d="M18 6L6 18M6 6L18 18"
@@ -1492,137 +975,121 @@ const HomeLoanPage = () => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.modalBodyContent}
-            >
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.modalBodyContent}>
               <View style={styles.modalFormGrid}>
                 <CustomInput
                   label="Loan amount"
-                  value={loanAmount}
-                  onChangeText={setLoanAmount}
+                  value={formData.loanAmount}
+                  onChangeText={(text) => setFormData({ ...formData, loanAmount: text })}
                   keyboardType="numeric"
                   prefix="₹"
                   containerStyle={styles.modalFormItem}
-                  placeholder=""
                 />
 
                 <CustomInput
                   label="Tenure"
-                  value={tenure}
-                  onChangeText={setTenure}
+                  value={formData.tenure}
+                  onChangeText={(text) => setFormData({ ...formData, tenure: text })}
                   keyboardType="numeric"
                   suffix="Years"
                   containerStyle={styles.modalFormItem}
-                  placeholder=""
                 />
 
                 <CustomInput
                   label="Your Age"
-                  value={age}
-                  onChangeText={setAge}
+                  value={formData.age}
+                  onChangeText={(text) => setFormData({ ...formData, age: text })}
                   keyboardType="numeric"
                   suffix="Years"
                   containerStyle={styles.modalFormItem}
-                  placeholder=""
                 />
 
                 <CustomDropdown
                   label="Is your property identified"
-                  value={propertyIdentified}
-                  onValueChange={setPropertyIdentified}
+                  value={formData.propertyIdentified}
+                  onValueChange={(value) => setFormData({ ...formData, propertyIdentified: value })}
                   options={["Yes", "No"]}
                   containerStyle={styles.modalFormItem}
-                  placeholder="Select"
                 />
 
                 <CustomInput
                   label="Property city"
-                  value={propertyCity}
-                  onChangeText={setPropertyCity}
+                  value={formData.propertyCity}
+                  onChangeText={(text) => setFormData({ ...formData, propertyCity: text })}
                   containerStyle={styles.modalFormItem}
-                  placeholder="Delhi"
                 />
 
                 <CustomInput
                   label="Property Cost"
-                  value={propertyCost}
-                  onChangeText={setPropertyCost}
+                  value={formData.propertyCost}
+                  onChangeText={(text) => setFormData({ ...formData, propertyCost: text })}
                   prefix="₹"
                   keyboardType="numeric"
                   containerStyle={styles.modalFormItem}
-                  placeholder="37,50,000"
                 />
 
                 <CustomDropdown
                   label="How are you currently employed"
-                  value={employment}
-                  onValueChange={setEmployment}
+                  value={formData.employmentType}
+                  onValueChange={(value) => setFormData({ ...formData, employmentType: value })}
                   options={["Salaried", "Self Employed", "Business"]}
                   containerStyle={styles.modalFormItem}
-                  placeholder="Salaried"
                 />
 
                 <CustomInput
                   label="Your income"
-                  value={income}
-                  onChangeText={setIncome}
+                  value={formData.income}
+                  onChangeText={(text) => setFormData({ ...formData, income: text })}
                   prefix="₹"
                   keyboardType="numeric"
                   suffix="Monthly"
                   containerStyle={styles.modalFormItem}
-                  placeholder="1,00,000"
                 />
 
                 <CustomInput
                   label="Current total EMI"
-                  value={currentEmi}
-                  onChangeText={setCurrentEmi}
+                  value={formData.currentEmi}
+                  onChangeText={(text) => setFormData({ ...formData, currentEmi: text })}
                   prefix="₹"
                   keyboardType="numeric"
                   suffix="Monthly"
                   containerStyle={styles.modalFormItem}
-                  placeholder="10,000"
                 />
 
                 <CustomInput
                   label="Full Name (as per PAN)"
-                  value={fullName}
-                  onChangeText={setFullName}
+                  value={formData.fullName}
+                  onChangeText={(text) => setFormData({ ...formData, fullName: text })}
                   containerStyle={styles.modalFormItemFull}
-                  placeholder="Enter your full name"
                 />
 
                 <CustomInput
                   label="Your Email Id"
-                  value={email}
-                  onChangeText={setEmail}
+                  value={formData.email}
+                  onChangeText={(text) => setFormData({ ...formData, email: text })}
                   keyboardType="email-address"
                   containerStyle={styles.modalFormItemFull}
-                  placeholder="Enter your email"
                 />
 
                 <CustomInput
                   label="Mobile Number(OTP verification req)"
-                  value={mobile}
-                  onChangeText={setMobile}
+                  value={formData.mobile}
+                  onChangeText={(text) => setFormData({ ...formData, mobile: text })}
                   keyboardType="phone-pad"
                   containerStyle={styles.modalFormItemFull}
-                  placeholder="Enter your mobile number"
                 />
               </View>
 
               <View style={styles.termsContainer}>
                 <CustomCheckbox
-                  checked={termsAccepted}
-                  onPress={() => setTermsAccepted(!termsAccepted)}
+                  checked={formData.acceptTerms}
+                  onPress={() => setFormData({ ...formData, acceptTerms: !formData.acceptTerms })}
                   label={
                     <Text style={styles.termsText}>
-                      I authorize Milestono.com relevant loan providers and
-                      their representatives to call, SMS or email me with
-                      reference to the application & accept Milestono "
-                      <Text style={styles.termsLink}>Terms & Conditions</Text>
-                      ". This consent shall override any DNC/NDNC registration.
+                      I authorize Milestono.com relevant loan providers and their representatives to call, SMS or email
+                      me with reference to the application & accept Milestono "
+                      <Text style={styles.termsLink}>Terms & Conditions</Text>". This consent shall override any
+                      DNC/NDNC registration.
                     </Text>
                   }
                 />
@@ -1631,67 +1098,27 @@ const HomeLoanPage = () => {
               <CustomButton
                 title="Submit Details"
                 style={styles.submitButton}
-                onPress={() => {
-                  closeModal();
-                }}
+                onPress={handleSubmit}
+                loading={formSubmitting}
               />
 
               <Text style={styles.privacyText}>
-                *Please note that our{" "}
-                <Text style={styles.privacyLink}>privacy policy</Text> does not
-                govern the use of your data by financial institutions once it is
-                shared. For more information, please refer the privacy policy of
-                related concerned bank.
+                *Please note that our <Text style={styles.privacyLink}>privacy policy</Text> does not govern the use of
+                your data by financial institutions once it is shared. For more information, please refer the privacy
+                policy of related concerned bank.
               </Text>
             </ScrollView>
           </Animated.View>
         </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f7fa",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#FFFFFF",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    zIndex: 10,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  headerTitleBlue: {
-    color: "#3B82F6",
-  },
-  headerTitlePurple: {
-    color: "#8B5CF6",
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  headerButton: {
-    marginLeft: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(59, 130, 246, 0.1)",
   },
   scrollView: {
     flex: 1,
@@ -1699,15 +1126,23 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     paddingBottom: 40,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6B7280",
+  },
+
   // Hero Section
   heroSection: {
-    width: "100%",
     backgroundColor: "#F3F4F6",
-  },
-  heroGradient: {
     paddingTop: 30,
     paddingBottom: 40,
-    position: "relative",
   },
   heroContent: {
     paddingHorizontal: 16,
@@ -1732,19 +1167,16 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   heroFormCard: {
+    backgroundColor: "white",
     borderRadius: 16,
-    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
   },
   heroForm: {
     padding: 20,
-  },
-  heroImageContainer: {
-    alignItems: "center",
-    marginTop: 20,
-  },
-  heroImage: {
-    width: width * 0.9,
-    height: 200,
   },
 
   // Banks Section
@@ -1780,6 +1212,15 @@ const styles = StyleSheet.create({
     width: width * 0.9,
     paddingHorizontal: 10,
   },
+  bankCard: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
   bankCardContent: {
     padding: 16,
   },
@@ -1787,6 +1228,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 12,
     right: 12,
+    backgroundColor: "#3B82F6",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
@@ -1809,6 +1251,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   bankLogo: {
     width: "100%",
@@ -1879,15 +1323,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
   },
-  calculatorContent: {
+  calculatorCard: {
+    backgroundColor: "white",
     borderRadius: 16,
-    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
   },
   calculatorForm: {
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
   },
   twoColumnInputs: {
     flexDirection: "row",
@@ -1895,43 +1343,6 @@ const styles = StyleSheet.create({
   },
   calculatorResults: {
     padding: 16,
-    backgroundColor: "#FFFFFF",
-  },
-  chartContainer: {
-    height: 200,
-    marginBottom: 20,
-  },
-  chartXAxis: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-  chartXLabel: {
-    fontSize: 10,
-    color: "#6B7280",
-  },
-  chartLegend: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 8,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: 8,
-  },
-  legendColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 4,
-  },
-  legendText: {
-    fontSize: 12,
-    color: "#6B7280",
-  },
-  resultsContainer: {
-    marginTop: 16,
   },
   resultsRow: {
     flexDirection: "row",
@@ -1980,22 +1391,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#3B82F6",
-  },
-
-  // Card Components
-  cardShadow: {
-    borderRadius: 16,
-    backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  card: {
-    borderRadius: 16,
-    overflow: "hidden",
-    backgroundColor: "#FFFFFF",
   },
 
   // Input Components
@@ -2135,9 +1530,6 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: "#374151",
   },
-  buttonIcon: {
-    marginRight: 8,
-  },
 
   // Checkbox Components
   checkboxContainer: {
@@ -2206,9 +1598,6 @@ const styles = StyleSheet.create({
   modalCloseButton: {
     padding: 4,
   },
-  modalBody: {
-    flex: 1,
-  },
   modalBodyContent: {
     padding: 16,
   },
@@ -2253,6 +1642,6 @@ const styles = StyleSheet.create({
     color: "#3B82F6",
     textDecorationLine: "underline",
   },
-});
+})
 
 export default HomeLoanPage;

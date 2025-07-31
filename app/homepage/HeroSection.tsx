@@ -280,10 +280,6 @@ const HeroSection: React.FC = () => {
       <MenuModal
         isVisible={isMenuVisible}
         onClose={() => setIsMenuVisible(false)}
-        isAuthenticated={isAuthenticated}
-        userFullName={userData.userFullName}
-        onLogout={handleLogout}
-        onLogin={handleLogin}
       />
     </View>
   )

@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation } from "expo-router";
+import { goBack } from "expo-router/build/global-state/routing";
 
 interface Form1Props {
   formData: any;
@@ -201,7 +202,7 @@ const Form1: React.FC<Form1Props> = ({
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate("index" as never);
+              goBack()
             }}
           >
             <Text style={styles.arrow}>←</Text>

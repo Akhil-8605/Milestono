@@ -24,6 +24,7 @@ import { useRouter } from "expo-router"
 import axios from "axios"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { handlePayment } from "./Payment"
+import { BASE_URL } from "@env"
 
 const { width, height } = Dimensions.get("window")
 
@@ -223,7 +224,6 @@ const shieldSvg = `
 `
 
 const PremiumAccountPage: React.FC = () => {
-  const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL || "https://your-api-url.com"
 
   const [plans, setPlans] = useState(PLANS)
   const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "yearly">("monthly")

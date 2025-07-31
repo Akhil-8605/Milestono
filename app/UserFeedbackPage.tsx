@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client"
+
+import { useState, useEffect, useCallback, useRef } from "react"
 import {
   View,
   Text,
@@ -7,246 +9,48 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
-  Dimensions,
   StatusBar,
   Image,
-  Platform,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
-import { Star } from "react-native-feather";
-import Header from "./components/Header";
+  Alert,
+  ActivityIndicator,
+  RefreshControl,
+} from "react-native"
+import { LinearGradient } from "expo-linear-gradient"
+import { Star } from "react-native-feather"
+import * as Animatable from "react-native-animatable"
+import axios from "axios"
+import Header from "./components/Header"
+import { BASE_URL } from "@env"
 
 type Feedback = {
-  id: number;
-  message: string;
-  user: string;
-  position: string;
-  rating: number;
-  date: string;
-  verified: boolean;
-};
+  _id: string
+  id?: number
+  message: string
+  user: string
+  position: string
+  rating: number
+  date: string
+  verified: boolean
+}
 
-const feedbacks: Feedback[] = [
-  {
-    id: 1,
-    message:
-      "Milestono has transformed how we manage our projects. The interface is intuitive and the support team is exceptional.",
-    user: "Vijay Kumar",
-    position: "Project Manager",
-    rating: 5,
-    date: "2025-01-25",
-    verified: true,
-  },
-  {
-    id: 2,
-    message:
-      "Great Service! The team went above and beyond to ensure our needs were met. Highly satisfied with the results.",
-    user: "Rahul Singh",
-    position: "CEO",
-    rating: 4,
-    date: "2025-02-01",
-    verified: true,
-  },
-  {
-    id: 3,
-    message:
-      "Highly recommended! The platform is robust and reliable. It has significantly improved our workflow efficiency.",
-    user: "Sneha Patel",
-    position: "Tech Lead",
-    rating: 5,
-    date: "2025-02-05",
-    verified: false,
-  },
-  {
-    id: 4,
-    message:
-      "The user interface is clean and easy to navigate. I appreciate the detailed analytics provided.",
-    user: "Arjun Mehta",
-    position: "Data Analyst",
-    rating: 4,
-    date: "2025-02-10",
-    verified: true,
-  },
-  {
-    id: 5,
-    message:
-      "Customer support was prompt and very helpful. It really made a difference.",
-    user: "Priya Sharma",
-    position: "Operations Manager",
-    rating: 5,
-    date: "2025-02-12",
-    verified: true,
-  },
-  {
-    id: 6,
-    message:
-      "I have seen a noticeable improvement in our project timelines since we started using Milestono.",
-    user: "Rahul Verma",
-    position: "Team Lead",
-    rating: 4,
-    date: "2025-02-15",
-    verified: false,
-  },
-  {
-    id: 7,
-    message:
-      "The integration with our existing tools was seamless. Kudos to the development team!",
-    user: "Anita Desai",
-    position: "CTO",
-    rating: 5,
-    date: "2025-02-18",
-    verified: true,
-  },
-  {
-    id: 8,
-    message:
-      "A game changer for our company. It simplifies complex workflows effortlessly.",
-    user: "Suresh Nair",
-    position: "Project Coordinator",
-    rating: 5,
-    date: "2025-02-20",
-    verified: false,
-  },
-  {
-    id: 9,
-    message:
-      "The app's performance is smooth even with heavy usage. Highly commendable!",
-    user: "Deepa Iyer",
-    position: "Software Engineer",
-    rating: 4,
-    date: "2025-02-22",
-    verified: true,
-  },
-  {
-    id: 10,
-    message:
-      "I love the intuitive design and how it keeps our team on track with their tasks.",
-    user: "Karan Kapoor",
-    position: "Product Manager",
-    rating: 5,
-    date: "2025-02-25",
-    verified: true,
-  },
-  {
-    id: 11,
-    message:
-      "The update really improved the navigation and overall user experience.",
-    user: "Neha Gupta",
-    position: "UX Designer",
-    rating: 4,
-    date: "2025-03-01",
-    verified: true,
-  },
-  {
-    id: 12,
-    message:
-      "Great app with excellent features. It really stands out in the market.",
-    user: "Rohit Singh",
-    position: "Marketing Head",
-    rating: 5,
-    date: "2025-03-03",
-    verified: false,
-  },
-  {
-    id: 13,
-    message:
-      "The system is reliable and has drastically reduced our project delays.",
-    user: "Manisha Rao",
-    position: "Operations Director",
-    rating: 5,
-    date: "2025-03-05",
-    verified: true,
-  },
-  {
-    id: 14,
-    message:
-      "I appreciate the regular updates and new features being added consistently.",
-    user: "Amitabh Joshi",
-    position: "CTO",
-    rating: 4,
-    date: "2025-03-07",
-    verified: true,
-  },
-  {
-    id: 15,
-    message:
-      "A very user-friendly platform that simplifies project management.",
-    user: "Shalini Kapoor",
-    position: "Project Coordinator",
-    rating: 4,
-    date: "2025-03-09",
-    verified: false,
-  },
-  {
-    id: 16,
-    message:
-      "The analytics dashboard provides insights that are critical for decision-making.",
-    user: "Rakesh Kumar",
-    position: "Data Scientist",
-    rating: 5,
-    date: "2025-03-10",
-    verified: true,
-  },
-  {
-    id: 17,
-    message:
-      "Our team productivity has seen a significant boost thanks to this platform.",
-    user: "Simran Kaur",
-    position: "Team Lead",
-    rating: 5,
-    date: "2025-03-12",
-    verified: true,
-  },
-  {
-    id: 18,
-    message:
-      "The platform is very intuitive, and the learning curve was minimal.",
-    user: "Vikram Singh",
-    position: "Senior Developer",
-    rating: 4,
-    date: "2025-03-14",
-    verified: true,
-  },
-  {
-    id: 19,
-    message: "Impressive customer service and the platform works flawlessly.",
-    user: "Pooja Patel",
-    position: "Operations Manager",
-    rating: 5,
-    date: "2025-03-15",
-    verified: true,
-  },
-  {
-    id: 20,
-    message:
-      "It has become an essential tool for our daily operations. Highly recommended!",
-    user: "Aditya Verma",
-    position: "CEO",
-    rating: 5,
-    date: "2025-03-17",
-    verified: true,
-  },
-];
-
-const ITEMS_PER_PAGE_OPTIONS: (number | "All")[] = [4, 10, 20, "All"];
+const ITEMS_PER_PAGE_OPTIONS: (number | "All")[] = [4, 10, 20, "All"]
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffTime = Math.abs(now.getTime() - date.getTime())
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
   if (diffDays <= 7) {
-    return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
+    return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`
   } else {
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    });
+    })
   }
-};
+}
 
 const renderRating = (rating: number) => {
   return (
@@ -262,12 +66,15 @@ const renderRating = (rating: number) => {
         />
       ))}
     </View>
-  );
-};
+  )
+}
 
-function CardContent({ feedback }: { feedback: Feedback }) {
+function CardContent({ feedback, index }: { feedback: Feedback; index: number }) {
+  const [expanded, setExpanded] = useState(false)
+  const shouldShowReadMore = feedback.message.length > 120
+
   return (
-    <>
+    <Animatable.View animation="fadeInUp" delay={index * 100} duration={600} style={styles.card}>
       <LinearGradient
         colors={["#6366F1", "#4F46E5"]}
         start={{ x: 0, y: 0 }}
@@ -281,12 +88,12 @@ function CardContent({ feedback }: { feedback: Feedback }) {
       </LinearGradient>
 
       <View style={styles.messageContainer}>
-        <Text style={styles.message} numberOfLines={4} ellipsizeMode="tail">
+        <Text style={styles.message} numberOfLines={expanded ? undefined : 4} ellipsizeMode="tail">
           {feedback.message}
         </Text>
-        {feedback.message.length > 120 && (
-          <TouchableOpacity style={styles.readMoreButton}>
-            <Text style={styles.readMoreText}>Read more</Text>
+        {shouldShowReadMore && (
+          <TouchableOpacity style={styles.readMoreButton} onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
+            <Text style={styles.readMoreText}>{expanded ? "Read less" : "Read more"}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -294,10 +101,7 @@ function CardContent({ feedback }: { feedback: Feedback }) {
       <View style={styles.cardFooter}>
         <View style={styles.userInfo}>
           <View style={styles.avatarContainer}>
-            <Image
-              source={require("../assets/images/PersonDummy.png")}
-              style={styles.avatar}
-            />
+            <Image source={require("../assets/images/PersonDummy.png")} style={styles.avatar} />
             {feedback.verified && (
               <View style={styles.verifiedBadge}>
                 <Text style={styles.verifiedText}>✓</Text>
@@ -311,169 +115,353 @@ function CardContent({ feedback }: { feedback: Feedback }) {
           </View>
         </View>
       </View>
-    </>
-  );
+    </Animatable.View>
+  )
 }
 
 const UserFeedbackPage = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number | "All">(4);
-  const [showModal, setShowModal] = useState(false);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState<number | "All">(4)
+  const [showModal, setShowModal] = useState(false)
+  const fetchingRef = useRef(false)
 
-  const totalPages =
-    itemsPerPage === "All"
-      ? 1
-      : Math.ceil(feedbacks.length / Number(itemsPerPage));
+  // Mock data as fallback
+  const mockFeedbacks: Feedback[] = [
+    {
+      _id: "1",
+      message:
+        "Milestono has transformed how we manage our projects. The interface is intuitive and the support team is exceptional.",
+      user: "Vijay Kumar",
+      position: "Project Manager",
+      rating: 5,
+      date: "2025-01-25",
+      verified: true,
+    },
+    {
+      _id: "2",
+      message:
+        "Great Service! The team went above and beyond to ensure our needs were met. Highly satisfied with the results.",
+      user: "Rahul Singh",
+      position: "CEO",
+      rating: 4,
+      date: "2025-02-01",
+      verified: true,
+    },
+    {
+      _id: "3",
+      message:
+        "Highly recommended! The platform is robust and reliable. It has significantly improved our workflow efficiency.",
+      user: "Sneha Patel",
+      position: "Tech Lead",
+      rating: 5,
+      date: "2025-02-05",
+      verified: false,
+    },
+    {
+      _id: "4",
+      message: "The user interface is clean and easy to navigate. I appreciate the detailed analytics provided.",
+      user: "Arjun Mehta",
+      position: "Data Analyst",
+      rating: 4,
+      date: "2025-02-10",
+      verified: true,
+    },
+    {
+      _id: "5",
+      message: "Customer support was prompt and very helpful. It really made a difference.",
+      user: "Priya Sharma",
+      position: "Operations Manager",
+      rating: 5,
+      date: "2025-02-12",
+      verified: true,
+    },
+  ]
+
+  const fetchFeedbacks = useCallback(async (showLoading = true) => {
+    // Prevent multiple simultaneous fetches
+    if (fetchingRef.current) {
+      return
+    }
+
+    fetchingRef.current = true
+
+    try {
+      if (showLoading) {
+        setLoading(true)
+      }
+
+      if (!BASE_URL) {
+        console.warn("BASE_URL not configured, using mock data")
+        setFeedbacks(mockFeedbacks)
+        return
+      }
+
+      const response = await axios.get(`${BASE_URL}/api/feedback`, {
+        timeout: 10000,
+      })
+
+      if (response.data && Array.isArray(response.data)) {
+        setFeedbacks(response.data)
+      } else {
+        throw new Error("Invalid response format")
+      }
+    } catch (error) {
+      console.error("Error fetching feedbacks:", error)
+
+      // Use mock data as fallback
+      setFeedbacks(mockFeedbacks)
+
+      if (showLoading) {
+        Alert.alert("Connection Issue", "Unable to load latest feedbacks. Showing cached data.", [
+          {
+            text: "Retry",
+            onPress: () => fetchFeedbacks(true),
+          },
+          { text: "OK", style: "cancel" },
+        ])
+      }
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+      fetchingRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchFeedbacks()
+  }, [fetchFeedbacks])
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true)
+    setLoading(true)
+    fetchFeedbacks(false)
+  }, [fetchFeedbacks])
+
+  const totalPages = itemsPerPage === "All" ? 1 : Math.ceil(feedbacks.length / Number(itemsPerPage))
 
   const getCurrentData = () => {
-    if (itemsPerPage === "All") return feedbacks;
-    const begin = (currentPage - 1) * Number(itemsPerPage);
-    const end = begin + Number(itemsPerPage);
-    return feedbacks.slice(begin, end);
-  };
+    if (itemsPerPage === "All") return feedbacks
+    const begin = (currentPage - 1) * Number(itemsPerPage)
+    const end = begin + Number(itemsPerPage)
+    return feedbacks.slice(begin, end)
+  }
 
   const renderPaginationButtons = () => {
-    const buttons = [];
-    for (let i = 1; i <= totalPages; i++) {
+    const buttons = []
+    const maxVisiblePages = 5
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1)
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
       buttons.push(
         <TouchableOpacity
           key={i}
-          style={[
-            styles.pageButton,
-            currentPage === i && styles.activePageButton,
-          ]}
+          style={[styles.pageButton, currentPage === i && styles.activePageButton]}
           onPress={() => setCurrentPage(i)}
+          activeOpacity={0.7}
         >
-          <Text
-            style={[
-              styles.pageButtonText,
-              currentPage === i && styles.activePageButtonText,
-            ]}
-          >
-            {i}
-          </Text>
-        </TouchableOpacity>
-      );
+          <Text style={[styles.pageButtonText, currentPage === i && styles.activePageButtonText]}>{i}</Text>
+        </TouchableOpacity>,
+      )
     }
-    return buttons;
-  };
+    return buttons
+  }
 
-  const statusBarHeight = StatusBar.currentHeight || 0;
+  const handleItemsPerPageChange = (option: number | "All") => {
+    setItemsPerPage(option)
+    setCurrentPage(1)
+    setShowModal(false)
+  }
+
+  const statusBarHeight = StatusBar.currentHeight || 0
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, marginTop: statusBarHeight }}>
+        <Header />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#6366F1" />
+          <Text style={styles.loadingText}>Loading feedbacks...</Text>
+        </View>
+      </View>
+    )
+  }
 
   return (
     <View style={{ flex: 1, marginTop: statusBarHeight }}>
       <Header />
-      <View style={[styles.container]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Client Feedbacks</Text>
-          <TouchableOpacity
-            style={styles.dropdown}
-            onPress={() => setShowModal(true)}
+      <View style={styles.container}>
+        <Animatable.View animation="fadeInDown" duration={600} style={styles.header}>
+          <LinearGradient
+            colors={["#6366F1", "#4F46E5"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.headerGradient}
           >
-            <Text style={styles.dropdownText}>
-              {itemsPerPage === "All" ? "All" : itemsPerPage}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Feedback Cards List */}
-        <FlatList
-          data={getCurrentData()}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <CardContent feedback={item} />
+            <Text style={styles.title}>Client Feedbacks</Text>
+            <View style={styles.statsContainer}>
+              <Text style={styles.statsText}>{feedbacks.length} Total Reviews</Text>
+              <Text style={styles.statsText}>
+                ⭐ {(feedbacks.reduce((acc, f) => acc + f.rating, 0) / feedbacks.length || 0).toFixed(1)} Average
+              </Text>
             </View>
-          )}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-        />
+          </LinearGradient>
 
-        {/* Pagination Controls */}
-        <View style={styles.pagination}>
-          <TouchableOpacity
-            style={styles.pageButton}
-            disabled={currentPage === 1}
-            onPress={() => setCurrentPage((prev) => prev - 1)}
-          >
-            <Text style={styles.pageButtonText}>Prev</Text>
+          <TouchableOpacity style={styles.dropdown} onPress={() => setShowModal(true)} activeOpacity={0.7}>
+            <Text style={styles.dropdownText}>{itemsPerPage === "All" ? "All" : itemsPerPage}</Text>
+            <Text style={styles.dropdownArrow}>▼</Text>
           </TouchableOpacity>
+        </Animatable.View>
 
-          {renderPaginationButtons()}
+        {feedbacks.length === 0 ? (
+          <Animatable.View animation="fadeIn" style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No feedbacks available</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={() => fetchFeedbacks()} activeOpacity={0.7}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </Animatable.View>
+        ) : (
+          <FlatList
+            data={getCurrentData()}
+            renderItem={({ item, index }) => <CardContent feedback={item} index={index} />}
+            keyExtractor={(item) => item._id || item.id?.toString() || Math.random().toString()}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#6366F1"]} tintColor="#6366F1" />
+            }
+          />
+        )}
 
-          <TouchableOpacity
-            style={styles.pageButton}
-            disabled={currentPage === totalPages}
-            onPress={() => setCurrentPage((prev) => prev + 1)}
-          >
-            <Text style={styles.pageButtonText}>Next</Text>
-          </TouchableOpacity>
-        </View>
+        {feedbacks.length > 0 && totalPages > 1 && (
+          <Animatable.View animation="fadeInUp" delay={300} style={styles.pagination}>
+            <TouchableOpacity
+              style={[styles.pageButton, currentPage === 1 && styles.disabledButton]}
+              disabled={currentPage === 1}
+              onPress={() => setCurrentPage((prev) => prev - 1)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.pageButtonText, currentPage === 1 && styles.disabledButtonText]}>Prev</Text>
+            </TouchableOpacity>
 
-        {/* Modal for selecting items per page */}
-        <Modal
-          visible={showModal}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setShowModal(false)}
-        >
-          <Pressable
-            style={styles.modalOverlay}
-            onPress={() => setShowModal(false)}
-          >
-            <View style={styles.modalContent}>
+            {renderPaginationButtons()}
+
+            <TouchableOpacity
+              style={[styles.pageButton, currentPage === totalPages && styles.disabledButton]}
+              disabled={currentPage === totalPages}
+              onPress={() => setCurrentPage((prev) => prev + 1)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.pageButtonText, currentPage === totalPages && styles.disabledButtonText]}>Next</Text>
+            </TouchableOpacity>
+          </Animatable.View>
+        )}
+
+        <Modal visible={showModal} transparent={true} animationType="fade" onRequestClose={() => setShowModal(false)}>
+          <Pressable style={styles.modalOverlay} onPress={() => setShowModal(false)}>
+            <Animatable.View animation="zoomIn" duration={300} style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Items per page</Text>
               {ITEMS_PER_PAGE_OPTIONS.map((option) => (
                 <TouchableOpacity
                   key={option.toString()}
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setItemsPerPage(option);
-                    setCurrentPage(1);
-                    setShowModal(false);
-                  }}
+                  style={[styles.modalItem, itemsPerPage === option && styles.selectedModalItem]}
+                  onPress={() => handleItemsPerPageChange(option)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.modalItemText}>{option}</Text>
+                  <Text style={[styles.modalItemText, itemsPerPage === option && styles.selectedModalItemText]}>
+                    {option}
+                  </Text>
+                  {itemsPerPage === option && <Text style={styles.checkmark}>✓</Text>}
                 </TouchableOpacity>
               ))}
-            </View>
+            </Animatable.View>
           </Pressable>
         </Modal>
       </View>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-    padding: 16,
+    backgroundColor: "#f8fafc",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6B7280",
+    fontWeight: "500",
   },
   header: {
+    marginBottom: 20,
+    borderRadius: 20,
+    margin: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 5,
+  },
+  headerGradient: {
+    padding: 20,
+    paddingBottom: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#ffffff",
+    marginBottom: 8,
+  },
+  statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 30,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#1F2937",
+  statsText: {
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.9)",
+    fontWeight: "500",
   },
   dropdown: {
-    padding: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 4,
-    minWidth: 50,
+    position: "absolute",
+    top: 20,
+    right: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    flexDirection: "row",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   dropdownText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
-    color: "#4A4A9C",
+    color: "#ffffff",
+    marginRight: 4,
+  },
+  dropdownArrow: {
+    fontSize: 10,
+    color: "#ffffff",
   },
   listContainer: {
+    paddingHorizontal: 16,
     paddingBottom: 20,
   },
   card: {
@@ -493,8 +481,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.05)",
   },
   quoteIconContainer: {
     justifyContent: "center",
@@ -523,6 +509,10 @@ const styles = StyleSheet.create({
   readMoreButton: {
     alignSelf: "flex-start",
     marginTop: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    backgroundColor: "rgba(79, 70, 229, 0.1)",
   },
   readMoreText: {
     fontSize: 14,
@@ -551,7 +541,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
-    marginRight: 10,
+    marginRight: 15,
   },
   avatar: {
     width: 50,
@@ -577,7 +567,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   userTextContainer: {
-    marginLeft: 15,
+    flex: 1,
   },
   userName: {
     fontSize: 16,
@@ -595,30 +585,67 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     marginTop: 4,
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: "#6366F1",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   pagination: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     marginTop: 16,
+    marginBottom: 20,
+    paddingHorizontal: 16,
   },
   pageButton: {
-    padding: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 4,
+    borderColor: "#D1D5DB",
+    borderRadius: 6,
     minWidth: 40,
     alignItems: "center",
-    marginHorizontal: 4,
+    marginHorizontal: 2,
+    backgroundColor: "#ffffff",
   },
   activePageButton: {
-    backgroundColor: "#232761",
-    borderColor: "#232761",
+    backgroundColor: "#6366F1",
+    borderColor: "#6366F1",
+  },
+  disabledButton: {
+    backgroundColor: "#F3F4F6",
+    borderColor: "#E5E7EB",
   },
   pageButtonText: {
-    color: "#666",
+    color: "#374151",
+    fontSize: 14,
+    fontWeight: "500",
   },
   activePageButtonText: {
-    color: "#fff",
+    color: "#ffffff",
+    fontWeight: "600",
+  },
+  disabledButtonText: {
+    color: "#9CA3AF",
   },
   modalOverlay: {
     flex: 1,
@@ -628,18 +655,48 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "white",
-    padding: 16,
-    borderRadius: 8,
-    minWidth: 150,
+    borderRadius: 16,
+    padding: 20,
+    minWidth: 200,
+    maxWidth: 300,
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1F2937",
+    marginBottom: 16,
+    textAlign: "center",
   },
   modalItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  selectedModalItem: {
+    backgroundColor: "rgba(99, 102, 241, 0.1)",
   },
   modalItemText: {
     fontSize: 16,
+    color: "#374151",
   },
-});
+  selectedModalItemText: {
+    color: "#6366F1",
+    fontWeight: "600",
+  },
+  checkmark: {
+    fontSize: 16,
+    color: "#6366F1",
+    fontWeight: "bold",
+  },
+})
 
-export default UserFeedbackPage;
+export default UserFeedbackPage

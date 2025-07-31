@@ -27,6 +27,7 @@ import NewsArticlesSection from "./homepage/NewsArticalsSection";
 import AboutMilestono from "./homepage/AboutMilestono";
 import Footer from "./components/Footer"
 import ReviewSection from "./components/ReviewSection"
+import UserFeedbackSection from "./propertydetails/UserFeedbackSection";
 export default function homepage() {
   return (
     <ScrollView
@@ -45,6 +46,7 @@ export default function homepage() {
       <RealEstateTabs />
       <NewsArticlesSection />
       <AboutMilestono />
+      <UserFeedbackSection />
       <ReviewSection/>
     </ScrollView>
   );

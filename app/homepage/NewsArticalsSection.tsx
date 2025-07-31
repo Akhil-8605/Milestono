@@ -1,9 +1,19 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Dimensions, Alert } from "react-native"
-import { useNavigation } from "expo-router"
-import { NavigationProp } from "@react-navigation/native";
+import { useState, useEffect, useCallback, useRef } from "react"
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Dimensions,
+  Alert,
+  ActivityIndicator,
+} from "react-native"
+import { router, useNavigation } from "expo-router"
+import type { NavigationProp } from "@react-navigation/native"
 import axios from "axios"
 import { BASE_URL } from "@env"
 
@@ -18,24 +28,63 @@ interface Article {
 }
 
 const NewsArticlesSection = () => {
-  const navigation = useNavigation<NavigationProp<{ NewsDetails: { article: Article } }>>();
+  const navigation = useNavigation<NavigationProp<{ NewsDetails: { article: Article } }>>()
   const [articles, setArticles] = useState<Article[]>([])
-  const [showAll, setShowAll] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const fetchingRef = useRef(false)
 
-  useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        const resp = await axios.get(`${BASE_URL}/api/articles`)
-        setArticles(resp.data as Article[])
-      } catch (e) {
-        console.error("Error fetching articles:", e)
-        Alert.alert("Error", "Unable to load articles.")
-      }
+  const fetchArticles = useCallback(async () => {
+    // Prevent multiple simultaneous fetches
+    if (fetchingRef.current) {
+      return
     }
-    fetchArticles()
+
+    fetchingRef.current = true
+
+    try {
+      setLoading(true)
+
+      if (!BASE_URL) {
+        console.warn("BASE_URL not configured, using mock data")
+        return
+      }
+
+      const response = await axios.get(`${BASE_URL}/api/articles`, {
+        timeout: 10000,
+      })
+
+      if (response.data && Array.isArray(response.data)) {
+        // Limit to first 5 articles
+        setArticles(response.data.slice(0, 5))
+      } else {
+        throw new Error("Invalid response format")
+      }
+    } catch (e) {
+      console.error("Error fetching articles:", e)
+    } finally {
+      setLoading(false)
+      fetchingRef.current = false
+    }
   }, [])
 
-  const displayed = showAll ? articles : articles.slice(0, 3)
+  useEffect(() => {
+    fetchArticles()
+  }, [fetchArticles])
+
+  const displayed = articles.slice(0, 5) // Always limit to 5 articles
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.heading}>News & Article</Text>
+        <Text style={styles.subHeading}>Read what's happening in Real Estate</Text>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#242a80" />
+          <Text style={styles.loadingText}>Loading articles...</Text>
+        </View>
+      </View>
+    )
+  }
 
   return (
     <View style={styles.container}>
@@ -54,10 +103,7 @@ const NewsArticlesSection = () => {
               <Text style={styles.description} numberOfLines={2}>
                 {article.paragraph}
               </Text>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.navigate("NewsDetails", { article })}
-              >
+              <TouchableOpacity style={styles.button} onPress={() => router.push(`/NewsDetail?article=${encodeURIComponent(JSON.stringify(article))}`)}>
                 <Text style={styles.buttonText}>Read More</Text>
               </TouchableOpacity>
             </View>
@@ -91,9 +137,20 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginBottom: 20,
   },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "500",
+  },
   scrollView: {
     padding: 10,
-    paddingLeft: 6,
+    paddingLeft: 10,
     marginLeft: -10,
   },
   card: {

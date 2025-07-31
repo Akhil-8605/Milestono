@@ -20,8 +20,7 @@ import type { NavigationProp } from "@react-navigation/native"
 import { useNavigation } from "expo-router"
 import axios from "axios"
 import * as SecureStore from "expo-secure-store"
-
-const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL || "http://localhost:3000"
+import { BASE_URL } from "@env"
 
 const { width } = Dimensions.get("window")
 

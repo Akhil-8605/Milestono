@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import * as ImagePicker from "expo-image-picker"
 import { BASE_URL } from "@env"
+import { goBack } from "expo-router/build/global-state/routing"
 
 
 interface UserProfile {
@@ -279,7 +280,7 @@ export default function ProfilePage() {
       await AsyncStorage.removeItem("user_id")
       setUser(null)
       showToast("Logged out successfully", "success")
-      navigation.navigate("index" as never) // Navigate to a login/home page
+      goBack(); // Navigate to a login/home page
     } catch (error: any) {
       showToast("Error logging out: " + (error.response?.data?.message || error.message), "error")
     }

@@ -19,8 +19,7 @@ import { useNavigation } from "expo-router"
 import ToggledMenus from "./ToggleMenus"
 import axios from "axios"
 import * as SecureStore from "expo-secure-store"
-
-const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL || "http://localhost:3000"
+import { BASE_URL } from "@env"
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window")
 

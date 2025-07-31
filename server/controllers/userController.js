@@ -448,26 +448,27 @@ const verifyEmail = async (req, res) => {
   const { email } = req.body;
   const otp = generateOtp();
   
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
+  // const transporter = nodemailer.createTransport({
+  //   host: "smtp.gmail.com",
+  //   port: 465,
+  //   secure: true,
+  //   auth: {
+  //     user: process.env.EMAIL_USERNAME,
+  //     pass: process.env.EMAIL_PASSWORD,
+  //   },
+  // });
 
-  const mailOptions = {
-    from: `"Milestono Support" <${process.env.EMAIL_USERNAME}>`,
-    to: email,
-    subject: "Milestono Verification Code",
-    text: `Dear User,\n\nYour Milestono verification code is: ${otp}\n\nPlease do not share this code with anyone.\n\nBest regards,\nMilestono.com`,
-  };
+  // const mailOptions = {
+  //   from: `"Milestono Support" <${process.env.EMAIL_USERNAME}>`,
+  //   to: email,
+  //   subject: "Milestono Verification Code",
+  //   text: `Dear User,\n\nYour Milestono verification code is: ${otp}\n\nPlease do not share this code with anyone.\n\nBest regards,\nMilestono.com`,
+  // };
 
   try {
-    await transporter.sendMail(mailOptions);
+    // await transporter.sendMail(mailOptions);
     res.status(200).json({ otp });
+    console.log("Email OTP:", otp);
   } catch (error) {
     console.error("Error sending email:", error);
     res.status(500).json({ error: "Failed to send email" });

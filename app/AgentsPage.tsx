@@ -1,10 +1,12 @@
-import React, { useState, useRef, useEffect } from "react";
+"use client"
+
+import type React from "react"
+import { useState, useRef, useEffect } from "react"
 import {
   StyleSheet,
   View,
   Text,
   SafeAreaView,
-  FlatList,
   Image,
   TouchableOpacity,
   TextInput,
@@ -15,34 +17,41 @@ import {
   Platform,
   Linking,
   ScrollView,
-} from "react-native";
-import {
-  Feather,
-  MaterialIcons,
-  AntDesign,
-  Ionicons,
-} from "@expo/vector-icons";
-import { useNavigation } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
-
+} from "react-native"
+import { Feather, MaterialIcons, AntDesign, Ionicons } from "@expo/vector-icons"
+import { useNavigation } from "expo-router"
+import { LinearGradient } from "expo-linear-gradient"
+import axios from "axios"
+import { BASE_URL } from "@env"
+// Keep the mock data as fallback
 const mockAgents = [
   {
     id: 1,
     name: "Agent 1",
     fullName: "Sarah Johnson",
+    firstName: "Sarah",
+    lastName: "Johnson",
     company: "Luxury Homes Realty",
+    agency: "Luxury Homes Realty",
     operatingSince: 2010,
     address: "1234 Main St, New York",
     phone: "(500) 555-1000",
     email: "agent1@luxuryhomes.com",
     image: "https://randomuser.me/api/portraits/women/1.jpg",
+    profile: "https://randomuser.me/api/portraits/women/1.jpg",
     rating: 3,
     propertiesSold: 10,
     specialization: "Luxury Homes",
     featured: true,
     verified: true,
     experience: 3,
+    yearsOfExperience: 3,
     awards: 1,
+    branding: "custom",
+    logo: null,
+    createdAt: "2020-01-01T00:00:00.000Z",
+    properties: 10,
+    projects: 2,
     residentialProperties: [
       {
         id: 1,
@@ -98,754 +107,71 @@ const mockAgents = [
         location: "Pune",
         status: "Under Construction",
         image: require("../assets/images/newproject4.png"),
-        description:
-          "Elegant apartments along the riverside with beautiful views and tranquil environment.",
+        description: "Elegant apartments along the riverside with beautiful views and tranquil environment.",
         price: "₹ 65L - 1.1Cr",
         possession: "June 2025",
         rating: 4.6,
       },
     ],
   },
-  {
-    id: 2,
-    name: "Agent 2",
-    fullName: "Michael Chen",
-    company: "Urban Property Group",
-    operatingSince: 2011,
-    address: "1235 Broadway Ave, Los Angeles",
-    phone: "(501) 555-1001",
-    email: "agent2@urbanproperty.com",
-    image: "https://randomuser.me/api/portraits/men/2.jpg",
-    rating: 4,
-    propertiesSold: 13,
-    specialization: "Commercial",
-    featured: false,
-    verified: false,
-    experience: 4,
-    awards: 2,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-    project: [
-      {
-        id: "proj-3",
-        name: "Serene Meadows",
-        location: "Chennai",
-        status: "Under Construction",
-        image: require("../assets/images/newproject2.png"),
-        description:
-          "Peaceful residential community surrounded by nature yet close to urban amenities.",
-        price: "₹ 60L - 95L",
-        possession: "March 2026",
-        rating: 4.4,
-      },
-      {
-        id: "proj-4",
-        name: "Industrial Park",
-        location: "Pune",
-        status: "Under Construction",
-        image: require("../assets/images/newproject1.png"),
-        description:
-          "Industrial spaces with robust infrastructure for manufacturing and warehousing.",
-        price: "₹ 1Cr - 2.2Cr",
-        possession: "December 2025",
-        rating: 4.5,
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Agent 3",
-    fullName: "Emily Rodriguez",
-    company: "Coastal Estates",
-    operatingSince: 2012,
-    address: "1236 Park Rd, Chicago",
-    phone: "(502) 555-1002",
-    email: "agent3@coastalestates.com",
-    image: "https://randomuser.me/api/portraits/women/3.jpg",
-    rating: 5,
-    propertiesSold: 16,
-    specialization: "Residential",
-    featured: false,
-    verified: false,
-    experience: 5,
-    awards: 3,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-    project: [
-      {
-        id: "proj-5",
-        name: "Retail Plaza",
-        location: "Delhi",
-        status: "Under Construction",
-        image: require("../assets/images/newproject3.png"),
-        description:
-          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
-        price: "₹ 1.2Cr - 2.5Cr",
-        possession: "September 2025",
-        rating: 4.6,
-      },
-      {
-        id: "proj-6",
-        name: "Green Valley",
-        location: "Bangalore",
-        status: "Under Construction",
-        image: require("../assets/images/newproject2.png"),
-        description:
-          "Eco-friendly residential complex with sustainable features and green spaces throughout the property.",
-        price: "₹ 85L - 1.5Cr",
-        possession: "December 2025",
-        rating: 4.5,
-      },
-    ],
-  },
-  {
-    id: 4,
-    name: "Agent 4",
-    fullName: "David Kim",
-    company: "Metropolitan Realtors",
-    operatingSince: 2013,
-    address: "1237 Ocean Blvd, Miami",
-    phone: "(503) 555-1003",
-    email: "agent4@metropolitan.com",
-    image: "https://randomuser.me/api/portraits/men/4.jpg",
-    rating: 3,
-    propertiesSold: 19,
-    specialization: "Vacation Rentals",
-    featured: false,
-    verified: true,
-    experience: 6,
-    awards: 4,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-    project: [
-      {
-        id: "proj-7",
-        name: "Riverside Residences",
-        location: "Pune",
-        status: "Under Construction",
-        image: require("../assets/images/newproject4.png"),
-        description:
-          "Elegant apartments along the riverside with beautiful views and tranquil environment.",
-        price: "₹ 65L - 1.1Cr",
-        possession: "June 2025",
-        rating: 4.6,
-      },
-      {
-        id: "proj-8",
-        name: "Serene Meadows",
-        location: "Chennai",
-        status: "Under Construction",
-        image: require("../assets/images/newproject2.png"),
-        description:
-          "Peaceful residential community surrounded by nature yet close to urban amenities.",
-        price: "₹ 60L - 95L",
-        possession: "March 2026",
-        rating: 4.4,
-      },
-    ],
-  },
-  {
-    id: 5,
-    name: "Agent 5",
-    fullName: "Jessica Patel",
-    company: "Premier Properties",
-    operatingSince: 2014,
-    address: "1238 Highland Dr, Seattle",
-    phone: "(504) 555-1004",
-    email: "agent5@premier.com",
-    image: "https://randomuser.me/api/portraits/women/5.jpg",
-    rating: 4,
-    propertiesSold: 22,
-    specialization: "New Developments",
-    featured: false,
-    verified: false,
-    experience: 7,
-    awards: 5,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-    project: [
-      {
-        id: "proj-9",
-        name: "Retail Plaza",
-        location: "Delhi",
-        status: "Under Construction",
-        image: require("../assets/images/newproject3.png"),
-        description:
-          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
-        price: "₹ 1.2Cr - 2.5Cr",
-        possession: "September 2025",
-        rating: 4.6,
-      },
-      {
-        id: "proj-10",
-        name: "Industrial Park",
-        location: "Pune",
-        status: "Under Construction",
-        image: require("../assets/images/newproject1.png"),
-        description:
-          "Industrial spaces with robust infrastructure for manufacturing and warehousing.",
-        price: "₹ 1Cr - 2.2Cr",
-        possession: "December 2025",
-        rating: 4.5,
-      },
-    ],
-  },
-  {
-    id: 6,
-    name: "Agent 6",
-    fullName: "Robert Williams",
-    company: "Elite Real Estate",
-    operatingSince: 2015,
-    address: "1239 Main St, Boston",
-    phone: "(505) 555-1005",
-    email: "agent6@luxuryhomes.com",
-    image: "https://randomuser.me/api/portraits/men/6.jpg",
-    rating: 5,
-    propertiesSold: 25,
-    specialization: "Luxury Homes",
-    featured: false,
-    verified: false,
-    experience: 8,
-    awards: 1,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-    project: [
-      {
-        id: "proj-11",
-        name: "Green Valley",
-        location: "Bangalore",
-        status: "Under Construction",
-        image: require("../assets/images/newproject2.png"),
-        description:
-          "Eco-friendly residential complex with sustainable features and green spaces throughout the property.",
-        price: "₹ 85L - 1.5Cr",
-        possession: "December 2025",
-        rating: 4.5,
-      },
-      {
-        id: "proj-12",
-        name: "Retail Plaza",
-        location: "Delhi",
-        status: "Under Construction",
-        image: require("../assets/images/newproject3.png"),
-        description:
-          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
-        price: "₹ 1.2Cr - 2.5Cr",
-        possession: "September 2025",
-        rating: 4.6,
-      },
-    ],
-  },
-  {
-    id: 7,
-    name: "Agent 7",
-    fullName: "Amanda Lee",
-    company: "Horizon Homes",
-    operatingSince: 2016,
-    address: "1240 Broadway Ave, Austin",
-    phone: "(506) 555-1006",
-    email: "agent7@urbanproperty.com",
-    image: "https://randomuser.me/api/portraits/women/7.jpg",
-    rating: 3,
-    propertiesSold: 28,
-    specialization: "Commercial",
-    featured: false,
-    verified: true,
-    experience: 9,
-    awards: 2,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-    project: [
-      {
-        id: "proj-13",
-        name: "Serene Meadows",
-        location: "Chennai",
-        status: "Under Construction",
-        image: require("../assets/images/newproject2.png"),
-        description:
-          "Peaceful residential community surrounded by nature yet close to urban amenities.",
-        price: "₹ 60L - 95L",
-        possession: "March 2026",
-        rating: 4.4,
-      },
-      {
-        id: "proj-14",
-        name: "Industrial Park",
-        location: "Pune",
-        status: "Under Construction",
-        image: require("../assets/images/newproject1.png"),
-        description:
-          "Industrial spaces with robust infrastructure for manufacturing and warehousing.",
-        price: "₹ 1Cr - 2.2Cr",
-        possession: "December 2025",
-        rating: 4.5,
-      },
-    ],
-  },
-  {
-    id: 8,
-    name: "Agent 8",
-    fullName: "James Taylor",
-    company: "Landmark Realty",
-    operatingSince: 2017,
-    address: "1241 Park Rd, Denver",
-    phone: "(507) 555-1007",
-    email: "agent8@coastalestates.com",
-    image: "https://randomuser.me/api/portraits/men/8.jpg",
-    rating: 4,
-    propertiesSold: 31,
-    specialization: "Residential",
-    featured: true,
-    verified: false,
-    experience: 10,
-    awards: 3,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-    project: [
-      {
-        id: "proj-15",
-        name: "Retail Plaza",
-        location: "Delhi",
-        status: "Under Construction",
-        image: require("../assets/images/newproject3.png"),
-        description:
-          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
-        price: "₹ 1.2Cr - 2.5Cr",
-        possession: "September 2025",
-        rating: 4.6,
-      },
-      {
-        id: "proj-16",
-        name: "Green Valley",
-        location: "Bangalore",
-        status: "Under Construction",
-        image: require("../assets/images/newproject2.png"),
-        description:
-          "Eco-friendly residential complex with sustainable features and green spaces throughout the property.",
-        price: "₹ 85L - 1.5Cr",
-        possession: "December 2025",
-        rating: 4.5,
-      },
-    ],
-  },
-  {
-    id: 9,
-    name: "Agent 9",
-    fullName: "Sophia Martinez",
-    company: "Golden Gate Properties",
-    operatingSince: 2018,
-    address: "1242 Ocean Blvd, San Francisco",
-    phone: "(508) 555-1008",
-    email: "agent9@metropolitan.com",
-    image: "https://randomuser.me/api/portraits/women/9.jpg",
-    rating: 5,
-    propertiesSold: 34,
-    specialization: "Vacation Rentals",
-    featured: false,
-    verified: false,
-    experience: 11,
-    awards: 4,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-    project: [
-      {
-        id: "proj-17",
-        name: "Serene Meadows",
-        location: "Chennai",
-        status: "Under Construction",
-        image: require("../assets/images/newproject2.png"),
-        description:
-          "Peaceful residential community surrounded by nature yet close to urban amenities.",
-        price: "₹ 60L - 95L",
-        possession: "March 2026",
-        rating: 4.4,
-      },
-      {
-        id: "proj-18",
-        name: "Industrial Park",
-        location: "Pune",
-        status: "Under Construction",
-        image: require("../assets/images/newproject1.png"),
-        description:
-          "Industrial spaces with robust infrastructure for manufacturing and warehousing.",
-        price: "₹ 1Cr - 2.2Cr",
-        possession: "December 2025",
-        rating: 4.5,
-      },
-    ],
-  },
-  {
-    id: 10,
-    name: "Agent 10",
-    fullName: "Daniel Brown",
-    company: "Skyline Real Estate",
-    operatingSince: 2019,
-    address: "1243 Highland Dr, Atlanta",
-    phone: "(509) 555-1009",
-    email: "agent10@premier.com",
-    image: "https://randomuser.me/api/portraits/men/10.jpg",
-    rating: 3,
-    propertiesSold: 37,
-    specialization: "New Developments",
-    featured: false,
-    verified: true,
-    experience: 12,
-    awards: 5,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-    project: [
-      {
-        id: "proj-19",
-        name: "Retail Plaza",
-        location: "Delhi",
-        status: "Under Construction",
-        image: require("../assets/images/newproject3.png"),
-        description:
-          "Prime retail spaces in high-footfall area with excellent visibility and accessibility.",
-        price: "₹ 1.2Cr - 2.5Cr",
-        possession: "September 2025",
-        rating: 4.6,
-      },
-      {
-        id: "proj-20",
-        name: "Riverside Residences",
-        location: "Pune",
-        status: "Under Construction",
-        image: require("../assets/images/newproject4.png"),
-        description:
-          "Elegant apartments along the riverside with beautiful views and tranquil environment.",
-        price: "₹ 65L - 1.1Cr",
-        possession: "June 2025",
-        rating: 4.6,
-      },
-    ],
-  },
-];
+]
 
 interface Property {
-  id: number;
-  name: string;
-  location: string;
-  propertyimage: any;
-  price: number;
-  bhk: string;
+  id: number
+  name: string
+  location: string
+  propertyimage: any
+  price: number
+  bhk: string
+}
+
+interface Agent {
+  id: number
+  name?: string
+  fullName?: string
+  firstName: string
+  lastName: string
+  company?: string
+  agency: string
+  operatingSince?: number
+  address: string
+  phone: string
+  email: string
+  image?: string
+  profile: string
+  rating: number
+  propertiesSold?: number
+  specialization?: string
+  featured?: boolean
+  verified?: boolean
+  experience?: number
+  yearsOfExperience: number
+  awards?: number
+  branding: string
+  logo?: string | null
+  createdAt: string
+  properties: number
+  projects: number
+  residentialProperties?: Property[]
+  commercialProperties?: Property[]
+  project?: {
+    id: string
+    name: string
+    location: string
+    status: string
+    image: any
+    description: string
+    price: string
+    possession: string
+    rating: number
+  }[]
 }
 
 const PropertyCard = ({ property }: { property: Property }) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation()
   return (
     <View key={property.id} style={styles.propertyCard}>
-      <Image
-        source={property.propertyimage}
-        style={styles.propertyImage}
-        resizeMode="contain"
-      />
+      <Image source={property.propertyimage} style={styles.propertyImage} resizeMode="contain" />
       <View style={styles.cardContent}>
         <Text style={styles.propertyName}>{property.name}</Text>
         <Text style={styles.locationText}>Location: {property.location}</Text>
@@ -860,7 +186,7 @@ const PropertyCard = ({ property }: { property: Property }) => {
           <TouchableOpacity
             style={styles.viewButtonAgent}
             onPress={() => {
-              navigation.navigate("PropertyDetailsPage" as never);
+              navigation.navigate("PropertyDetailsPage" as never)
             }}
           >
             <Text style={styles.viewButtonTextAgent}>View Details</Text>
@@ -868,30 +194,26 @@ const PropertyCard = ({ property }: { property: Property }) => {
         </View>
       </View>
     </View>
-  );
-};
+  )
+}
 
 interface ProjectCardProps {
   project: {
-    id: string;
-    name: string;
-    location: string;
-    status: string;
-    image: any;
-    description: string;
-    price: string;
-    possession: string;
-    rating: number;
-  };
-  onViewDetails: () => void;
-  onInquiry: () => void;
+    id: string
+    name: string
+    location: string
+    status: string
+    image: any
+    description: string
+    price: string
+    possession: string
+    rating: number
+  }
+  onViewDetails: () => void
+  onInquiry: () => void
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({
-  project,
-  onViewDetails,
-  onInquiry,
-}) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, onViewDetails, onInquiry }) => {
   return (
     <View key={project.id} style={styles.projectCard}>
       <View style={styles.projectImageContainer}>
@@ -917,144 +239,134 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         <Text style={styles.projectTitle}>{project.name}</Text>
         <View style={styles.locationContainer}>
           <Text style={styles.projectLocation}>📍 {project.location}</Text>
-          {project.price && (
-            <Text style={styles.projectPrice}>{project.price}</Text>
-          )}
+          {project.price && <Text style={styles.projectPrice}>{project.price}</Text>}
         </View>
-        {project.possession && (
-          <Text style={styles.projectPossession}>
-            🗓️ Possession: {project.possession}
-          </Text>
-        )}
+        {project.possession && <Text style={styles.projectPossession}>🗓️ Possession: {project.possession}</Text>}
         <View style={styles.projectButtons}>
-          <TouchableOpacity
-            style={styles.viewButton}
-            onPress={onViewDetails}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity style={styles.viewButton} onPress={onViewDetails} activeOpacity={0.8}>
             <Text style={styles.buttonText}>View Details</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.inquiryButton}
-            onPress={onInquiry}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity style={styles.inquiryButton} onPress={onInquiry} activeOpacity={0.8}>
             <Text style={styles.buttonText}>Inquiry</Text>
           </TouchableOpacity>
         </View>
       </View>
     </View>
-  );
-};
+  )
+}
 
 export default function AgentsPage() {
-  const [agents, setAgents] = useState(mockAgents);
-  const [filteredAgents, setFilteredAgents] = useState(mockAgents);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchBy, setSearchBy] = useState("name");
-  interface Agent {
-    id: number;
-    name: string;
-    fullName: string;
-    company: string;
-    operatingSince: number;
-    address: string;
-    phone: string;
-    email: string;
-    image: string;
-    rating: number;
-    propertiesSold: number;
-    specialization: string;
-    featured: boolean;
-    verified: boolean;
-    experience: number;
-    awards: number;
-    residentialProperties: Property[];
-    commercialProperties: Property[];
-    project: {
-      id: string;
-      name: string;
-      location: string;
-      status: string;
-      image: any;
-      description: string;
-      price: string;
-      possession: string;
-      rating: number;
-    }[];
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [filteredAgents, setFilteredAgents] = useState<Agent[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchBy, setSearchBy] = useState("name")
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [selectedTab, setSelectedTab] = useState("residential")
+  const [projectModalVisible, setProjectModalVisible] = useState(false)
+  const [selectedProjectForModal, setSelectedProjectForModal] = useState<any>(null)
+  const [inquiryModalVisible, setInquiryModalVisible] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const agentsPerPage = 10
+  const totalPages = Math.ceil(filteredAgents.length / agentsPerPage)
+
+  const scrollY = useRef(new Animated.Value(0)).current
+  const modalAnimation = useRef(new Animated.Value(0)).current
+
+  // API call to fetch agents
+  const handleAgents = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await axios.get(`${BASE_URL}/api/verified-all-agents`)
+
+      if (response.data && Array.isArray(response.data)) {
+        // Transform the API data to match our interface
+        const transformedAgents = response.data.map((agent: any) => ({
+          ...agent,
+          fullName: `${agent.firstName} ${agent.lastName}`,
+          name: `${agent.firstName} ${agent.lastName}`,
+          company: agent.agency,
+          image: agent.profile,
+          experience: agent.yearsOfExperience,
+          verified: agent.branding === "trusted" || agent.branding === "custom",
+          featured: agent.branding === "custom",
+          // Add mock data for properties and projects if not available from API
+          residentialProperties: agent.residentialProperties || mockAgents[0].residentialProperties,
+          commercialProperties: agent.commercialProperties || mockAgents[0].commercialProperties,
+          project: agent.project || mockAgents[0].project,
+          propertiesSold: agent.properties || 0,
+          awards: 3, // Default value
+          rating: 4, // Default rating
+        }))
+
+        setAgents(transformedAgents)
+        setFilteredAgents(transformedAgents)
+      } else {
+        throw new Error("Invalid response format")
+      }
+    } catch (error) {
+      console.error("Error fetching agents:", error)
+      setError("Failed to load agents. Using sample data.")
+      // Fallback to mock data
+      setAgents(mockAgents)
+      setFilteredAgents(mockAgents)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("residential");
-  const [projectModalVisible, setProjectModalVisible] = useState(false);
-  interface Project {
-    id: string;
-    name: string;
-    location: string;
-    status: string;
-    image: any;
-    description: string;
-    price: string;
-    possession: string;
-    rating: number;
-  }
-
-  const [selectedProjectForModal, setSelectedProjectForModal] =
-    useState<Project | null>(null);
-  const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
-
-  const agentsPerPage = 10;
-  const totalPages = Math.ceil(filteredAgents.length / agentsPerPage);
-
-  const featuredProperties = agents
-    .slice(0, 3)
-    .flatMap((agent) => agent.residentialProperties);
-
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const modalAnimation = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    handleAgents()
+  }, [])
 
   const filterAgents = () => {
     if (!searchQuery.trim()) {
-      setFilteredAgents(agents);
-      return;
+      setFilteredAgents(agents)
+      return
     }
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase()
     const filtered = agents.filter((agent) => {
       if (searchBy === "name") {
-        return agent.fullName.toLowerCase().includes(query);
+        return `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(query)
       } else if (searchBy === "company") {
-        return agent.company.toLowerCase().includes(query);
+        return agent.agency.toLowerCase().includes(query)
       } else if (searchBy === "all") {
         return (
-          agent.fullName.toLowerCase().includes(query) ||
-          agent.company.toLowerCase().includes(query) ||
-          agent.address.toLowerCase().includes(query) ||
-          agent.specialization.toLowerCase().includes(query)
-        );
+          `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(query) ||
+          agent.agency.toLowerCase().includes(query) ||
+          agent.address.toLowerCase().includes(query)
+        )
       }
-      return true;
-    });
-    setFilteredAgents(filtered);
-    setCurrentPage(1);
-  };
+      return true
+    })
+    setFilteredAgents(filtered)
+    setCurrentPage(1)
+  }
+
+  // Update filter when search parameters change
+  useEffect(() => {
+    filterAgents()
+  }, [agents, searchQuery, searchBy])
 
   const getCurrentPageAgents = () => {
-    const startIndex = (currentPage - 1) * agentsPerPage;
-    const endIndex = startIndex + agentsPerPage;
-    return filteredAgents.slice(startIndex, endIndex);
-  };
+    const startIndex = (currentPage - 1) * agentsPerPage
+    const endIndex = startIndex + agentsPerPage
+    return filteredAgents.slice(startIndex, endIndex)
+  }
 
-  const handleContactPress = (agent: (typeof mockAgents)[0]) => {
-    setSelectedAgent(agent);
-    setModalVisible(true);
+  const handleContactPress = (agent: Agent) => {
+    setSelectedAgent(agent)
+    setModalVisible(true)
     Animated.timing(modalAnimation, {
       toValue: 1,
       duration: 300,
       useNativeDriver: true,
-    }).start();
-  };
+    }).start()
+  }
 
   const closeModal = () => {
     Animated.timing(modalAnimation, {
@@ -1062,50 +374,47 @@ export default function AgentsPage() {
       duration: 200,
       useNativeDriver: true,
     }).start(() => {
-      setModalVisible(false);
-      setSelectedAgent(null);
-      setSelectedTab("residential");
-    });
-  };
+      setModalVisible(false)
+      setSelectedAgent(null)
+      setSelectedTab("residential")
+    })
+  }
 
   const handleCall = (phone: string) => {
-    Linking.openURL(`tel:${phone}`);
-  };
+    Linking.openURL(`tel:${phone}`)
+  }
 
   const handleEmail = (email: string) => {
-    Linking.openURL(`mailto:${email}`);
-  };
+    Linking.openURL(`mailto:${email}`)
+  }
 
   const renderAgentCard = ({ item, index }: { item: Agent; index: number }) => {
-    const inputRange = [(index - 1) * 350, index * 350, (index + 1) * 350];
+    const inputRange = [(index - 1) * 350, index * 350, (index + 1) * 350]
     const scale = scrollY.interpolate({
       inputRange,
       outputRange: [0.97, 1, 0.97],
       extrapolate: "clamp",
-    });
+    })
     const opacity = scrollY.interpolate({
       inputRange,
       outputRange: [0.85, 1, 0.85],
       extrapolate: "clamp",
-    });
+    })
+
     return (
-      <Animated.View
-        style={[styles.cardContainer, { transform: [{ scale }], opacity }]}
-      >
+      <Animated.View style={[styles.cardContainer, { transform: [{ scale }], opacity }]}>
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Image
-              source={{ uri: item.image }}
-              style={styles.agentImage}
-              resizeMode="cover"
-            />
-            {item.featured && (
+            <Image source={{ uri: item.profile || item.image }} style={styles.agentImage} resizeMode="cover" />
+            {item.branding === "custom" && item.logo ? (
+              <Image source={{ uri: item.logo }} style={styles.agentLogo} resizeMode="contain" />
+            ) : item.branding === "custom" ? (
               <View style={styles.featuredBadge}>
                 <AntDesign name="star" size={12} color="#fff" />
-                <Text style={styles.featuredText}>Featured</Text>
+                <Text style={styles.featuredText}>{item.agency}</Text>
               </View>
-            )}
-            {item.verified && (
+            ) : null}
+            {(item.branding === "trusted" || item.branding === "custom") && (
               <View style={styles.verifiedBadge}>
                 <Ionicons name="checkmark-circle" size={14} color="#fff" />
                 <Text style={styles.verifiedText}>Verified</Text>
@@ -1115,10 +424,12 @@ export default function AgentsPage() {
           <View style={styles.cardBody}>
             <View style={styles.cardBodyTop}>
               <View>
-                <Text style={styles.agentName}>{item.fullName}</Text>
+                <Text style={styles.agentName}>
+                  {item.firstName} {item.lastName}
+                </Text>
                 <View style={styles.companyContainer}>
                   <MaterialIcons name="business" size={14} color="#666" />
-                  <Text style={styles.companyText}>{item.company}</Text>
+                  <Text style={styles.companyText}>{item.agency}</Text>
                 </View>
               </View>
               <View style={styles.ratingContainer}>
@@ -1127,36 +438,35 @@ export default function AgentsPage() {
                   .map((_, i) => (
                     <AntDesign
                       key={i}
-                      name={i < Math.floor(item.rating) ? "star" : "staro"}
+                      name={i < Math.floor(item.rating || 4) ? "star" : "staro"}
                       size={12}
                       color="#FFD700"
                       style={{ marginRight: 2 }}
                     />
                   ))}
-                <Text style={styles.ratingTextAgent}>
-                  ({item.rating.toFixed(1)})
-                </Text>
+                <Text style={styles.ratingTextAgent}>({(item.rating || 4).toFixed(1)})</Text>
               </View>
             </View>
             <View style={styles.statsContainer}>
               <View style={styles.agentStatBox}>
-                <Text style={styles.agentStatValue}>{item.propertiesSold}</Text>
-                <Text style={styles.agentStatLabel}>Properties Sold</Text>
+                <Text style={styles.agentStatValue}>{item.properties || 0}</Text>
+                <Text style={styles.agentStatLabel}>Properties</Text>
               </View>
               <View style={styles.agentStatBox}>
-                <Text style={styles.agentStatValue}>{item.experience}</Text>
+                <Text style={styles.agentStatValue}>{item.yearsOfExperience}</Text>
                 <Text style={styles.agentStatLabel}>Years Experience</Text>
               </View>
               <View style={styles.agentStatBox}>
-                <Text style={styles.agentStatValue}>{item.awards}</Text>
-                <Text style={styles.agentStatLabel}>Awards</Text>
+                <Text style={styles.agentStatValue}>{item.projects || 0}</Text>
+                <Text style={styles.agentStatLabel}>Projects</Text>
               </View>
             </View>
             <View style={styles.infoSection}>
               <View style={styles.infoRow}>
                 <Feather name="calendar" size={14} color="#666" />
                 <Text style={styles.infoText}>
-                  Operating since {item.operatingSince}
+                  Operating since:{" "}
+                  {new Date(item.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                 </Text>
               </View>
               <View style={styles.infoRow}>
@@ -1166,37 +476,42 @@ export default function AgentsPage() {
                 </Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={styles.contactButton}
-              onPress={() => handleContactPress(item)}
-              activeOpacity={1}
-            >
+            <TouchableOpacity style={styles.contactButton} onPress={() => handleContactPress(item)} activeOpacity={1}>
               <Text style={styles.contactButtonText}>Contact Now</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Animated.View>
-    );
-  };
+    )
+  }
 
   const modalTranslateY = modalAnimation.interpolate({
     inputRange: [0, 1],
     outputRange: [500, 0],
-  });
+  })
   const modalBackdropOpacity = modalAnimation.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 0.7],
-  });
-  const statusBarHeight = StatusBar.currentHeight || 0;
+  })
+  const statusBarHeight = StatusBar.currentHeight || 0
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading agents...</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
       <View style={styles.stickyHeader}>
         <Text style={styles.headerTitle}>Real Estate Agents</Text>
-        <Text style={styles.headerSubtitle}>
-          Find the perfect agent for your needs
-        </Text>
+        <Text style={styles.headerSubtitle}>Find the perfect agent for your needs</Text>
+        {error && <Text style={styles.errorText}>{error}</Text>}
       </View>
       <Animated.FlatList
         data={getCurrentPageAgents()}
@@ -1204,35 +519,25 @@ export default function AgentsPage() {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
-        )}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
         scrollEventThrottle={16}
         ListHeaderComponent={() => (
           <>
             <View style={styles.searchContainer}>
               <View style={styles.searchInputContainer}>
-                <Feather
-                  name="search"
-                  size={14}
-                  color="#666"
-                  style={styles.searchIcon}
-                />
+                <Feather name="search" size={14} color="#666" style={styles.searchIcon} />
                 <TextInput
                   style={styles.searchInput}
                   placeholder="Search agents..."
                   value={searchQuery}
                   onChangeText={(text) => {
-                    setSearchQuery(text);
-                    filterAgents();
+                    setSearchQuery(text)
                   }}
                 />
                 {searchQuery.length > 0 && (
                   <TouchableOpacity
                     onPress={() => {
-                      setSearchQuery("");
-                      filterAgents();
+                      setSearchQuery("")
                     }}
                   >
                     <Feather name="x" size={20} color="#666" />
@@ -1243,59 +548,26 @@ export default function AgentsPage() {
                 <Text style={styles.filterLabel}>Search by:</Text>
                 <View style={styles.filterOptions}>
                   <TouchableOpacity
-                    style={[
-                      styles.filterOption,
-                      searchBy === "name" && styles.filterOptionActive,
-                    ]}
-                    onPress={() => {
-                      setSearchBy("name");
-                      filterAgents();
-                    }}
+                    style={[styles.filterOption, searchBy === "name" && styles.filterOptionActive]}
+                    onPress={() => setSearchBy("name")}
                   >
-                    <Text
-                      style={[
-                        styles.filterOptionText,
-                        searchBy === "name" && styles.filterOptionTextActive,
-                      ]}
-                    >
+                    <Text style={[styles.filterOptionText, searchBy === "name" && styles.filterOptionTextActive]}>
                       Name
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[
-                      styles.filterOption,
-                      searchBy === "company" && styles.filterOptionActive,
-                    ]}
-                    onPress={() => {
-                      setSearchBy("company");
-                      filterAgents();
-                    }}
+                    style={[styles.filterOption, searchBy === "company" && styles.filterOptionActive]}
+                    onPress={() => setSearchBy("company")}
                   >
-                    <Text
-                      style={[
-                        styles.filterOptionText,
-                        searchBy === "company" && styles.filterOptionTextActive,
-                      ]}
-                    >
+                    <Text style={[styles.filterOptionText, searchBy === "company" && styles.filterOptionTextActive]}>
                       Company
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[
-                      styles.filterOption,
-                      searchBy === "all" && styles.filterOptionActive,
-                    ]}
-                    onPress={() => {
-                      setSearchBy("all");
-                      filterAgents();
-                    }}
+                    style={[styles.filterOption, searchBy === "all" && styles.filterOptionActive]}
+                    onPress={() => setSearchBy("all")}
                   >
-                    <Text
-                      style={[
-                        styles.filterOptionText,
-                        searchBy === "all" && styles.filterOptionTextActive,
-                      ]}
-                    >
+                    <Text style={[styles.filterOptionText, searchBy === "all" && styles.filterOptionTextActive]}>
                       All
                     </Text>
                   </TouchableOpacity>
@@ -1303,27 +575,18 @@ export default function AgentsPage() {
               </View>
             </View>
             <View style={styles.resultsInfo}>
-              <Text style={styles.resultsText}>
-                {filteredAgents.length} agents found
-              </Text>
+              <Text style={styles.resultsText}>{filteredAgents.length} agents found</Text>
             </View>
           </>
         )}
       />
       <View style={styles.stickyFooter}>
         <TouchableOpacity
-          style={[
-            styles.paginationButton,
-            currentPage === 1 && styles.paginationButtonDisabled,
-          ]}
+          style={[styles.paginationButton, currentPage === 1 && styles.paginationButtonDisabled]}
           onPress={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
         >
-          <Feather
-            name="chevron-left"
-            size={20}
-            color={currentPage === 1 ? "#ccc" : "#333"}
-          />
+          <Feather name="chevron-left" size={20} color={currentPage === 1 ? "#ccc" : "#333"} />
         </TouchableOpacity>
         <View style={styles.paginationInfo}>
           <Text style={styles.paginationText}>
@@ -1331,154 +594,93 @@ export default function AgentsPage() {
           </Text>
         </View>
         <TouchableOpacity
-          style={[
-            styles.paginationButton,
-            currentPage === totalPages && styles.paginationButtonDisabled,
-          ]}
-          onPress={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
+          style={[styles.paginationButton, currentPage === totalPages && styles.paginationButtonDisabled]}
+          onPress={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
           disabled={currentPage === totalPages}
         >
-          <Feather
-            name="chevron-right"
-            size={20}
-            color={currentPage === totalPages ? "#ccc" : "#333"}
-          />
+          <Feather name="chevron-right" size={20} color={currentPage === totalPages ? "#ccc" : "#333"} />
         </TouchableOpacity>
       </View>
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="none"
-        onRequestClose={closeModal}
-      >
+      <Modal visible={modalVisible} transparent={true} animationType="none" onRequestClose={closeModal}>
         <View style={styles.modalContainer}>
-          <Animated.View
-            style={[styles.modalBackdrop, { opacity: modalBackdropOpacity }]}
-          >
+          <Animated.View style={[styles.modalBackdrop, { opacity: modalBackdropOpacity }]}>
             <TouchableOpacity style={{ flex: 1 }} onPress={closeModal} />
           </Animated.View>
           {selectedAgent && (
-            <Animated.View
-              style={[
-                styles.modalContent,
-                { transform: [{ translateY: modalTranslateY }] },
-              ]}
-            >
+            <Animated.View style={[styles.modalContent, { transform: [{ translateY: modalTranslateY }] }]}>
               <View style={styles.modalHeader}>
                 <View style={styles.modalHeaderLine} />
                 <Text style={styles.modalTitle}>Contact Agent</Text>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={closeModal}
-                >
+                <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
                   <Feather name="x" size={24} color="#333" />
                 </TouchableOpacity>
               </View>
-              <ScrollView
-                style={styles.modalBody}
-                showsVerticalScrollIndicator={false}
-              >
+              <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
                 <View style={styles.modalAgentInfo}>
                   <Image
-                    source={{ uri: selectedAgent.image }}
+                    source={{ uri: selectedAgent.profile || selectedAgent.image }}
                     style={styles.modalAgentImage}
                   />
                   <View style={styles.modalAgentDetails}>
                     <Text style={styles.modalAgentName}>
-                      {selectedAgent.fullName}
+                      {selectedAgent.firstName} {selectedAgent.lastName}
                     </Text>
-                    <Text style={styles.modalAgentCompany}>
-                      {selectedAgent.company}
-                    </Text>
+                    <Text style={styles.modalAgentCompany}>{selectedAgent.agency}</Text>
                     <View style={styles.modalAgentRating}>
                       {Array(5)
                         .fill(0)
                         .map((_, i) => (
                           <AntDesign
                             key={i}
-                            name={
-                              i < Math.floor(selectedAgent.rating)
-                                ? "star"
-                                : "staro"
-                            }
+                            name={i < Math.floor(selectedAgent.rating || 4) ? "star" : "staro"}
                             size={14}
                             color="#FFD700"
                             style={{ marginRight: 2 }}
                           />
                         ))}
-                      <Text style={styles.modalRatingText}>
-                        ({selectedAgent.rating.toFixed(1)})
-                      </Text>
+                      <Text style={styles.modalRatingText}>({(selectedAgent.rating || 4).toFixed(1)})</Text>
                     </View>
                   </View>
                 </View>
                 <View style={styles.statsContainer}>
                   <View style={styles.agentStatBox}>
-                    <Text style={styles.agentStatValue}>
-                      {selectedAgent.propertiesSold}
-                    </Text>
-                    <Text style={styles.agentStatLabel}>Properties Sold</Text>
+                    <Text style={styles.agentStatValue}>{selectedAgent.properties || 0}</Text>
+                    <Text style={styles.agentStatLabel}>Properties</Text>
                   </View>
                   <View style={styles.agentStatBox}>
-                    <Text style={styles.agentStatValue}>
-                      {selectedAgent.experience}
-                    </Text>
+                    <Text style={styles.agentStatValue}>{selectedAgent.yearsOfExperience}</Text>
                     <Text style={styles.agentStatLabel}>Years Experience</Text>
                   </View>
                   <View style={styles.agentStatBox}>
-                    <Text style={styles.agentStatValue}>
-                      {selectedAgent.awards}
-                    </Text>
-                    <Text style={styles.agentStatLabel}>Awards</Text>
+                    <Text style={styles.agentStatValue}>{selectedAgent.projects || 0}</Text>
+                    <Text style={styles.agentStatLabel}>Projects</Text>
                   </View>
                 </View>
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>About Agent</Text>
                   <Text style={styles.aboutText}>
-                    {selectedAgent.fullName} is a professional real estate agent
-                    with {selectedAgent.experience} years of experience,
-                    specializing in {selectedAgent.specialization}. With a
-                    proven track record of {selectedAgent.propertiesSold}{" "}
-                    properties sold, they are a trusted advisor in the real
-                    estate market.
+                    {selectedAgent.firstName} {selectedAgent.lastName} is a professional real estate agent with{" "}
+                    {selectedAgent.yearsOfExperience} years of experience, specializing in {selectedAgent.projects || 0}{" "}
+                    new projects. With a proven track record of {selectedAgent.properties || 0} properties, they are a
+                    trusted advisor in the real estate market.
                   </Text>
                 </View>
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>Properties</Text>
                   <View style={styles.tabContainer}>
                     <TouchableOpacity
-                      style={[
-                        styles.tabButton,
-                        selectedTab === "residential" && styles.activeTabButton,
-                      ]}
+                      style={[styles.tabButton, selectedTab === "residential" && styles.activeTabButton]}
                       onPress={() => setSelectedTab("residential")}
                     >
-                      <Text
-                        style={[
-                          styles.tabButtonText,
-                          selectedTab === "residential" &&
-                            styles.activeTabButtonText,
-                        ]}
-                      >
+                      <Text style={[styles.tabButtonText, selectedTab === "residential" && styles.activeTabButtonText]}>
                         Residential
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[
-                        styles.tabButton,
-                        selectedTab === "commercial" && styles.activeTabButton,
-                      ]}
+                      style={[styles.tabButton, selectedTab === "commercial" && styles.activeTabButton]}
                       onPress={() => setSelectedTab("commercial")}
                     >
-                      <Text
-                        style={[
-                          styles.tabButtonText,
-                          selectedTab === "commercial" &&
-                            styles.activeTabButtonText,
-                        ]}
-                      >
+                      <Text style={[styles.tabButtonText, selectedTab === "commercial" && styles.activeTabButtonText]}>
                         Commercial
                       </Text>
                     </TouchableOpacity>
@@ -1489,7 +691,7 @@ export default function AgentsPage() {
                       showsHorizontalScrollIndicator={false}
                       contentContainerStyle={styles.scrollContainer}
                     >
-                      {selectedAgent.residentialProperties.map((property) => (
+                      {selectedAgent.residentialProperties?.map((property) => (
                         <PropertyCard key={property.id} property={property} />
                       ))}
                     </ScrollView>
@@ -1499,7 +701,7 @@ export default function AgentsPage() {
                       showsHorizontalScrollIndicator={false}
                       contentContainerStyle={styles.scrollContainer}
                     >
-                      {selectedAgent.commercialProperties.map((property) => (
+                      {selectedAgent.commercialProperties?.map((property) => (
                         <PropertyCard key={property.id} property={property} />
                       ))}
                     </ScrollView>
@@ -1515,30 +717,25 @@ export default function AgentsPage() {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.scrollContainer}
                   >
-                    {selectedAgent.project.map((proj) => (
+                    {selectedAgent.project?.map((proj) => (
                       <ProjectCard
                         key={proj.id}
                         project={proj}
                         onViewDetails={() => {
-                          setSelectedProjectForModal(proj);
-                          setProjectModalVisible(true);
+                          setSelectedProjectForModal(proj)
+                          setProjectModalVisible(true)
                         }}
                         onInquiry={() => {
-                          setInquiryModalVisible(true);
+                          setInquiryModalVisible(true)
                         }}
                       />
                     ))}
                   </ScrollView>
                 </View>
                 <View style={styles.modalSection}>
-                  <Text style={styles.modalSectionTitle}>
-                    Contact Information
-                  </Text>
+                  <Text style={styles.modalSectionTitle}>Contact Information</Text>
                   <View style={styles.contactOptions}>
-                    <TouchableOpacity
-                      style={styles.contactOption}
-                      onPress={() => handleCall(selectedAgent.phone)}
-                    >
+                    <TouchableOpacity style={styles.contactOption} onPress={() => handleCall(selectedAgent.phone)}>
                       <LinearGradient
                         colors={["#4CAF50", "#2E7D32"]}
                         start={{ x: 0, y: 0 }}
@@ -1549,19 +746,14 @@ export default function AgentsPage() {
                       </LinearGradient>
                       <View style={styles.contactOptionDetails}>
                         <Text style={styles.contactOptionLabel}>Phone</Text>
-                        <Text style={styles.contactOptionValue}>
-                          {selectedAgent.phone}
-                        </Text>
+                        <Text style={styles.contactOptionValue}>{selectedAgent.phone}</Text>
                       </View>
                       <View style={styles.contactOptionAction}>
                         <Text style={styles.contactOptionActionText}>Call</Text>
                         <Feather name="chevron-right" size={14} color="#666" />
                       </View>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.contactOption}
-                      onPress={() => handleEmail(selectedAgent.email)}
-                    >
+                    <TouchableOpacity style={styles.contactOption} onPress={() => handleEmail(selectedAgent.email)}>
                       <LinearGradient
                         colors={["#2196F3", "#0D47A1"]}
                         start={{ x: 0, y: 0 }}
@@ -1572,14 +764,10 @@ export default function AgentsPage() {
                       </LinearGradient>
                       <View style={styles.contactOptionDetails}>
                         <Text style={styles.contactOptionLabel}>Email</Text>
-                        <Text style={styles.contactOptionValue}>
-                          {selectedAgent.email}
-                        </Text>
+                        <Text style={styles.contactOptionValue}>{selectedAgent.email}</Text>
                       </View>
                       <View style={styles.contactOptionAction}>
-                        <Text style={styles.contactOptionActionText}>
-                          Email
-                        </Text>
+                        <Text style={styles.contactOptionActionText}>Email</Text>
                         <Feather name="chevron-right" size={14} color="#666" />
                       </View>
                     </TouchableOpacity>
@@ -1593,20 +781,13 @@ export default function AgentsPage() {
                         <Feather name="map-pin" size={18} color="#fff" />
                       </LinearGradient>
                       <View style={styles.contactOptionDetails}>
-                        <Text style={styles.contactOptionLabel}>
-                          Office Address
-                        </Text>
-                        <Text style={styles.contactOptionValue}>
-                          {selectedAgent.address}
-                        </Text>
+                        <Text style={styles.contactOptionLabel}>Office Address</Text>
+                        <Text style={styles.contactOptionValue}>{selectedAgent.address}</Text>
                       </View>
                     </View>
                   </View>
                 </View>
-                <TouchableOpacity
-                  style={styles.scheduleButton}
-                  activeOpacity={0.8}
-                >
+                <TouchableOpacity style={styles.scheduleButton} activeOpacity={0.8}>
                   <LinearGradient
                     colors={["#232761", "#232761"]}
                     start={{ x: 0, y: 0 }}
@@ -1631,65 +812,42 @@ export default function AgentsPage() {
           <View style={styles.projectModalContainer}>
             {selectedProjectForModal && (
               <>
-                <TouchableOpacity
-                  style={styles.modalCloseButton}
-                  onPress={() => setProjectModalVisible(false)}
-                >
+                <TouchableOpacity style={styles.modalCloseButton} onPress={() => setProjectModalVisible(false)}>
                   <Feather name="x" size={24} color="#FFF" />
                 </TouchableOpacity>
-                <Image
-                  source={selectedProjectForModal.image}
-                  style={styles.modalProjectImage}
-                />
+                <Image source={selectedProjectForModal.image} style={styles.modalProjectImage} />
                 <ScrollView style={styles.modalScrollView}>
-                  <Text style={styles.modalTitle}>
-                    {selectedProjectForModal.name}
-                  </Text>
+                  <Text style={styles.modalTitle}>{selectedProjectForModal.name}</Text>
                   <View style={styles.modalInfoRow}>
-                    <Text style={styles.modalLocation}>
-                      📍 {selectedProjectForModal.location}
-                    </Text>
+                    <Text style={styles.modalLocation}>📍 {selectedProjectForModal.location}</Text>
                     {selectedProjectForModal.rating && (
-                      <Text style={styles.modalRating}>
-                        ★ {selectedProjectForModal.rating}
-                      </Text>
+                      <Text style={styles.modalRating}>★ {selectedProjectForModal.rating}</Text>
                     )}
                   </View>
-                  <Text style={styles.modalStatus}>
-                    {selectedProjectForModal.status}
-                  </Text>
+                  <Text style={styles.modalStatus}>{selectedProjectForModal.status}</Text>
                   {selectedProjectForModal.price && (
                     <View style={styles.priceContainerModal}>
                       <Text style={styles.priceLabel}>Price Range:</Text>
-                      <Text style={styles.priceValue}>
-                        {selectedProjectForModal.price}
-                      </Text>
+                      <Text style={styles.priceValue}>{selectedProjectForModal.price}</Text>
                     </View>
                   )}
                   {selectedProjectForModal.possession && (
                     <View style={styles.possessionContainerModal}>
                       <Text style={styles.possessionLabel}>Possession:</Text>
-                      <Text style={styles.possessionValue}>
-                        {selectedProjectForModal.possession}
-                      </Text>
+                      <Text style={styles.possessionValue}>{selectedProjectForModal.possession}</Text>
                     </View>
                   )}
-                  <Text style={styles.modalDescription}>
-                    {selectedProjectForModal.description}
-                  </Text>
+                  <Text style={styles.modalDescription}>{selectedProjectForModal.description}</Text>
                 </ScrollView>
                 <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    style={styles.modalButton}
-                    onPress={() => setProjectModalVisible(false)}
-                  >
+                  <TouchableOpacity style={styles.modalButton} onPress={() => setProjectModalVisible(false)}>
                     <Text style={styles.modalButtonCloseText}>Close</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.modalButton, styles.modalInquiryButton]}
                     onPress={() => {
-                      setInquiryModalVisible(true);
-                      setProjectModalVisible(false);
+                      setInquiryModalVisible(true)
+                      setProjectModalVisible(false)
                     }}
                   >
                     <Text style={styles.modalButtonText}>Inquiry</Text>
@@ -1708,46 +866,47 @@ export default function AgentsPage() {
       >
         <View style={styles.inquiryModalOverlay}>
           <View style={styles.inquiryModalContainer}>
-            <TouchableOpacity
-              style={styles.inquiryModalCloseButton}
-              onPress={() => setInquiryModalVisible(false)}
-            >
+            <TouchableOpacity style={styles.inquiryModalCloseButton} onPress={() => setInquiryModalVisible(false)}>
               <Feather name="x" size={30} color={"#232761"} />
             </TouchableOpacity>
-            <Text style={styles.inquiryModalTitle}>
-              You are requesting to view advertiser details
-            </Text>
+            <Text style={styles.inquiryModalTitle}>You are requesting to view advertiser details</Text>
             <View style={styles.inquiryModalDetails}>
               <Text style={styles.inquiryModalLabel}>POSTED BY AGENT:</Text>
-              <Text style={styles.inquiryModalValue}>
-                +91 988** **** | i********@gmail.com
-              </Text>
+              <Text style={styles.inquiryModalValue}>+91 988** **** | i********@gmail.com</Text>
               <Text style={styles.inquiryModalValue}>VISHAL KATE</Text>
               <View style={styles.divider} />
-              <Text style={styles.inquiryModalLabel}>
-                POSTED ON 17th DEC, 2024
-              </Text>
-              <Text style={styles.inquiryModalValue}>
-                ₹ 15 Lac | Phule Nagar Akkuj
-              </Text>
-              <Text style={styles.inquiryModalValue}>
-                2 Guntha | Residential Land
-              </Text>
+              <Text style={styles.inquiryModalLabel}>POSTED ON 17th DEC, 2024</Text>
+              <Text style={styles.inquiryModalValue}>₹ 15 Lac | Phule Nagar Akkuj</Text>
+              <Text style={styles.inquiryModalValue}>2 Guntha | Residential Land</Text>
             </View>
           </View>
         </View>
       </Modal>
     </SafeAreaView>
-  );
+  )
 }
 
-const { width } = Dimensions.get("window");
-const cardWidth = width * 0.75;
+const { width } = Dimensions.get("window")
+const cardWidth = width * 0.75
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8f9fa",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#666",
+  },
+  errorText: {
+    fontSize: 12,
+    color: "#ff6b6b",
+    marginTop: 4,
   },
   stickyHeader: {
     position: "absolute",
@@ -1862,6 +1021,15 @@ const styles = StyleSheet.create({
     height: 175,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
+  },
+  agentLogo: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    width: 60,
+    height: 30,
+    borderRadius: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
   },
   featuredBadge: {
     position: "absolute",
@@ -2042,6 +1210,11 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: 16,
   },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
   closeButton: {
     position: "absolute",
     right: 16,
@@ -2093,11 +1266,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666",
     marginLeft: 4,
-  },
-  agentStatsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 24,
   },
   modalSection: {
     marginBottom: 24,
@@ -2237,6 +1405,11 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 8,
   },
+  priceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
   priceText: {
     fontSize: 12,
     fontWeight: "600",
@@ -2339,7 +1512,7 @@ const styles = StyleSheet.create({
   locationContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 5
+    marginBottom: 5,
   },
   projectLocation: {
     fontSize: 14,
@@ -2377,20 +1550,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     fontWeight: "bold",
-  },
-  propertiesSection: {
-    paddingVertical: 20,
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-  },
-  propertiesSectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 10,
-  },
-  propertiesScrollContainer: {
-    paddingRight: 20,
   },
   modalOverlay: {
     flex: 1,
@@ -2430,12 +1589,6 @@ const styles = StyleSheet.create({
     padding: 20,
     maxHeight: 350,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1a237e",
-    marginBottom: 10,
-  },
   modalInfoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -2455,22 +1608,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#4CAF50",
     marginBottom: 15,
-  },
-  priceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    backgroundColor: "rgba(26, 35, 126, 0.05)",
-    padding: 10,
-    borderRadius: 10,
-  },
-  possessionContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-    backgroundColor: "rgba(76, 175, 80, 0.05)",
-    padding: 10,
-    borderRadius: 10,
   },
   priceContainerModal: {
     flexDirection: "row",
@@ -2587,4 +1724,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#DDD",
     marginVertical: 16,
   },
-});
+})

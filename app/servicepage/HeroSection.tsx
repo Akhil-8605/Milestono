@@ -17,6 +17,7 @@ import { useNavigation } from "expo-router";
 import MenuModal from "../components/HeroModel";
 import * as Location from "expo-location";
 import { GOOGLE_API_KEY } from "@env";
+import { goBack } from "expo-router/build/global-state/routing";
 const cities = [
   "Pune",
   "Mumbai",
@@ -116,14 +117,6 @@ const HeroSection = () => {
     getCityName(latLong[0], latLong[1]);
   }, []);
 
-  const ServiceForm = async () => {
-    try {
-      await Linking.openURL(`https://milestono.com/serviceform`);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
     <View style={stylesHero.container}>
       <StatusBar translucent backgroundColor="transparent" />
@@ -165,7 +158,7 @@ const HeroSection = () => {
             <View style={stylesHero.tabContainer}>
               <TouchableOpacity
                 style={stylesHero.inactiveTab}
-                onPress={() => navigation.navigate("index" as never)}
+                onPress={() => goBack()}
               >
                 <Text style={stylesHero.inactiveTabText}>Real Estate</Text>
               </TouchableOpacity>
@@ -176,7 +169,7 @@ const HeroSection = () => {
 
             <TouchableOpacity
               style={[stylesHero.tabContainer, { padding: 12 }]}
-              onPress={() => { ServiceForm() }}
+              onPress={() => { navigation.navigate("ServiceFormPage" as never) }}
             >
               <Text style={stylesHero.ServiceTitle}>
                 Are you a Service Provider?

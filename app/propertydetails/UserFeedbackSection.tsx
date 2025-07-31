@@ -1,110 +1,90 @@
-import { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Dimensions,
-  TouchableOpacity,
-  Animated,
-  Platform,
-} from "react-native";
-import { useNavigation } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
-import { Star, ChevronRight } from "react-native-feather";
+"use client"
 
-const { width } = Dimensions.get("window");
-const cardWidth = width * 0.85;
+import { useState, useEffect, useRef, useCallback, type JSX } from "react"
+import { View, Text, Image, ScrollView, StyleSheet, Dimensions, TouchableOpacity, Platform } from "react-native"
+import { useNavigation } from "expo-router"
+import { LinearGradient } from "expo-linear-gradient"
+import { BlurView } from "expo-blur"
+import { Star, ChevronRight } from "react-native-feather"
+import axios from "axios"
+import { BASE_URL } from "@env"
 
-const feedbacks = [
-  {
-    id: 1,
-    message:
-      "Milestono has transformed how we manage our projects. The interface is intuitive and the support team is exceptional.",
-    user: "Vijay Kumar",
-    position: "Project Manager",
-    rating: 5,
-    date: "2025-01-25",
-    verified: true,
-  },
-  {
-    id: 2,
-    message:
-      "Great Service! The team went above and beyond to ensure our needs were met. Highly satisfied with the results.",
-    user: "Rahul Singh",
-    position: "CEO",
-    rating: 4,
-    date: "2025-02-01",
-    verified: true,
-  },
-  {
-    id: 3,
-    message:
-      "Highly recommended! The platform is robust and reliable. It has significantly improved our workflow efficiency.",
-    user: "Sneha Patel",
-    position: "Tech Lead",
-    rating: 5,
-    date: "2025-02-05",
-    verified: false,
-  },
-  {
-    id: 1,
-    message:
-      "Milestono has transformed how we manage our projects. The interface is intuitive and the support team is exceptional.",
-    user: "Vijay Kumar",
-    position: "Project Manager",
-    rating: 5,
-    date: "2025-01-25",
-    verified: false,
-  },
-  {
-    id: 2,
-    message:
-      "Great Service! The team went above and beyond to ensure our needs were met. Highly satisfied with the results.",
-    user: "Rahul Singh",
-    position: "CEO",
-    rating: 4,
-    date: "2025-02-01",
-    verified: true,
-  },
-  {
-    id: 3,
-    message:
-      "Highly recommended! The platform is robust and reliable. It has significantly improved our workflow efficiency.",
-    user: "Sneha Patel",
-    position: "Tech Lead",
-    rating: 5,
-    date: "2025-02-05",
-    verified: true,
-  },
-];
+const { width } = Dimensions.get("window")
+const cardWidth = width * 0.85
+
+interface Feedback {
+  _id: string
+  id?: number
+  message: string
+  user: string
+  position: string
+  rating: number
+  date: string
+  verified: boolean
+}
 
 export default function UserFeedbackSection() {
-  const navigation = useNavigation();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const scrollViewRef = useRef<ScrollView>(null);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const navigation = useNavigation()
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const scrollViewRef = useRef<ScrollView>(null)
+  const fetchingRef = useRef(false)
+
+  const fetchFeedbacks = useCallback(async () => {
+    // Prevent multiple simultaneous fetches
+    if (fetchingRef.current) {
+      return
+    }
+
+    fetchingRef.current = true
+
+    try {
+      if (!BASE_URL) {
+        console.warn("BASE_URL not configured, using mock data")
+        return
+      }
+
+      const response = await axios.get(`${BASE_URL}/api/feedback`, {
+        timeout: 8000,
+      })
+
+      if (response.data && Array.isArray(response.data)) {
+        // Limit to first 5 feedbacks
+        setFeedbacks(response.data.slice(0, 5))
+      } else {
+        throw new Error("Invalid response format")
+      }
+    } catch (error) {
+      console.error("Error fetching feedbacks:", error)
+      // Use mock data as fallback (limited to 5)
+    } finally {
+      setLoading(false)
+      fetchingRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchFeedbacks()
+  }, [fetchFeedbacks])
 
   // Format date to a more readable format
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffTime = Math.abs(now.getTime() - date.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
     if (diffDays <= 7) {
-      return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
+      return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`
     } else {
       return date.toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
         day: "numeric",
-      });
+      })
     }
-  };
+  }
 
   // Render star ratings
   const renderRating = (rating: number) => {
@@ -121,107 +101,36 @@ export default function UserFeedbackSection() {
           />
         ))}
       </View>
-    );
-  };
+    )
+  }
 
   // Auto-scroll every 5 seconds
   useEffect(() => {
+    if (feedbacks.length === 0) return
+
     const interval = setInterval(() => {
-      const nextIndex =
-        currentIndex === feedbacks.length - 1 ? 0 : currentIndex + 1;
-      setCurrentIndex(nextIndex);
-
-      // Animation sequence
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(fadeAnim, {
-            toValue: 0.4,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(scaleAnim, {
-            toValue: 0.95,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scaleAnim, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [currentIndex, fadeAnim, scaleAnim]);
-
-  // Initial animation
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [fadeAnim, scaleAnim]);
+      const nextIndex = currentIndex === feedbacks.length - 1 ? 0 : currentIndex + 1
+      setCurrentIndex(nextIndex)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [currentIndex, feedbacks.length])
 
   // Scroll to current index
   useEffect(() => {
-    if (scrollViewRef.current) {
+    if (scrollViewRef.current && feedbacks.length > 0) {
       scrollViewRef.current.scrollTo({
         x: currentIndex * (cardWidth + 20),
         animated: true,
-      });
+      })
     }
-  }, [currentIndex]);
+  }, [currentIndex, feedbacks.length])
 
   // Handle manual card selection
   const handleCardPress = (index: number) => {
     if (index !== currentIndex) {
-      setCurrentIndex(index);
-
-      // Animation for manual selection
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(fadeAnim, {
-            toValue: 0.4,
-            duration: 150,
-            useNativeDriver: true,
-          }),
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(scaleAnim, {
-            toValue: 0.97,
-            duration: 150,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scaleAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start();
+      setCurrentIndex(index)
     }
-  };
+  }
 
   return (
     <View style={styles.outerContainer}>
@@ -238,85 +147,62 @@ export default function UserFeedbackSection() {
             onPress={() => navigation.navigate("UserFeedbackPage" as never)}
           >
             <Text style={styles.viewAllText}>View all</Text>
-            <ChevronRight
-              width={14}
-              height={14}
-              color="#4A4A9C"
-              strokeWidth={2}
-            />
+            <ChevronRight width={14} height={14} color="#4A4A9C" strokeWidth={2} />
           </TouchableOpacity>
         </View>
 
         {/* Scrollable Feedback Cards */}
-        <Animated.View
-          style={{
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollView}
+          snapToInterval={cardWidth + 20}
+          decelerationRate="fast"
+          onMomentumScrollEnd={(event) => {
+            const newIndex = Math.round(event.nativeEvent.contentOffset.x / (cardWidth + 20))
+            if (newIndex >= 0 && newIndex < feedbacks.length) {
+              setCurrentIndex(newIndex)
+            }
           }}
         >
-          <ScrollView
-            ref={scrollViewRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.scrollView}
-            snapToInterval={cardWidth + 20}
-            decelerationRate="fast"
-            onMomentumScrollEnd={(event) => {
-              const newIndex = Math.round(
-                event.nativeEvent.contentOffset.x / (cardWidth + 20)
-              );
-              if (newIndex >= 0 && newIndex < feedbacks.length) {
-                setCurrentIndex(newIndex);
-              }
-            }}
-          >
-            {feedbacks.map((feedback, index) => (
-              <TouchableOpacity
-                key={feedback.id}
-                activeOpacity={0.95}
-                onPress={() => handleCardPress(index)}
-              >
-                {Platform.OS === "ios" ? (
-                  <BlurView
-                    intensity={index === currentIndex ? 0 : 50}
-                    tint="light"
-                    style={[
-                      styles.card,
-                      { width: cardWidth },
-                      index === currentIndex && styles.activeCard,
-                    ]}
-                  >
-                    <CardContent
-                      feedback={feedback}
-                      isActive={index === currentIndex}
-                      formatDate={formatDate}
-                      renderRating={renderRating}
-                    />
-                  </BlurView>
-                ) : (
-                  <View
-                    style={[
-                      styles.card,
-                      { width: cardWidth },
-                      index === currentIndex && styles.activeCard,
-                      {
-                        backgroundColor:
-                          index === currentIndex ? "#ffffff" : "#f8f8f8",
-                      },
-                    ]}
-                  >
-                    <CardContent
-                      feedback={feedback}
-                      isActive={index === currentIndex}
-                      formatDate={formatDate}
-                      renderRating={renderRating}
-                    />
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </Animated.View>
+          {feedbacks.map((feedback, index) => (
+            <TouchableOpacity key={feedback._id} activeOpacity={0.95} onPress={() => handleCardPress(index)}>
+              {Platform.OS === "ios" ? (
+                <BlurView
+                  intensity={index === currentIndex ? 0 : 50}
+                  tint="light"
+                  style={[styles.card, styles.activeCard]}
+                >
+                  <CardContent
+                    feedback={feedback}
+                    isActive={index === currentIndex}
+                    formatDate={formatDate}
+                    renderRating={renderRating}
+                  />
+                </BlurView>
+              ) : (
+                <View
+                  style={[
+                    styles.card,
+                    { width: cardWidth },
+                    index === currentIndex && styles.activeCard,
+                    {
+                      backgroundColor: index === currentIndex ? "#ffffff" : "#f8f8f8",
+                    },
+                  ]}
+                >
+                  <CardContent
+                    feedback={feedback}
+                    isActive={index === currentIndex}
+                    formatDate={formatDate}
+                    renderRating={renderRating}
+                  />
+                </View>
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
         {/* Pagination Dots */}
         <View style={styles.paginationContainer}>
@@ -324,16 +210,13 @@ export default function UserFeedbackSection() {
             <TouchableOpacity
               key={index}
               onPress={() => handleCardPress(index)}
-              style={[
-                styles.paginationDot,
-                index === currentIndex && styles.activePaginationDot,
-              ]}
+              style={[styles.paginationDot, index === currentIndex && styles.activePaginationDot]}
             />
           ))}
         </View>
       </View>
     </View>
-  );
+  )
 }
 
 // Separate component for card content to improve readability
@@ -343,31 +226,27 @@ function CardContent({
   formatDate,
   renderRating,
 }: {
-  feedback: any;
-  isActive: boolean;
-  formatDate: (date: string) => string;
-  renderRating: (rating: number) => JSX.Element;
+  feedback: Feedback
+  isActive: boolean
+  formatDate: (date: string) => string
+  renderRating: (rating: number) => JSX.Element
 }) {
   return (
     <>
       <LinearGradient
-        colors={
-          isActive ? ["#6366F1", "#4F46E5"] : ["transparent", "transparent"]
-        }
+        colors={isActive ? ["#6366F1", "#4F46E5"] : ["transparent", "transparent"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.cardHeader}
       >
-        <View style={styles.quoteIconContainer}>"</View>
+        <View style={styles.quoteIconContainer}>
+          <Text style={[styles.quoteIcon, { color: isActive ? "#fff" : "#6366F1" }]}>"</Text>
+        </View>
         {renderRating(feedback.rating)}
       </LinearGradient>
 
       <View style={styles.messageContainer}>
-        <Text
-          style={[styles.message, isActive && styles.activeMessage]}
-          numberOfLines={4}
-          ellipsizeMode="tail"
-        >
+        <Text style={[styles.message, isActive && styles.activeMessage]} numberOfLines={4} ellipsizeMode="tail">
           {feedback.message}
         </Text>
 
@@ -380,16 +259,8 @@ function CardContent({
 
       <View style={styles.cardFooter}>
         <View style={styles.userInfo}>
-          <View
-            style={[
-              styles.avatarContainer,
-              isActive && styles.activeAvatarContainer,
-            ]}
-          >
-            <Image
-              source={require("../../assets/images/PersonDummy.png")}
-              style={styles.avatar}
-            />
+          <View style={[styles.avatarContainer, isActive && styles.activeAvatarContainer]}>
+            <Image source={require("../../assets/images/PersonDummy.png")} style={styles.avatar} />
             {feedback.verified && (
               <View style={styles.verifiedBadge}>
                 <Text style={styles.verifiedText}>✓</Text>
@@ -397,18 +268,14 @@ function CardContent({
             )}
           </View>
           <View style={styles.userTextContainer}>
-            <Text style={[styles.userName, isActive && styles.activeUserName]}>
-              {feedback.user}
-            </Text>
+            <Text style={[styles.userName, isActive && styles.activeUserName]}>{feedback.user}</Text>
             <Text style={styles.userPosition}>{feedback.position}</Text>
-            <Text style={[styles.date, isActive && styles.activeDate]}>
-              {formatDate(feedback.date)}
-            </Text>
+            <Text style={[styles.date, isActive && styles.activeDate]}>{formatDate(feedback.date)}</Text>
           </View>
         </View>
       </View>
     </>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -425,7 +292,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: 25,
-    // Pattern effect using borderRadius
     borderColor: "rgba(230, 230, 250, 0.5)",
   },
   container: {
@@ -506,7 +372,10 @@ const styles = StyleSheet.create({
   quoteIconContainer: {
     justifyContent: "center",
     alignItems: "center",
-    color: "#fff"
+  },
+  quoteIcon: {
+    fontSize: 24,
+    fontWeight: "bold",
   },
   ratingContainer: {
     flexDirection: "row",
@@ -627,4 +496,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#232761",
     opacity: 1,
   },
-});
+})
