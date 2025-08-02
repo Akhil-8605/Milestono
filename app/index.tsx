@@ -17,7 +17,7 @@ export default function Main() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
 
   useEffect(() => {
-    AsyncStorage.getItem("Auth")
+    AsyncStorage.getItem("auth")
       .then(value => {
         setIsLoggedIn(value === "true")
       })
@@ -51,7 +51,6 @@ export default function Main() {
         style={{ flex: 1, backgroundColor: "#f5f5f5" }}
       >
         <Homepage />
-        <Footer />
       </ScrollView>
       <BottomNavbar />
     </View>

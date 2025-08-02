@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import type React from "react"
 import { useState, useEffect } from "react"
 import {
   View,
@@ -18,7 +18,7 @@ import {
   Platform,
 } from "react-native"
 import Icon from "react-native-vector-icons/MaterialCommunityIcons"
-import { useRouter } from "expo-router"
+import { useRouter, useLocalSearchParams } from "expo-router"
 import MultiSlider from "@ptomasroos/react-native-multi-slider"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
@@ -30,6 +30,7 @@ const { width } = Dimensions.get("window")
 const PropertySearchAndFilter = () => {
   const router = useRouter()
   const statusBarHeight = StatusBar.currentHeight || 0
+  const searchParams = useLocalSearchParams() // Add this line
 
   // Basic states for Category, Search, etc.
   const [selectedType, setSelectedType] = useState("Sell")
@@ -99,6 +100,16 @@ const PropertySearchAndFilter = () => {
   useEffect(() => {
     loadSavedFilters()
   }, [])
+
+  // Add this useEffect to handle navigation parameters
+  useEffect(() => {
+    if (searchParams.cityName) {
+      const cityFromParam = searchParams.cityName as string
+      setSearchQuery(cityFromParam)
+      setSelectedCity(cityFromParam)
+      handleCitySelect(cityFromParam) // Trigger geocoding for the pre-filled city
+    }
+  }, [searchParams.cityName]) // Depend on searchParams.cityName
 
   // Load saved filters from AsyncStorage
   const loadSavedFilters = async () => {

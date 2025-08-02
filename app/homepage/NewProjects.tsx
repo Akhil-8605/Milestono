@@ -92,7 +92,7 @@ export default function RecommendedProjectsSection() {
   // Inquiry handler
   const handleInquiryClick = async (projectId: string) => {
     try {
-      const token = await AsyncStorage.getItem("authToken")
+      const token = await AsyncStorage.getItem("auth")
       if (!token) {
         Alert.alert("Login Required", "Please log in to send an inquiry.")
         return
