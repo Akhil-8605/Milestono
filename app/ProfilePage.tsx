@@ -20,6 +20,7 @@ import axios from "axios"
 import * as ImagePicker from "expo-image-picker"
 import { BASE_URL } from "@env"
 import { goBack } from "expo-router/build/global-state/routing"
+import Header from "./components/Header"
 
 
 interface UserProfile {
@@ -387,6 +388,7 @@ export default function ProfilePage() {
 
   return (
     <ScrollView style={[styles.container, { marginTop: statusBarHeight }]} showsVerticalScrollIndicator={false}>
+      <Header/>
       {loading ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#232761" />

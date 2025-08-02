@@ -396,7 +396,7 @@ export default function NewProjectsPage() {
 
   useEffect(() => {
     Animated.spring(tabIndicatorPosition, {
-      toValue: activeTab === "residential" ? 0 : 175,
+      toValue: activeTab === "residential" ? 0 : width * 0.5,
       useNativeDriver: true,
       friction: 8,
       tension: 50,
@@ -602,7 +602,7 @@ export default function NewProjectsPage() {
               },
             ]}
           >
-            <BlurView intensity={40} tint="dark" style={styles.formContainer}>
+            <BlurView intensity={80} tint="dark" style={styles.formContainer}>
               <Animatable.Text animation="pulse" iterationCount="infinite" duration={2000} style={styles.formTitle}>
                 PROPERTY INQUIRY
               </Animatable.Text>
@@ -1008,7 +1008,7 @@ const styles = StyleSheet.create({
   },
   tabIndicator: {
     position: "absolute",
-    width: 175,
+    width: width * 0.5,
     height: "100%",
     backgroundColor: "rgba(26, 35, 126, 0.1)",
     borderRadius: 10,

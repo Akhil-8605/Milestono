@@ -19,6 +19,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useRoute, RouteProp } from "@react-navigation/native" // Import route hooks
 import { BASE_URL } from "@env"
+import Header from "./components/Header"
 
 // Local image imports
 const recentActivityHouse = require("../assets/images/recentActivityHouse.png")
@@ -406,6 +407,7 @@ export default function PropertyActivities() {
 
   return (
     <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
+      <Header/>
       <View style={styles.tabContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScroll}>
           {TABS.map((tab) => (

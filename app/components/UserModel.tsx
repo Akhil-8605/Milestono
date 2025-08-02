@@ -300,7 +300,7 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
                   style={[styles.actionBox, { backgroundColor: "#E3F2FD" }]}
                   onPress={() => {
                     onClose()
-                    navigation.navigate("SearchProperty")
+                    navigation.navigate("SearchPropertyPage")
                   }}
                 >
                   <FontAwesome5 name="search" size={24} color="#1976D2" />
@@ -311,7 +311,7 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
 
                 <TouchableOpacity
                   style={[styles.actionBox, { backgroundColor: "#E8F5E8" }]}
-                  onPress={() => navigateToRoute("PostProperty")}
+                  onPress={() => navigation.navigate("PostPropertyPage")}
                 >
                   <FontAwesome5 name="plus" size={24} color="#388E3C" />
                   <Text style={styles.actionText}>Post your property</Text>

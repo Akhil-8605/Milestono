@@ -21,6 +21,7 @@ import axios from "axios"
 import * as ImagePicker from "expo-image-picker"
 import * as DocumentPicker from "expo-document-picker"
 import { BASE_URL } from "@env"
+import { goBack } from "expo-router/build/global-state/routing"
 
 // Define a type for file assets from ImagePicker or DocumentPicker
 type FileAsset = ImagePicker.ImagePickerAsset | DocumentPicker.DocumentPickerAsset
@@ -134,7 +135,24 @@ export default function ServiceForm() {
     const token = await AsyncStorage.getItem("auth")
     if (!token) {
       setLoading(false)
-      showToast("No auth token found", "error")
+      if (!token) {
+        return Alert.alert(
+          "Error",
+          "Login is required to post a property.",
+          [
+            {
+              text: "Exit",
+              style: "cancel",
+              onPress: () => goBack(),
+            },
+            {
+              text: "Login",
+              onPress: () => navigation.navigate("LoginPage" as never),
+            },
+          ],
+          { cancelable: true }
+        );
+      }
       return
     }
     try {
@@ -695,10 +713,10 @@ export default function ServiceForm() {
     }
   }
 
-   const statusBarHeight = StatusBar.currentHeight || 0;
+  const statusBarHeight = StatusBar.currentHeight || 0;
 
   return (
-    <ScrollView style={[styles.container, { marginTop: statusBarHeight ,}]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { marginTop: statusBarHeight, }]} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={styles.title}>Service Provider Registration</Text>
         <Text style={styles.subtitle}>Join our network of trusted professionals</Text>

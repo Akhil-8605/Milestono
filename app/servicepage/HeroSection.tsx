@@ -195,7 +195,7 @@ const stylesHero = StyleSheet.create({
   },
   backgroundImage: {
     width: "100%",
-    height: 300,
+    height: 350,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

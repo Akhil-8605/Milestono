@@ -87,11 +87,10 @@ const menuItems = {
     icon: "building",
     items: [
       { title: "Post Property", icon: "pen", linkto: "PostPropertyPage" },
-      { title: "Owner Services", icon: "tools", linkto: "OwnerServicesPage" },
       {
         title: "About Milestono",
         icon: "info-circle",
-        linkto: "AboutMilestonoPage",
+        linkto: "AboutUsPage",
       },
       { title: "View Properties", icon: "eye", linkto: "SearchPage" },
       { title: "About Us", icon: "user", linkto: "AboutUsPage" },
@@ -113,7 +112,7 @@ const menuItems = {
       {
         title: "Register to Property",
         icon: "clipboard-check",
-        linkto: "RegisterPropertyPage",
+        linkto: "PostPropertyPage",
       },
       {
         title: "View Video about Milestono",

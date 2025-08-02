@@ -129,7 +129,6 @@ const styles = StyleSheet.create({
   activeItem: {
     fontSize: 17,
     color: "#fff",
-    fontWeight: "bold",
   },
   slideContainer: {
     height: 450,
@@ -137,9 +136,9 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 18,
     color: "#fff",
+    textAlign: "auto",
     marginVertical: 10,
     lineHeight: 24,
-    fontWeight: "600",
   },
   image: {
     width: "100%",

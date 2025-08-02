@@ -59,7 +59,7 @@ const RealEstateSection = () => {
           useNativeDriver: true,
         }).start();
       });
-    }, 5000); // Change category every 5 seconds
+    }, 3000); // Change category every 5 seconds
 
     return () => clearInterval(interval);
   }, []);

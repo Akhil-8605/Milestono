@@ -9,7 +9,8 @@ import Header from "./components/Header"
 import axios from "axios"
 import { BASE_URL } from "@env"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-
+import { useNavigation } from "expo-router"
+import { goBack } from "expo-router/build/global-state/routing"
 interface PhotoFile {
   uri: string
   name: string
@@ -52,6 +53,12 @@ const PostProperty = () => {
   const [disabled, setDisabled] = useState(true)
   const [uploadedPhotos, setUploadedPhotos] = useState<PhotoFile[]>([])
 
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    checkEligibility(); // Check eligibility on mount 
+  })
+
   const [formData, setFormData] = useState<FormData>({
     heading: "",
     sellType: "",
@@ -93,7 +100,24 @@ const PostProperty = () => {
   const checkEligibility = async () => {
     try {
       const token = await AsyncStorage.getItem("auth")
-      if (!token) return
+      if (!token) {
+        return Alert.alert(
+          "Error",
+          "Login is required to post a property.",
+          [
+            {
+              text: "Exit",
+              style: "cancel",
+              onPress: () => goBack(),
+            },
+            {
+              text: "Login",
+              onPress: () => navigation.navigate("LoginPage" as never),
+            },
+          ],
+          { cancelable: true }
+        );
+      }
 
       const res = await axios.get(`${BASE_URL}/api/check-num-of-properties`, {
         headers: { Authorization: token },

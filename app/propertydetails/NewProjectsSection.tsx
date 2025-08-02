@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   heading: {
-    fontSize: 22,
+    fontSize: 25,
     fontWeight: "700",
     color: "#1F2937",
     letterSpacing: -0.5,
