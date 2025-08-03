@@ -2,16 +2,18 @@
 
 import { useState } from "react"
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, Image } from "react-native"
-
+import { useNavigation } from "expo-router"
 const { width, height } = Dimensions.get("window")
 
 interface SplashScreenProps {
   onGetStarted: () => void
 }
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ onGetStarted }) => {
+const SplashScreen = () => {
   const [currentScreen, setCurrentScreen] = useState(1)
   const totalScreens = 5
+
+  const navigation = useNavigation();
 
   const handleSkip = () => {
     setCurrentScreen(5)
@@ -22,7 +24,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onGetStarted }) => {
     if (currentScreen < totalScreens) {
       setCurrentScreen(currentScreen + 1)
     } else {
-      onGetStarted()
+      navigation.navigate("index2" as never)
     }
   }
 
@@ -189,9 +191,10 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onGetStarted }) => {
     }
   }
 
+  const statusBarHeight = StatusBar.currentHeight || 0
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2B4C7E" />
+    <View style={[styles.container]}>
       {renderCurrentScreen()}
     </View>
   )
