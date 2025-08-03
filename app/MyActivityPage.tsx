@@ -24,7 +24,7 @@ import Header from "./components/Header"
 // Local image imports
 const recentActivityHouse = require("../assets/images/recentActivityHouse.png")
 const recentActivityPhone = require("../assets/images/recentActivityPhone.png")
-const recentActivityNothingHere = require("../assets/images/recentActivitynothing.png")
+const recentActivityNothingHere = require("../assets/images/recentActivityHouse.png")
 
 const TABS = [
   { id: "viewed", title: "Recently Viewed" },

@@ -20,7 +20,10 @@
         "exclude": [
           "react-native-maps",
           "react-native-chart-kit",
-          "react-native-feather"
+          "react-native-feather",
+          "@rneui/base",
+          "@rneui/themed",
+          "react-native-vector-icons"
         ]
       }
     }
