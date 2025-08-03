@@ -17,6 +17,7 @@ import {
 } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
+import { goBack } from "expo-router/build/global-state/routing"
 
 const { width } = Dimensions.get("window")
 
@@ -32,12 +33,6 @@ const ContactUsPage: React.FC<ContactUsPageProps> = ({ navigation }) => {
         message: "",
     })
     const [loading, setLoading] = useState(false)
-
-    const goBack = () => {
-        if (navigation) {
-            navigation.goBack()
-        }
-    }
 
     const handleInputChange = (field: string, value: string) => {
         setFormData((prev) => ({

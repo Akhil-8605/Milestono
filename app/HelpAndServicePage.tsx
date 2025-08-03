@@ -2,6 +2,7 @@ import type React from "react"
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, StatusBar } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
+import { goBack } from "expo-router/build/global-state/routing"
 
 const { width } = Dimensions.get("window")
 
@@ -10,11 +11,6 @@ interface HelpAndServicePageProps {
 }
 
 const HelpAndServicePage: React.FC<HelpAndServicePageProps> = ({ navigation }) => {
-    const goBack = () => {
-        if (navigation) {
-            navigation.goBack()
-        }
-    }
 
     const navigateToContact = () => {
         if (navigation) {
