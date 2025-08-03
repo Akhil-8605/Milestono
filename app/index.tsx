@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   View,
   ScrollView,
@@ -11,10 +11,18 @@ import BottomNavbar from "./components/BottomNavbar"
 import SplashScreen from "./SplashScreen"
 
 export default function Main() {
+  const statusBarHeight = StatusBar.currentHeight || 0
   return (
-    <>
+    <View style={{ flex: 1, marginTop: statusBarHeight }}>
       <StatusBar backgroundColor="white" barStyle="dark-content" />
-      <SplashScreen />
-    </>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 80 }}
+        style={{ flex: 1, backgroundColor: "#f5f5f5" }}
+      >
+        <Homepage />
+      </ScrollView>
+      <BottomNavbar />
+    </View>
   )
 }
