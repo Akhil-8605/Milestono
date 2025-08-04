@@ -1,18 +1,18 @@
-import React, { useState ,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation } from "expo-router";
 import axios from "axios";
 import { BASE_URL } from "@env";
 
 export default function PropertyRegistration() {
-  
+
   const [data, setData] = useState({
     users: 0,
     projects: 0,
     properties: 0,
   });
 
-    const handleData = async () => {
+  const handleData = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/api/home-count`);
       setData(response.data as any);
@@ -23,8 +23,8 @@ export default function PropertyRegistration() {
 
   useEffect(() => {
     handleData();
-  }, [location]);
-  
+  }, []);
+
   const stats = [
     { number: data.properties.toString(), label: "Property Listings" },
     { number: data.projects.toString(), label: "Projects" },
