@@ -27,7 +27,12 @@
         "backgroundColor": "#f5f5f5"
       },
       "package": "com.milestono.milestono",
-      "versionCode": 1
+      "versionCode": 1,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -52,9 +57,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "13cec52b-50c0-4d79-ad21-c740044a909d"
+        "projectId": "4ec301ec-1891-4393-8300-9b11197c6e04"
       }
     },
-    "owner": "akhil-8605"
+    "owner": "divya-0615"
   }
 }
