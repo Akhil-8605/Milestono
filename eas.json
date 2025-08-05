@@ -15,6 +15,11 @@
       "autoIncrement": true
     },
     "apk": {
+      "env": {
+        "BASE_URL": "https://api.milestono.com:6005",
+        "GOOGLE_API_KEY": "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw",
+        "RAZORPAY_KEY_ID": "rzp_live_pm762YfvGOPF3L"
+      },  
       "android": {
         "buildType": "apk"
       },
