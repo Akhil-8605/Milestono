@@ -1,38 +1,60 @@
-import React, { useEffect, useState } from "react"
-import {
-  View,
-  ScrollView,
-  StatusBar,
-  ActivityIndicator,
-} from "react-native"
+"use client"
+
+import { useEffect, useState, useCallback } from "react"
+import { View, ScrollView, StatusBar, ActivityIndicator, Text, RefreshControl } from "react-native"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
-import Homepage from "./homepage"           // adjust paths if needed
-import Footer from "./components/Footer"
+import Homepage from "./homepage" // adjust paths if needed
 import BottomNavbar from "./components/BottomNavbar"
 import SplashScreen from "./SplashScreen"
 
 export default function Main() {
   const [isLoading, setIsLoading] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    AsyncStorage.getItem("auth")
-      .then(value => {
-        setIsLoggedIn(value === "true")
-      })
-      .catch(err => console.error("Error reading login flag", err))
-      .finally(() => setIsLoading(false))
+    const checkLoginStatus = async () => {
+      try {
+        const token = await AsyncStorage.getItem("auth")
+        setIsLoggedIn(!!token)
+      } catch (err) {
+        console.error("Error reading login token from AsyncStorage", err)
+        setIsLoggedIn(false)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkLoginStatus()
   }, [])
 
   const handleGetStarted = () => {
     setIsLoggedIn(true)
   }
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+
+    try {
+      // Update refresh key to force re-render of Homepage component
+      setRefreshKey((prevKey) => prevKey + 1)
+
+      // Add a small delay to show the refresh animation
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    } catch (error) {
+      console.error("Error during refresh:", error)
+    } finally {
+      setRefreshing(false)
+    }
+  }, [])
+
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5" }}>
+        <ActivityIndicator size="large" color="#232761" />
+        <Text style={{ marginTop: 10, fontSize: 16, color: "#333" }}>Loading...</Text>
       </View>
     )
   }
@@ -49,8 +71,19 @@ export default function Main() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 80 }}
         style={{ flex: 1, backgroundColor: "#f5f5f5" }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#232761"]} // Android
+            tintColor="#232761" // iOS
+            title="Pull to refresh..."
+            titleColor="#232761"
+            progressBackgroundColor="#ffffff"
+          />
+        }
       >
-        <Homepage />
+        <Homepage key={`homepage-${refreshKey}`} />
       </ScrollView>
       <BottomNavbar />
     </View>

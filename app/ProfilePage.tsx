@@ -387,47 +387,199 @@ export default function ProfilePage() {
   const statusBarHeight = StatusBar.currentHeight || 0;
 
   return (
-    <ScrollView style={[styles.container, { marginTop: statusBarHeight }]} showsVerticalScrollIndicator={false}>
-      <Header/>
-      {loading ? (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#232761" />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      ) : (
-        <View style={styles.content}>
-          <Text style={styles.header}>User Profile</Text>
-
-          <View style={styles.profileSection}>
-            <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
-              <Image source={{ uri: imageSrc }} style={styles.profileImage} />
-              <View style={styles.cameraIconContainer}>
-                <FontAwesome5 name="camera" size={20} color="#fff" solid />
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleUpdateProfile} style={styles.updateButton}>
-              <Text style={styles.updateButtonText}>Update Profile</Text>
-            </TouchableOpacity>
+    <View style={{flex: 1, marginTop: statusBarHeight }}>
+      <Header />
+      <ScrollView style={[styles.container]} showsVerticalScrollIndicator={false}>
+        {loading ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#232761" />
+            <Text style={styles.loadingText}>Loading...</Text>
           </View>
+        ) : (
+          <View style={styles.content}>
+            <Text style={styles.header}>User Profile</Text>
 
-          <View style={styles.card}>
-            <View style={styles.field}>
-              <Text style={styles.label}>Email:</Text>
-              <TextInput style={styles.input} value={userProfile.email || ""} editable={false} />
+            <View style={styles.profileSection}>
+              <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
+                <Image source={{ uri: imageSrc }} style={styles.profileImage} />
+                <View style={styles.cameraIconContainer}>
+                  <FontAwesome5 name="camera" size={20} color="#fff" solid />
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleUpdateProfile} style={styles.updateButton}>
+                <Text style={styles.updateButtonText}>Update Profile</Text>
+              </TouchableOpacity>
             </View>
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Phone:</Text>
-              {isEditingPhone ? (
-                <>
+            <View style={styles.card}>
+              <View style={styles.field}>
+                <Text style={styles.label}>Email:</Text>
+                <TextInput style={styles.input} value={userProfile.email || ""} editable={false} />
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Phone:</Text>
+                {isEditingPhone ? (
+                  <>
+                    <TextInput
+                      style={styles.input}
+                      value={phone}
+                      onChangeText={setPhone}
+                      keyboardType="phone-pad"
+                      placeholder="Enter new phone number"
+                    />
+                    <TouchableOpacity onPress={verifyPhone} style={styles.sendOtpButton}>
+                      <Text style={styles.sendOtpButtonText}>Send OTP</Text>
+                    </TouchableOpacity>
+                    <View style={styles.otpContainer}>
+                      <Text style={styles.label}>OTP:</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={otp}
+                        onChangeText={setOtp}
+                        keyboardType="numeric"
+                        placeholder="Enter OTP"
+                      />
+                      <TouchableOpacity onPress={handlePhoneChange} style={styles.verifyButton}>
+                        <Text style={styles.verifyButtonText}>Verify</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <View style={styles.phoneDisplayContainer}>
+                    <TextInput style={styles.input} value={phone} editable={false} />
+                    <TouchableOpacity onPress={() => setIsEditingPhone(true)} style={styles.changeNumberButton}>
+                      <Text style={styles.changeNumberButtonText}>Change Number</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {!user && ( // Only show password fields if not logged in via Google (assuming 'user' means Google user)
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Change Password</Text>
+                <View style={styles.field}>
+                  <Text style={styles.label}>Current Password:</Text>
                   <TextInput
                     style={styles.input}
-                    value={phone}
-                    onChangeText={setPhone}
-                    keyboardType="phone-pad"
-                    placeholder="Enter new phone number"
+                    secureTextEntry
+                    value={checkPassword}
+                    onChangeText={setCheckPassword}
+                    placeholder="Enter current password"
                   />
-                  <TouchableOpacity onPress={verifyPhone} style={styles.sendOtpButton}>
+                </View>
+                <View style={styles.field}>
+                  <Text style={styles.label}>New Password:</Text>
+                  <TextInput
+                    style={styles.input}
+                    secureTextEntry
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    placeholder="Enter new password"
+                  />
+                </View>
+                <View style={styles.field}>
+                  <Text style={styles.label}>Confirm Password:</Text>
+                  <TextInput
+                    style={styles.input}
+                    secureTextEntry
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    placeholder="Confirm new password"
+                  />
+                </View>
+                <TouchableOpacity onPress={handleUpdatePassword} style={styles.updateButton}>
+                  <Text style={styles.updateButtonText}>Update Password</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {userServiceData ? (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>User Service Profile</Text>
+                <View style={styles.fieldRow}>
+                  <View style={styles.fieldHalf}>
+                    <Text style={styles.label}>District:</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={userServiceData.district || ""}
+                      onChangeText={(text) => setUserServiceData({ ...userServiceData, district: text })}
+                    />
+                  </View>
+                  <View style={styles.fieldHalf}>
+                    <Text style={styles.label}>State:</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={userServiceData.state || ""}
+                      onChangeText={(text) => setUserServiceData({ ...userServiceData, state: text })}
+                    />
+                  </View>
+                </View>
+                <View style={styles.field}>
+                  <Text style={styles.label}>Sub-District:</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={userServiceData.subDistrict || ""}
+                    onChangeText={(text) => setUserServiceData({ ...userServiceData, subDistrict: text })}
+                  />
+                </View>
+                <View style={styles.field}>
+                  <Text style={styles.label}>Address:</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={userServiceData.address || ""}
+                    onChangeText={(text) => setUserServiceData({ ...userServiceData, address: text })}
+                  />
+                </View>
+                <View style={styles.fieldRow}>
+                  <View style={styles.fieldHalf}>
+                    <Text style={styles.label}>Account No:</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={userServiceData.accountNo || ""}
+                      onChangeText={(text) => setUserServiceData({ ...userServiceData, accountNo: text })}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={styles.fieldHalf}>
+                    <Text style={styles.label}>IFSC Code:</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={userServiceData.ifsccode || ""}
+                      onChangeText={(text) => setUserServiceData({ ...userServiceData, ifsccode: text })}
+                    />
+                  </View>
+                </View>
+                <TouchableOpacity onPress={handleServiceUpdate} style={styles.updateButton}>
+                  <Text style={styles.updateButtonText}>Update Service Details</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.card}>
+                <Text style={styles.noServiceProfileText}>
+                  You don&apos;t have a Service Profile{" "}
+                  <Text style={styles.linkText} onPress={() => navigation.navigate("ServiceFormPage" as never)}>
+                    Click Here
+                  </Text>{" "}
+                  to activate.
+                </Text>
+              </View>
+            )}
+
+            <View style={[styles.card, styles.deleteAccountCard]}>
+              {isEditingDeleteEmail ? (
+                <>
+                  <Text style={styles.label}>Verify Email to Delete Account</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={deleteEmail}
+                    onChangeText={setDeleteEmail}
+                    placeholder="Enter Account Email"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity onPress={verifyDeleteEmail} style={styles.sendOtpButton}>
                     <Text style={styles.sendOtpButtonText}>Send OTP</Text>
                   </TouchableOpacity>
                   <View style={styles.otpContainer}>
@@ -437,178 +589,28 @@ export default function ProfilePage() {
                       value={otp}
                       onChangeText={setOtp}
                       keyboardType="numeric"
-                      placeholder="Enter OTP"
+                      placeholder="Confirm OTP"
                     />
-                    <TouchableOpacity onPress={handlePhoneChange} style={styles.verifyButton}>
-                      <Text style={styles.verifyButtonText}>Verify</Text>
+                    <TouchableOpacity onPress={handleDeleteEmailChange} style={styles.confirmDeleteButton}>
+                      <Text style={styles.confirmDeleteButtonText}>Confirm to Delete</Text>
                     </TouchableOpacity>
                   </View>
                 </>
               ) : (
-                <View style={styles.phoneDisplayContainer}>
-                  <TextInput style={styles.input} value={phone} editable={false} />
-                  <TouchableOpacity onPress={() => setIsEditingPhone(true)} style={styles.changeNumberButton}>
-                    <Text style={styles.changeNumberButtonText}>Change Number</Text>
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity onPress={() => setIsEditingDeleteEmail(true)} style={styles.deleteAccountButton}>
+                  <Text style={styles.deleteAccountButtonText}>Delete Account</Text>
+                </TouchableOpacity>
               )}
             </View>
+
+            <TouchableOpacity onPress={glogout} style={styles.logoutButton}>
+              <FontAwesome5 name="sign-out-alt" size={18} color="#fff" solid />
+              <Text style={styles.logoutButtonText}>Log Out</Text>
+            </TouchableOpacity>
           </View>
-
-          {!user && ( // Only show password fields if not logged in via Google (assuming 'user' means Google user)
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Change Password</Text>
-              <View style={styles.field}>
-                <Text style={styles.label}>Current Password:</Text>
-                <TextInput
-                  style={styles.input}
-                  secureTextEntry
-                  value={checkPassword}
-                  onChangeText={setCheckPassword}
-                  placeholder="Enter current password"
-                />
-              </View>
-              <View style={styles.field}>
-                <Text style={styles.label}>New Password:</Text>
-                <TextInput
-                  style={styles.input}
-                  secureTextEntry
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  placeholder="Enter new password"
-                />
-              </View>
-              <View style={styles.field}>
-                <Text style={styles.label}>Confirm Password:</Text>
-                <TextInput
-                  style={styles.input}
-                  secureTextEntry
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Confirm new password"
-                />
-              </View>
-              <TouchableOpacity onPress={handleUpdatePassword} style={styles.updateButton}>
-                <Text style={styles.updateButtonText}>Update Password</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {userServiceData ? (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>User Service Profile</Text>
-              <View style={styles.fieldRow}>
-                <View style={styles.fieldHalf}>
-                  <Text style={styles.label}>District:</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={userServiceData.district || ""}
-                    onChangeText={(text) => setUserServiceData({ ...userServiceData, district: text })}
-                  />
-                </View>
-                <View style={styles.fieldHalf}>
-                  <Text style={styles.label}>State:</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={userServiceData.state || ""}
-                    onChangeText={(text) => setUserServiceData({ ...userServiceData, state: text })}
-                  />
-                </View>
-              </View>
-              <View style={styles.field}>
-                <Text style={styles.label}>Sub-District:</Text>
-                <TextInput
-                  style={styles.input}
-                  value={userServiceData.subDistrict || ""}
-                  onChangeText={(text) => setUserServiceData({ ...userServiceData, subDistrict: text })}
-                />
-              </View>
-              <View style={styles.field}>
-                <Text style={styles.label}>Address:</Text>
-                <TextInput
-                  style={styles.input}
-                  value={userServiceData.address || ""}
-                  onChangeText={(text) => setUserServiceData({ ...userServiceData, address: text })}
-                />
-              </View>
-              <View style={styles.fieldRow}>
-                <View style={styles.fieldHalf}>
-                  <Text style={styles.label}>Account No:</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={userServiceData.accountNo || ""}
-                    onChangeText={(text) => setUserServiceData({ ...userServiceData, accountNo: text })}
-                    keyboardType="numeric"
-                  />
-                </View>
-                <View style={styles.fieldHalf}>
-                  <Text style={styles.label}>IFSC Code:</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={userServiceData.ifsccode || ""}
-                    onChangeText={(text) => setUserServiceData({ ...userServiceData, ifsccode: text })}
-                  />
-                </View>
-              </View>
-              <TouchableOpacity onPress={handleServiceUpdate} style={styles.updateButton}>
-                <Text style={styles.updateButtonText}>Update Service Details</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.card}>
-              <Text style={styles.noServiceProfileText}>
-                You don&apos;t have a Service Profile{" "}
-                <Text style={styles.linkText} onPress={() => navigation.navigate("ServiceFormPage" as never)}>
-                  Click Here
-                </Text>{" "}
-                to activate.
-              </Text>
-            </View>
-          )}
-
-          <View style={[styles.card, styles.deleteAccountCard]}>
-            {isEditingDeleteEmail ? (
-              <>
-                <Text style={styles.label}>Verify Email to Delete Account</Text>
-                <TextInput
-                  style={styles.input}
-                  value={deleteEmail}
-                  onChangeText={setDeleteEmail}
-                  placeholder="Enter Account Email"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity onPress={verifyDeleteEmail} style={styles.sendOtpButton}>
-                  <Text style={styles.sendOtpButtonText}>Send OTP</Text>
-                </TouchableOpacity>
-                <View style={styles.otpContainer}>
-                  <Text style={styles.label}>OTP:</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={otp}
-                    onChangeText={setOtp}
-                    keyboardType="numeric"
-                    placeholder="Confirm OTP"
-                  />
-                  <TouchableOpacity onPress={handleDeleteEmailChange} style={styles.confirmDeleteButton}>
-                    <Text style={styles.confirmDeleteButtonText}>Confirm to Delete</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <TouchableOpacity onPress={() => setIsEditingDeleteEmail(true)} style={styles.deleteAccountButton}>
-                <Text style={styles.deleteAccountButtonText}>Delete Account</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <TouchableOpacity onPress={glogout} style={styles.logoutButton}>
-            <FontAwesome5 name="sign-out-alt" size={18} color="#fff" solid />
-            <Text style={styles.logoutButtonText}>Log Out</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </ScrollView>
+        )}
+      </ScrollView>
+    </View>
   )
 }
 

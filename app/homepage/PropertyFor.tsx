@@ -47,7 +47,7 @@ export default function PropertyForSection() {
       router.push({
         pathname: "SearchPage" as never,
         params: {
-          location: location,
+          cityName: location,
         },
       });
     }

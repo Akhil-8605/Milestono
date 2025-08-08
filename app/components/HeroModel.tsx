@@ -13,12 +13,13 @@ import {
   Pressable,
   Platform,
   Modal,
+  RefreshControl,
 } from "react-native"
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5"
 import { useNavigation } from "expo-router"
 import ToggledMenus from "./ToggleMenus"
 import axios from "axios"
-import * as SecureStore from "expo-secure-store"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { BASE_URL } from "@env"
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window")
@@ -54,21 +55,22 @@ const MenuModal: React.FC<MenuModalProps> = ({ isVisible, onClose }) => {
     countOfProvidedService: 0,
   })
   const [loading, setLoading] = useState<boolean>(false)
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false) // New state for pull-to-refresh
 
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current
 
   // Authentication function
   const authenticateUser = async (): Promise<void> => {
     try {
-      const token = await SecureStore.getItemAsync("auth")
+      const token = await AsyncStorage.getItem("auth")
       if (!token) {
         setIsAuthenticated(false)
         return
       }
 
-      const response = await axios.get(`${BASE_URL}/api/authenticate`, {
+      const response = (await axios.get(`${BASE_URL}/api/authenticate`, {
         headers: { Authorization: token },
-      }) as any
+      })) as any
 
       setIsAuthenticated(response.data.role === "user")
     } catch (error) {
@@ -80,15 +82,15 @@ const MenuModal: React.FC<MenuModalProps> = ({ isVisible, onClose }) => {
   // Agent/CRM access check
   const authenticateAgent = async (): Promise<void> => {
     try {
-      const token = await SecureStore.getItemAsync("auth")
+      const token = await AsyncStorage.getItem("auth")
       if (!token) {
         setCrmAccess(false)
         return
       }
 
-      const response = await axios.get(`${BASE_URL}/api/crm-access`, {
+      const response = (await axios.get(`${BASE_URL}/api/crm-access`, {
         headers: { Authorization: token },
-      }) as any
+      })) as any
 
       setCrmAccess(response.data.crmAccess === true)
     } catch (error) {
@@ -100,7 +102,7 @@ const MenuModal: React.FC<MenuModalProps> = ({ isVisible, onClose }) => {
   // Fetch user data
   const getUserData = async (): Promise<void> => {
     try {
-      const token = await SecureStore.getItemAsync("auth")
+      const token = await AsyncStorage.getItem("auth")
       if (!token) return
 
       const response = await axios.get(`${BASE_URL}/api/user-data`, {
@@ -128,8 +130,8 @@ const MenuModal: React.FC<MenuModalProps> = ({ isVisible, onClose }) => {
       setLoading(true)
 
       // Remove local tokens
-      await SecureStore.deleteItemAsync("auth")
-      await SecureStore.deleteItemAsync("user_id")
+      await AsyncStorage.removeItem("auth")
+      await AsyncStorage.removeItem("user_id")
 
       // Call Google logout
       await handleGoogleLogout()
@@ -163,7 +165,7 @@ const MenuModal: React.FC<MenuModalProps> = ({ isVisible, onClose }) => {
     navigation.navigate("LoginPage" as never)
   }
 
-  // Initialize data when modal opens
+  // Initialize data when modal opens or on refresh
   const initializeData = async (): Promise<void> => {
     setLoading(true)
     try {
@@ -172,6 +174,18 @@ const MenuModal: React.FC<MenuModalProps> = ({ isVisible, onClose }) => {
       console.error("Failed to initialize data:", error)
     } finally {
       setLoading(false)
+    }
+  }
+  
+  // Handle pull-to-refresh
+  const onRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await initializeData()
+    } catch (error) {
+      console.error("Refresh failed:", error)
+    } finally {
+      setIsRefreshing(false)
     }
   }
 
@@ -239,7 +253,7 @@ const MenuModal: React.FC<MenuModalProps> = ({ isVisible, onClose }) => {
       icon: "plus-circle",
       color: "#e8f5e9",
       iconBg: "#2e7d32",
-      linkto: "PostService",
+      linkto: "ServicePage",
     },
     {
       title: "Use Service",
@@ -304,37 +318,8 @@ const MenuModal: React.FC<MenuModalProps> = ({ isVisible, onClose }) => {
             style={styles.scrollView}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollViewContent}
+            refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
           >
-            {/* Display user stats if authenticated */}
-            {isAuthenticated && (
-              <View style={styles.userStatsContainer}>
-                <View style={styles.statsRow}>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>{userData.countOfSavedProperty}</Text>
-                    <Text style={styles.statLabel}>Saved</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>{userData.countOfContactedProperty}</Text>
-                    <Text style={styles.statLabel}>Contacted</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>{userData.countOfPostedProperty}</Text>
-                    <Text style={styles.statLabel}>Posted</Text>
-                  </View>
-                </View>
-                <View style={styles.statsRow}>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>{userData.countOfRequestedService}</Text>
-                    <Text style={styles.statLabel}>Used Services</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>{userData.countOfProvidedService}</Text>
-                    <Text style={styles.statLabel}>Provided Services</Text>
-                  </View>
-                </View>
-              </View>
-            )}
-
             <View style={styles.actionButtons}>
               {actionButtons.map((action, index) => (
                 <TouchableOpacity
@@ -413,7 +398,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: "90%",
+    maxHeight: "100%",
     elevation: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },

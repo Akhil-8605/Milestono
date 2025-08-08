@@ -15,6 +15,7 @@ import {
   PanResponder,
   StatusBar,
   Alert,
+  RefreshControl, // Add this import
 } from "react-native"
 import { FontAwesome5 } from "@expo/vector-icons"
 import AsyncStorage from "@react-native-async-storage/async-storage"
@@ -24,7 +25,7 @@ import { BASE_URL } from "@env"
 const WINDOW_HEIGHT = Dimensions.get("window").height
 const WINDOW_WIDTH = Dimensions.get("window").width
 const DRAG_THRESHOLD = 50
-const DEFAULT_HEIGHT = WINDOW_HEIGHT;
+const DEFAULT_HEIGHT = WINDOW_HEIGHT
 
 interface Notification {
   _id: string
@@ -44,6 +45,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ visible, onClose 
   const [modalHeight, setModalHeight] = useState(DEFAULT_HEIGHT)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [activeTab, setActiveTab] = useState("Inbox")
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false) // New state for pull-to-refresh
   const socketRef = useRef<Socket | null>(null)
 
   const panResponder = useRef(
@@ -147,6 +149,18 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ visible, onClose 
       }
     } catch (error) {
       console.error("Error fetching notifications:", error)
+    }
+  }
+
+  // Handle pull-to-refresh
+  const onRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await fetchNotifications()
+    } catch (error) {
+      console.error("Refresh failed:", error)
+    } finally {
+      setIsRefreshing(false)
     }
   }
 
@@ -265,7 +279,14 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ visible, onClose 
             {activeTab === "Inbox" && <View style={styles.tabUnderline} />}
           </View>
 
-          <ScrollView style={styles.notificationList} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.notificationList}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              // Add refreshControl prop
+              <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+            }
+          >
             {notifications.length > 0 ? (
               notifications.map(renderNotification)
             ) : (

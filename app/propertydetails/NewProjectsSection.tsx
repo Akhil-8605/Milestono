@@ -161,11 +161,11 @@ export default function RecommendedProjectsSection() {
     <View key={proj._id} style={[styles.projectCard, { width: cardWidth }]}>
       <View style={styles.projectImageContainer}>
         <Image
-          source={{
-            uri: proj.images?.[0] || "/placeholder.svg?height=160&width=300",
-          }}
+          source={proj.images?.[0] ? {
+            uri: proj.images?.[0],
+          } : require("../../assets/images/dummyImg.webp")}
           style={styles.projectImage}
-          defaultSource={require("../../assets/images/newproject1.png")}
+          defaultSource={require("../../assets/images/dummyImg.webp")}
         />
         <LinearGradient
           colors={["rgba(0,0,0,0)", "transparent"]}
@@ -323,11 +323,11 @@ export default function RecommendedProjectsSection() {
                 </TouchableOpacity>
 
                 <Image
-                  source={{
-                    uri: selectedProject.images?.[0] || "/placeholder.svg?height=200&width=400",
-                  }}
+                  source={selectedProject.images?.[0] ? {
+                    uri: selectedProject.images?.[0]
+                  } : require("../../assets/images/dummyImg.webp")}
                   style={styles.modalImage}
-                  defaultSource={require("../../assets/images/newproject1.png")}
+                  defaultSource={require("../../assets/images/dummyImg.webp")}
                 />
 
                 <ScrollView style={styles.modalScrollView}>

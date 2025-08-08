@@ -21,100 +21,10 @@ import {
 import { Feather, MaterialIcons, AntDesign, Ionicons } from "@expo/vector-icons"
 import { useNavigation } from "expo-router"
 import { LinearGradient } from "expo-linear-gradient"
+import { useRouter } from "expo-router"
 import axios from "axios"
 import { BASE_URL } from "@env"
 // Keep the mock data as fallback
-const mockAgents = [
-  {
-    id: 1,
-    name: "Agent 1",
-    fullName: "Sarah Johnson",
-    firstName: "Sarah",
-    lastName: "Johnson",
-    company: "Luxury Homes Realty",
-    agency: "Luxury Homes Realty",
-    operatingSince: 2010,
-    address: "1234 Main St, New York",
-    phone: "(500) 555-1000",
-    email: "agent1@luxuryhomes.com",
-    image: "https://randomuser.me/api/portraits/women/1.jpg",
-    profile: "https://randomuser.me/api/portraits/women/1.jpg",
-    rating: 3,
-    propertiesSold: 10,
-    specialization: "Luxury Homes",
-    featured: true,
-    verified: true,
-    experience: 3,
-    yearsOfExperience: 3,
-    awards: 1,
-    branding: "custom",
-    logo: null,
-    createdAt: "2020-01-01T00:00:00.000Z",
-    properties: 10,
-    projects: 2,
-    residentialProperties: [
-      {
-        id: 1,
-        name: "Sample Residential 1",
-        location: "Sample Location 1",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 99999,
-        bhk: "1BHK",
-      },
-      {
-        id: 2,
-        name: "Sample Residential 2",
-        location: "Sample Location 2",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 150000,
-        bhk: "2BHK",
-      },
-    ],
-    commercialProperties: [
-      {
-        id: 1,
-        name: "Sample Commercial 1",
-        location: "Sample Location 3",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 200000,
-        bhk: "Office Space",
-      },
-      {
-        id: 2,
-        name: "Sample Commercial 2",
-        location: "Sample Location 4",
-        propertyimage: require("../assets/images/dummyImg.webp"),
-        price: 250000,
-        bhk: "Shop",
-      },
-    ],
-    project: [
-      {
-        id: "proj-1",
-        name: "Green Valley",
-        location: "Bangalore",
-        status: "Under Construction",
-        image: require("../assets/images/newproject2.png"),
-        description:
-          "Eco-friendly residential complex with sustainable features and green spaces throughout the property.",
-        price: "₹ 85L - 1.5Cr",
-        possession: "December 2025",
-        rating: 4.5,
-      },
-      {
-        id: "proj-2",
-        name: "Riverside Residences",
-        location: "Pune",
-        status: "Under Construction",
-        image: require("../assets/images/newproject4.png"),
-        description: "Elegant apartments along the riverside with beautiful views and tranquil environment.",
-        price: "₹ 65L - 1.1Cr",
-        possession: "June 2025",
-        rating: 4.6,
-      },
-    ],
-  },
-]
 
 interface Property {
   id: number
@@ -168,7 +78,7 @@ interface Agent {
 }
 
 const PropertyCard = ({ property }: { property: Property }) => {
-  const navigation = useNavigation()
+  const router = useRouter()
   return (
     <View key={property.id} style={styles.propertyCard}>
       <Image source={property.propertyimage} style={styles.propertyImage} resizeMode="contain" />
@@ -180,13 +90,25 @@ const PropertyCard = ({ property }: { property: Property }) => {
           <Text style={styles.typeText}>| {property.bhk}</Text>
         </View>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.saveButton}>
+          <TouchableOpacity style={styles.saveButton} onPress={() => {
+              router.push({
+                pathname: "/PropertyDetailsPage" as any,
+                params: {
+                  id: property.id,
+                },
+              })
+            }}>
             <Text style={styles.saveButtonText}>Save Property</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.viewButtonAgent}
             onPress={() => {
-              navigation.navigate("PropertyDetailsPage" as never)
+              router.push({
+                pathname: "/PropertyDetailsPage" as any,
+                params: {
+                  id: property.id,
+                },
+              })
             }}
           >
             <Text style={styles.viewButtonTextAgent}>View Details</Text>
@@ -276,6 +198,8 @@ export default function AgentsPage() {
   const scrollY = useRef(new Animated.Value(0)).current
   const modalAnimation = useRef(new Animated.Value(0)).current
 
+  const router = useRouter()
+
   // API call to fetch agents
   const handleAgents = async () => {
     try {
@@ -295,9 +219,9 @@ export default function AgentsPage() {
           verified: agent.branding === "trusted" || agent.branding === "custom",
           featured: agent.branding === "custom",
           // Add mock data for properties and projects if not available from API
-          residentialProperties: agent.residentialProperties || mockAgents[0].residentialProperties,
-          commercialProperties: agent.commercialProperties || mockAgents[0].commercialProperties,
-          project: agent.project || mockAgents[0].project,
+          residentialProperties: agent.residentialProperties,
+          commercialProperties: agent.commercialProperties,
+          project: agent.project,
           propertiesSold: agent.properties || 0,
           awards: 3, // Default value
           rating: 4, // Default rating
@@ -311,9 +235,6 @@ export default function AgentsPage() {
     } catch (error) {
       console.error("Error fetching agents:", error)
       setError("Failed to load agents. Using sample data.")
-      // Fallback to mock data
-      setAgents(mockAgents)
-      setFilteredAgents(mockAgents)
     } finally {
       setLoading(false)
     }

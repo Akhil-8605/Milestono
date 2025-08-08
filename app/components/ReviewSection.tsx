@@ -1,4 +1,7 @@
-import React, { useState, useRef } from "react";
+"use client"
+
+import type React from "react"
+import { useState, useRef } from "react"
 import {
   View,
   Text,
@@ -11,33 +14,37 @@ import {
   Linking,
   Image,
   ScrollView,
-} from "react-native";
+  Alert,
+  ActivityIndicator,
+} from "react-native"
+import axios from "axios"
 
-const { height } = Dimensions.get("window");
+const { height } = Dimensions.get("window")
 
-type FeedbackOption = "problem" | "question" | "suggestion" | "other";
-
-// Namespace for the component to avoid style conflicts
-const COMPONENT_PREFIX = "feedback_";
+type FeedbackOption = "problem" | "question" | "suggestion" | "other"
 
 const FeedbackComponent: React.FC = () => {
-  const [showPositiveModal, setShowPositiveModal] = useState(false);
-  const [showNegativeModal, setShowNegativeModal] = useState(false);
-  const [selectedOption, setSelectedOption] =
-    useState<FeedbackOption>("problem");
-  const [feedbackText, setFeedbackText] = useState("");
+  const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL || "your-api-base-url"
 
-  const positiveSlideAnim = useRef(new Animated.Value(height)).current;
-  const negativeSlideAnim = useRef(new Animated.Value(height)).current;
+  const [showPositiveModal, setShowPositiveModal] = useState(false)
+  const [showNegativeModal, setShowNegativeModal] = useState(false)
+  const [selectedOption, setSelectedOption] = useState<FeedbackOption>("problem")
+  const [feedbackText, setFeedbackText] = useState("")
+  const [email, setEmail] = useState("")
+  const [name, setName] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const positiveSlideAnim = useRef(new Animated.Value(height)).current
+  const negativeSlideAnim = useRef(new Animated.Value(height)).current
 
   const openPositiveModal = () => {
-    setShowPositiveModal(true);
+    setShowPositiveModal(true)
     Animated.timing(positiveSlideAnim, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
-    }).start();
-  };
+    }).start()
+  }
 
   const closePositiveModal = () => {
     Animated.timing(positiveSlideAnim, {
@@ -45,18 +52,18 @@ const FeedbackComponent: React.FC = () => {
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      setShowPositiveModal(false);
-    });
-  };
+      setShowPositiveModal(false)
+    })
+  }
 
   const openNegativeModal = () => {
-    setShowNegativeModal(true);
+    setShowNegativeModal(true)
     Animated.timing(negativeSlideAnim, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
-    }).start();
-  };
+    }).start()
+  }
 
   const closeNegativeModal = () => {
     Animated.timing(negativeSlideAnim, {
@@ -64,33 +71,124 @@ const FeedbackComponent: React.FC = () => {
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      setShowNegativeModal(false);
-    });
-  };
+      setShowNegativeModal(false)
+      // Reset form fields
+      setEmail("")
+      setName("")
+      setFeedbackText("")
+      setSelectedOption("problem")
+    })
+  }
 
   const handleGoToPlayStore = () => {
     // Replace with actual Play Store URL
-    Linking.openURL(
-      "https://play.google.com/store/apps/details?id=com.99acres.app"
-    );
-    closePositiveModal();
-  };
+    Linking.openURL("https://play.google.com/store/apps/details?id=com.99acres.app")
+    closePositiveModal()
+  }
 
-  const handleSubmitFeedback = () => {
-    // Handle feedback submission logic here
-    console.log("Feedback submitted:", { selectedOption, feedbackText });
-    closeNegativeModal();
-    setFeedbackText("");
-  };
+  const validateForm = () => {
+    if (!name.trim()) {
+      Alert.alert("Validation Error", "Please enter your name")
+      return false
+    }
+    if (!email.trim()) {
+      Alert.alert("Validation Error", "Please enter your email")
+      return false
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      Alert.alert("Validation Error", "Please enter a valid email address")
+      return false
+    }
+    if (!feedbackText.trim()) {
+      Alert.alert("Validation Error", "Please enter your feedback")
+      return false
+    }
+    return true
+  }
 
-  const renderOptionButton = (
-    option: FeedbackOption,
-    label: string,
-    isSelected: boolean
-  ) => (
+  const handleSubmitFeedback = async () => {
+    if (!validateForm()) {
+      return
+    }
+
+    try {
+      setLoading(true)
+
+      const feedbackData = {
+        name: name.trim(),
+        email: email.trim(),
+        feedback: `${selectedOption.toUpperCase()}: ${feedbackText.trim()}`,
+        type: selectedOption,
+      }
+
+      await axios.post(`${BASE_URL}/api/feedback`, feedbackData, {
+        timeout: 10000, // 10 second timeout
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      Alert.alert(
+        "Success",
+        "Thank you for your feedback! We appreciate your input and will use it to improve Milestono.",
+        [
+          {
+            text: "OK",
+            onPress: () => closeNegativeModal(),
+          },
+        ],
+      )
+    } catch (error: any) {
+      console.error("Error submitting feedback:", error)
+
+      let errorMessage = "Failed to submit feedback. Please try again."
+
+      // Handle different error scenarios
+      if (error?.code === "ECONNABORTED" || error?.message?.includes("timeout")) {
+        errorMessage = "Request timed out. Please check your internet connection and try again."
+      } else if (error?.response?.status) {
+        const status = error.response.status
+        switch (status) {
+          case 400:
+            errorMessage = "Invalid data submitted. Please check your inputs."
+            break
+          case 404:
+            errorMessage = "Service not found. Please contact support."
+            break
+          case 500:
+          case 502:
+          case 503:
+            errorMessage = "Server error. Please try again later."
+            break
+          default:
+            errorMessage = `Server error (${status}). Please try again later.`
+        }
+      } else if (error?.request || error?.message?.includes("Network")) {
+        errorMessage = "Network error. Please check your internet connection."
+      } else if (error?.message) {
+        errorMessage = `Connection error: ${error.message}`
+      }
+
+      Alert.alert("Error", errorMessage, [
+        {
+          text: "Retry",
+          onPress: () => handleSubmitFeedback(),
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const renderOptionButton = (option: FeedbackOption, label: string, isSelected: boolean) => (
     <TouchableOpacity
       style={[styles.optionButton, isSelected && styles.selectedOptionButton]}
       onPress={() => setSelectedOption(option)}
+      disabled={loading}
     >
       {isSelected ? (
         <View style={styles.checkmarkContainer}>
@@ -103,21 +201,16 @@ const FeedbackComponent: React.FC = () => {
       )}
       <Text style={styles.optionText}>{label}</Text>
     </TouchableOpacity>
-  );
+  )
 
   return (
     <View style={styles.rootContainer}>
       <View style={styles.feedbackContainer}>
         <Text style={styles.title}>Are you finding us helpful?</Text>
-        <Text style={styles.subtitle}>
-          Your feedback will help us make Milestono the best.
-        </Text>
+        <Text style={styles.subtitle}>Your feedback will help us make Milestono the best.</Text>
 
         <View style={styles.optionsContainer}>
-          <TouchableOpacity
-            style={styles.optionCard}
-            onPress={openPositiveModal}
-          >
+          <TouchableOpacity style={styles.optionCard} onPress={openPositiveModal}>
             <Image
               source={{
                 uri: "https://emojipedia-us.s3.amazonaws.com/source/skype/289/smiling-face-with-smiling-eyes_1f60a.png",
@@ -127,10 +220,7 @@ const FeedbackComponent: React.FC = () => {
             <Text style={styles.optionCardText}>Yes, Loving it</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.optionCard}
-            onPress={openNegativeModal}
-          >
+          <TouchableOpacity style={styles.optionCard} onPress={openNegativeModal}>
             <Image
               source={{
                 uri: "https://emojipedia-us.s3.amazonaws.com/source/skype/289/slightly-frowning-face_1f641.png",
@@ -143,34 +233,17 @@ const FeedbackComponent: React.FC = () => {
       </View>
 
       {/* Positive Feedback Modal */}
-      <Modal
-        visible={showPositiveModal}
-        transparent={true}
-        animationType="none"
-        onRequestClose={closePositiveModal}
-      >
+      <Modal visible={showPositiveModal} transparent={true} animationType="none" onRequestClose={closePositiveModal}>
         <View style={styles.modalOverlay}>
-          <Animated.View
-            style={[
-              styles.modalContent,
-              { transform: [{ translateY: positiveSlideAnim }] },
-            ]}
-          >
+          <Animated.View style={[styles.modalContent, { transform: [{ translateY: positiveSlideAnim }] }]}>
             <View style={styles.positiveModalContainer}>
-              <Image
-                source={require("../../assets/images/feedbacksectionmobile.png")}
-                style={styles.ratingImage}
-              />
+              <Image source={require("../../assets/images/feedbacksectionmobile.png")} style={styles.ratingImage} />
               <Text style={styles.modalTitle}>Review Milestono now!</Text>
               <Text style={styles.modalSubtitle}>
-                Rate us <Text style={styles.boldText}>5 star</Text> and help
-                others discover Milestono easily.
+                Rate us <Text style={styles.boldText}>5 star</Text> and help others discover Milestono easily.
               </Text>
 
-              <TouchableOpacity
-                style={styles.playStoreButton}
-                onPress={handleGoToPlayStore}
-              >
+              <TouchableOpacity style={styles.playStoreButton} onPress={handleGoToPlayStore}>
                 <Text style={styles.playStoreButtonText}>Go to Play Store</Text>
               </TouchableOpacity>
 
@@ -183,26 +256,21 @@ const FeedbackComponent: React.FC = () => {
       </Modal>
 
       {/* Negative Feedback Modal */}
-      <Modal
-        visible={showNegativeModal}
-        transparent={true}
-        animationType="none"
-        onRequestClose={closeNegativeModal}
-      >
+      <Modal visible={showNegativeModal} transparent={true} animationType="none" onRequestClose={closeNegativeModal}>
         <View style={styles.modalOverlay}>
-          <Animated.View
-            style={[
-              styles.modalContent,
-              { transform: [{ translateY: negativeSlideAnim }] },
-            ]}
-          >
+          <Animated.View style={[styles.modalContent, { transform: [{ translateY: negativeSlideAnim }] }]}>
             <ScrollView style={styles.negativeModalContainer}>
+              {loading && (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="large" color="#0078d4" />
+                  <Text style={styles.loadingText}>Submitting feedback...</Text>
+                </View>
+              )}
+
               <View style={styles.feedbackHeaderContainer}>
                 <View>
                   <Text style={styles.modalTitle}>What can we Improve?</Text>
-                  <Text style={styles.modalSubtitle}>
-                    How can we make Milestono better for you?
-                  </Text>
+                  <Text style={styles.modalSubtitle}>How can we make Milestono better for you?</Text>
                 </View>
                 <Image
                   source={{
@@ -212,60 +280,98 @@ const FeedbackComponent: React.FC = () => {
                 />
               </View>
 
-              <View style={styles.optionsRow}>
-                {renderOptionButton(
-                  "problem",
-                  "Reporting a Problem",
-                  selectedOption === "problem"
-                )}
-                {renderOptionButton(
-                  "question",
-                  "Asking us a Que",
-                  selectedOption === "question"
-                )}
+              <View style={styles.formContainer}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>
+                    <Text style={styles.required}>*</Text> Name:
+                  </Text>
+                  <TextInput
+                    style={[styles.textInput, loading && styles.disabledInput]}
+                    placeholder="Enter your name"
+                    placeholderTextColor="#999"
+                    value={name}
+                    onChangeText={setName}
+                    editable={!loading}
+                  />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>
+                    <Text style={styles.required}>*</Text> Email:
+                  </Text>
+                  <TextInput
+                    style={[styles.textInput, loading && styles.disabledInput]}
+                    placeholder="Enter your email"
+                    placeholderTextColor="#999"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!loading}
+                  />
+                </View>
+
+                <Text style={styles.categoryLabel}>
+                  <Text style={styles.required}>*</Text> Category:
+                </Text>
+                <View style={styles.optionsRow}>
+                  {renderOptionButton("problem", "Reporting a Problem", selectedOption === "problem")}
+                  {renderOptionButton("question", "Asking us a Que", selectedOption === "question")}
+                </View>
+
+                <View style={styles.optionsRow}>
+                  {renderOptionButton("suggestion", "Suggestion/Improvement", selectedOption === "suggestion")}
+                  {renderOptionButton("other", "Others", selectedOption === "other")}
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>
+                    <Text style={styles.required}>*</Text> Feedback:
+                  </Text>
+                  <TextInput
+                    style={[styles.feedbackInput, loading && styles.disabledInput]}
+                    placeholder="Please describe your feedback here..."
+                    placeholderTextColor="#999"
+                    multiline={true}
+                    numberOfLines={5}
+                    value={feedbackText}
+                    onChangeText={setFeedbackText}
+                    maxLength={1000}
+                    editable={!loading}
+                  />
+                  <Text style={styles.characterCount}>{feedbackText.length}/1000</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.submitButton, loading && styles.disabledButton]}
+                  onPress={handleSubmitFeedback}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Text style={styles.submitButtonText}>Submit Feedback</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.cancelButton, loading && styles.disabledButton]}
+                  onPress={closeNegativeModal}
+                  disabled={loading}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
               </View>
-
-              <View style={styles.optionsRow}>
-                {renderOptionButton(
-                  "suggestion",
-                  "Suggestion/Improvement",
-                  selectedOption === "suggestion"
-                )}
-                {renderOptionButton(
-                  "other",
-                  "Others",
-                  selectedOption === "other"
-                )}
-              </View>
-
-              <TextInput
-                style={styles.feedbackInput}
-                placeholder="Please describe your feedback here..."
-                placeholderTextColor="#999"
-                multiline={true}
-                numberOfLines={5}
-                value={feedbackText}
-                onChangeText={setFeedbackText}
-              />
-
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleSubmitFeedback}
-              >
-                <Text style={styles.submitButtonText}>Submit Feedback</Text>
-              </TouchableOpacity>
             </ScrollView>
           </Animated.View>
         </View>
       </Modal>
     </View>
-  );
-};
+  )
+}
 
-// Create a separate StyleSheet with namespaced style names
 const styles = StyleSheet.create({
   rootContainer: {
-    // Using a specific name to avoid conflicts
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
@@ -339,6 +445,25 @@ const styles = StyleSheet.create({
   negativeModalContainer: {
     padding: 25,
   },
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#0078d4",
+    fontWeight: "500",
+  },
   feedbackHeaderContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -387,6 +512,39 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 10,
     textDecorationLine: "underline",
+  },
+  formContainer: {
+    marginTop: 10,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333",
+    marginBottom: 8,
+  },
+  required: {
+    color: "red",
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: "white",
+  },
+  disabledInput: {
+    backgroundColor: "#f5f5f5",
+    color: "#999",
+  },
+  categoryLabel: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333",
+    marginBottom: 15,
   },
   optionsRow: {
     flexDirection: "row",
@@ -446,9 +604,16 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 5,
     padding: 15,
-    height: 150,
+    height: 120,
     textAlignVertical: "top",
-    marginBottom: 20,
+    fontSize: 16,
+    backgroundColor: "white",
+  },
+  characterCount: {
+    textAlign: "right",
+    fontSize: 12,
+    color: "#999",
+    marginTop: 5,
   },
   submitButton: {
     backgroundColor: "#0078d4",
@@ -464,6 +629,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-});
+  cancelButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    width: "100%",
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+})
 
-export default FeedbackComponent;
+export default FeedbackComponent

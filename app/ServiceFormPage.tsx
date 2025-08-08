@@ -22,6 +22,7 @@ import * as ImagePicker from "expo-image-picker"
 import * as DocumentPicker from "expo-document-picker"
 import { BASE_URL } from "@env"
 import { goBack } from "expo-router/build/global-state/routing"
+import { useRouter } from "expo-router"
 
 // Define a type for file assets from ImagePicker or DocumentPicker
 type FileAsset = ImagePicker.ImagePickerAsset | DocumentPicker.DocumentPickerAsset
@@ -126,6 +127,8 @@ export default function ServiceForm() {
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [imageSrc, setImageSrc] = useState<string | null>(null)
+
+  const router = useRouter();
 
   const showToast = (message: string, type: "success" | "error") => {
     Alert.alert(type === "success" ? "Success" : "Error", message)
@@ -378,16 +381,32 @@ export default function ServiceForm() {
     }
   }
 
+  const getFileName = (file: any): string => {
+    try {
+      if (typeof file === "object" && file !== null) {
+        if ("fileName" in file && file.fileName) return file.fileName;
+        if ("name" in file && file.name) return file.name;
+      }
+    } catch (err: any) {
+      Alert.alert(
+        "Upload Error",
+        "Could not read the selected file. Please try again later.", [
+        { text: 'OK', onPress: () => router.replace("/") },
+      ]);
+    }
+    return "File selected";
+  };
+
   const FileUploadArea = ({
     fieldName,
     label,
     required = true,
     fileType = "image", // 'image' or 'document'
   }: {
-    fieldName: keyof FormDataState
-    label: string
-    required?: boolean
-    fileType?: "image" | "document"
+    fieldName: keyof FormDataState;
+    label: string;
+    required?: boolean;
+    fileType?: "image" | "document";
   }) => (
     <View style={styles.fileUploadContainer}>
       <Text style={styles.label}>
@@ -407,17 +426,7 @@ export default function ServiceForm() {
             <>
               <Text style={styles.uploadIconSuccess}>✓</Text>
               <Text style={styles.uploadFilename}>
-                {(() => {
-                  const currentFile = formData[fieldName] as FileAsset | null
-                  if (currentFile) {
-                    if ("fileName" in currentFile && currentFile.fileName) {
-                      return currentFile.fileName
-                    } else if ("name" in currentFile && currentFile.name) {
-                      return currentFile.name
-                    }
-                  }
-                  return "File selected" // Fallback text
-                })()}
+                {getFileName(formData[fieldName])}
               </Text>
               <Text style={styles.uploadSuccessText}>File uploaded successfully</Text>
             </>

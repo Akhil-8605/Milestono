@@ -57,12 +57,12 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "35e552f9-4cea-4be2-bfd1-2ac1f7136ca9"
+        "projectId": "e26857be-3431-4036-8e56-f996387c15fc"
       },
       "BASE_URL": "https://api.milestono.com:6005",
       "RAZORPAY_KEY_ID": "rzp_live_pm762YfvGOPF3L",
       "GOOGLE_API_KEY": "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
     },
-    "owner": "omkar-1431"
+    "owner": "akhil-8421"
   }
 }

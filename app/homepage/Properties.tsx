@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native"
-import { useNavigation } from "expo-router"
+import { useNavigation, useRouter } from "expo-router"
 import axios from "axios"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import * as Location from "expo-location"
@@ -58,6 +58,7 @@ export default function NewLaunchProperties() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const navigation = useNavigation<NavigationProps>()
+  const router = useRouter();
 
   useEffect(() => {
     getProperties()
@@ -70,7 +71,7 @@ export default function NewLaunchProperties() {
     if (!token) {
       Alert.alert("Authentication Required", "Please log in to view properties.", [
         { text: "Cancel", style: "cancel" },
-        { text: "Login", onPress: () => navigation.navigate("login" as never) },
+        { text: "Login", onPress: () => navigation.navigate("LoginPage" as never) },
       ])
       return
     }
@@ -232,9 +233,12 @@ export default function NewLaunchProperties() {
         price: propertyForNavigation.expectedPrice,
       })
 
-      navigation.navigate("PropertyDetailsPage", {
-        propertyData: JSON.stringify(propertyForNavigation),
-      } as never)
+      router.push({
+        pathname: "/PropertyDetailsPage" as any,
+        params: {
+          id: property._id,
+        },
+      })
     } catch (error) {
       console.error("Navigation error:", error)
       Alert.alert("Error", "Unable to navigate to property details. Please try again.")
