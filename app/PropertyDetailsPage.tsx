@@ -1018,7 +1018,7 @@ const FurnitureSection = ({ property }: { property: any }) => {
     Lamp: "lamp-desk",
     Mattress: "bed-single",
     Desk: "panel-top",
-    "Wardrobe": "wardrobe", // alias
+    Wardrobe: "wardrobe", // alias
     "Chest of Drawers": "boxes",
     "Stool": "stool",
     "Recliner": "couch",
