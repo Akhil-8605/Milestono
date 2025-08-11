@@ -14,7 +14,7 @@ const realEstateData = {
     title: "Residential",
     description:
       "Explore a wide range of residential properties designed to suit every lifestyle. From urban apartments to spacious family homes, each property offers comfort, modern amenities, and easy access to schools, parks, and shopping centers. Perfect for creating a place you'll love to call home.",
-    image: require("../../assets/images/realestate1.jpg"),
+    image: require("../../assets/images/insigntPageImg1.jpg"),
   },
   Commercial: {
     title: "Commercial",

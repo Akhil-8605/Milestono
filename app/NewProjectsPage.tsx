@@ -226,54 +226,6 @@ export default function NewProjectsPage() {
         },
       ])
 
-      // Fallback to mock data
-      const mockResidential = [
-        {
-          _id: "1",
-          title: "Project Launch",
-          address: "New Delhi",
-          status: "Construction Completed",
-          images: [require("../assets/images/newproject1.png")],
-          description:
-            "We are launching a new project, please check properly. Luxury apartments with modern amenities including swimming pool, gym, and 24/7 security.",
-          type: "residential" as const,
-          possession: "2024-12-01",
-          price: "₹ 75L - 1.2Cr",
-          rating: 4.8,
-        },
-        {
-          _id: "2",
-          title: "Green Valley",
-          address: "Bangalore",
-          status: "Under Construction",
-          images: [require("../assets/images/newproject2.png")],
-          description:
-            "Eco-friendly residential complex with sustainable features and green spaces throughout the property.",
-          type: "residential" as const,
-          possession: "2025-12-01",
-          price: "₹ 85L - 1.5Cr",
-          rating: 4.5,
-        },
-      ]
-
-      const mockCommercial = [
-        {
-          _id: "3",
-          title: "Tech Hub",
-          address: "Bangalore",
-          status: "Ready to Move",
-          images: [require("../assets/images/newproject2.png")],
-          description: "Modern office spaces designed for tech companies with advanced infrastructure.",
-          type: "commercial" as const,
-          possession: "2024-01-01",
-          price: "₹ 2Cr - 4Cr",
-          rating: 4.8,
-        },
-      ]
-
-      setResidentialProjects(mockResidential)
-      setCommercialProjects(mockCommercial)
-      setAllProjects([...mockResidential, ...mockCommercial])
     } finally {
       setIsLoadingProjects(false)
       setIsLoading(false)
@@ -421,7 +373,7 @@ export default function NewProjectsPage() {
               source={
                 typeof item.images[0] === "string"
                   ? { uri: item.images[0] }
-                  : item.images[0] || require("../assets/images/newproject1.png")
+                  : item.images[0] || require("../assets/images/dummyImg.webp")
               }
               style={styles.projectImage}
             />
@@ -769,7 +721,7 @@ export default function NewProjectsPage() {
                     source={
                       typeof selectedProject.images[0] === "string"
                         ? { uri: selectedProject.images[0] }
-                        : selectedProject.images[0] || require("../assets/images/newproject1.png")
+                        : selectedProject.images[0] || require("../assets/images/dummyImg.webp")
                     }
                     style={styles.modalImage}
                   />

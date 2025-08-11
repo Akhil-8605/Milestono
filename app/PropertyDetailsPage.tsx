@@ -21,7 +21,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons"
 import { LinearGradient } from "expo-linear-gradient"
 import { BlurView } from "expo-blur"
 import { useRoute, useNavigation } from "@react-navigation/native"
-import * as SecureStore from "expo-secure-store"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import { BASE_URL } from "@env"
 
@@ -54,40 +54,10 @@ export default function PropertyListing() {
   const route = useRoute()
   const navigation = useNavigation()
 
-  // Parse property data from route params
+  // Parse property ID from route params
   const [property, setProperty] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    try {
-      const params = route.params as any
-      console.log("Route params:", params)
-
-      if (params?.propertyData) {
-        const propertyData =
-          typeof params.propertyData === "string" ? JSON.parse(params.propertyData) : params.propertyData
-
-        console.log("Parsed property data:", propertyData)
-        setProperty(propertyData)
-      } else if (params?.property) {
-        // Fallback for old parameter name
-        const propertyData = typeof params.property === "string" ? JSON.parse(params.property) : params.property
-
-        console.log("Fallback property data:", propertyData)
-        setProperty(propertyData)
-      } else {
-        console.error("No property data found in route params")
-        Alert.alert("Error", "Property data not found")
-        navigation.goBack()
-      }
-    } catch (error) {
-      console.error("Error parsing property data:", error)
-      Alert.alert("Error", "Failed to load property data")
-      navigation.goBack()
-    } finally {
-      setLoading(false)
-    }
-  }, [route.params, navigation])
+  const [loading, setLoading] = useState(true) // Initial loading for fetching property details
+  const [apiLoading, setApiLoading] = useState(false) // For other API calls
 
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const imageScrollRef = useRef<ScrollView>(null)
@@ -99,11 +69,45 @@ export default function PropertyListing() {
   const [saved, setSaved] = useState(false)
   const [countViewed, setCountViewed] = useState(0)
   const [user, setUser] = useState<any>(null)
-  const [apiLoading, setApiLoading] = useState(false)
   const [inquiryModalVisible, setInquiryModalVisible] = useState(false)
   const [shareModalVisible, setShareModalVisible] = useState(false)
 
   const statusBarHeight = StatusBar.currentHeight || 0
+
+  const fetchPropertyDetails = async (propertyId: string) => {
+    setLoading(true)
+    try {
+      const response = await axios.get(`${BASE_URL}/api/property_details`) as any
+      const filtered = response.data.filter((listing: any) => listing._id === propertyId)
+      if (filtered.length > 0) {
+        setProperty(filtered[0])
+      } else {
+        Alert.alert("Error", "Property not found.")
+        navigation.goBack()
+      }
+    } catch (error) {
+      console.error("Error fetching property details:", error)
+      Alert.alert("Error", "Failed to load property details.")
+      navigation.goBack()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const params = route.params as any
+    console.log("Route params:", params)
+
+    if (params?.id) {
+      const propertyId = String(params.id)
+      fetchPropertyDetails(propertyId)
+    } else {
+      console.error("No property ID found in route params")
+      Alert.alert("Error", "Property ID not found.")
+      navigation.goBack()
+      setLoading(false) // Ensure loading state is cleared
+    }
+  }, [route.params, navigation])
 
   // Fixed image handling - ensure all URIs are valid strings
   const getValidImages = () => {
@@ -151,7 +155,7 @@ export default function PropertyListing() {
     return () => clearInterval(timer)
   }, [PROPERTY_IMAGES.length])
 
-  // Check initial states on component mount
+  // Check initial states on component mount (after property is loaded)
   useEffect(() => {
     if (property?._id) {
       checkContactViewed()
@@ -159,20 +163,21 @@ export default function PropertyListing() {
       checkCountContactViewed()
       handleAddToRecent()
     }
-  }, [property])
+  }, [property]) // Depend on property state
 
   // Get user details when contact is viewed
   useEffect(() => {
-    if (contactViewed) {
-      getUserDetail()
+    if (contactViewed && property?.email) {
+      // Ensure property.email is available
+      getUserDetail(property.email)
     }
-  }, [contactViewed])
+  }, [contactViewed, property?.email]) // Depend on contactViewed and property.email
 
   const checkContactViewed = async () => {
     if (!property?._id) return
 
     try {
-      const token = await SecureStore.getItemAsync("jwt")
+      const token = await AsyncStorage.getItem("auth")
       if (token) {
         const response = await axios.get(`${BASE_URL}/api/contact-viewed/${property._id}`, {
           headers: { Authorization: token },
@@ -195,17 +200,22 @@ export default function PropertyListing() {
     }
   }
 
-  const getUserDetail = async () => {
+  const getUserDetail = async (email: string) => {
+    // Accept email as parameter
     setApiLoading(true)
-    const token = await SecureStore.getItemAsync("jwt")
+    const token = await AsyncStorage.getItem("auth")
     if (!token) {
       setApiLoading(false)
       return
     }
     try {
-      const response = await axios.get(`${BASE_URL}/api/userdetail`, {
-        headers: { Authorization: token },
-      })
+      const response = await axios.post(
+        `${BASE_URL}/api/owner-details`,
+        { email },
+        {
+          headers: { Authorization: token },
+        },
+      )
       setUser(response.data)
     } catch (error) {
       console.error("Error fetching user details:", error)
@@ -224,7 +234,7 @@ export default function PropertyListing() {
   const unlockContact = async () => {
     if (!property?._id) return
 
-    const token = await SecureStore.getItemAsync("jwt")
+    const token = await AsyncStorage.getItem("auth")
     if (!token) {
       Alert.alert("Login Required", "If you want to unlock, login first.", [
         { text: "Cancel", style: "cancel" },
@@ -265,7 +275,7 @@ export default function PropertyListing() {
   const handleViewWhatsappClick = async () => {
     if (!property?._id) return
 
-    const token = await SecureStore.getItemAsync("jwt")
+    const token = await AsyncStorage.getItem("auth")
     if (!token) {
       Alert.alert("Login Required", "If you want to unlock, login first.", [
         { text: "Cancel", style: "cancel" },
@@ -318,7 +328,7 @@ export default function PropertyListing() {
   const handleSaveClick = async () => {
     if (!property?._id) return
 
-    const token = await SecureStore.getItemAsync("jwt")
+    const token = await AsyncStorage.getItem("auth")
     if (!token) {
       Alert.alert("Login Required", "If you want to save, login first.", [
         { text: "Cancel", style: "cancel" },
@@ -349,7 +359,7 @@ export default function PropertyListing() {
   const handleUnSaveClick = async () => {
     if (!property?._id) return
 
-    const token = await SecureStore.getItemAsync("jwt")
+    const token = await AsyncStorage.getItem("auth")
     if (!token) {
       Alert.alert("Error", "Authentication required.")
       return
@@ -378,7 +388,7 @@ export default function PropertyListing() {
     if (!property?._id) return
 
     try {
-      const token = await SecureStore.getItemAsync("jwt")
+      const token = await AsyncStorage.getItem("auth")
       if (token) {
         const response = await axios.get(`${BASE_URL}/api/saved/${property._id}`, {
           headers: { Authorization: token },
@@ -393,7 +403,7 @@ export default function PropertyListing() {
   const handleAddToRecent = async () => {
     if (!property?._id) return
 
-    const token = await SecureStore.getItemAsync("jwt")
+    const token = await AsyncStorage.getItem("auth")
     try {
       await axios.post(
         `${BASE_URL}/api/mark-view`,
@@ -408,7 +418,7 @@ export default function PropertyListing() {
   const handleInquiryClick = async () => {
     if (!property?._id) return
 
-    const token = await SecureStore.getItemAsync("jwt")
+    const token = await AsyncStorage.getItem("auth")
     if (!token) {
       Alert.alert("Login Required", "User must be logged in to send a property enquiry.")
       return
@@ -734,12 +744,12 @@ export default function PropertyListing() {
                 POSTED ON{" "}
                 {property?.createdAt
                   ? new Date(property.createdAt)
-                    .toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })
-                    .toUpperCase()
+                      .toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                      .toUpperCase()
                   : "N/A"}
               </Text>
               <Text style={styles.inquiryModalValue}>
@@ -818,10 +828,10 @@ const QuickInfoSection = ({ property }: { property: any }) => {
       label: "Posted On",
       value: property?.createdAt
         ? new Date(property.createdAt).toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })
         : "N/A",
     },
     {
@@ -937,7 +947,7 @@ const AmenitiesSection = ({ property }: { property: any }) => {
     "Pet Area": "paw-print",
     "Solar Panels": "sun",
     "Security Cabin": "shield",
-    "Amphitheatre": "theater",
+    Amphitheatre: "theater",
     "Multipurpose Court": "dribbble",
     "Basketball Court": "dribbble",
     "Tennis Court": "dribbble",
@@ -950,24 +960,21 @@ const AmenitiesSection = ({ property }: { property: any }) => {
     "Barbecue Area": "flame",
     "Conference Room": "presentation",
     "Co-working Space": "users",
-    "ATM": "credit-card",
+    ATM: "credit-card",
     "Mini Theatre": "film",
     "Senior Citizen Zone": "user-check",
     "Laundry Room": "washer",
-    "Salon": "scissors",
-    "Creche": "baby",
+    Salon: "scissors",
+    Creche: "baby",
     "EV Charging Point": "battery-full",
     "Recreation Room": "puzzle",
-    "Pharmacy": "pill",
+    Pharmacy: "pill",
     "Medical Facility": "stethoscope",
-  };
-
+  }
 
   // Filter amenities that exist in the property
   const availableAmenities =
-    property?.amenities?.filter((amenity: string) =>
-      typeof amenity === "string" && amenity.trim().length > 0
-    ) || [];
+    property?.amenities?.filter((amenity: string) => typeof amenity === "string" && amenity.trim().length > 0) || []
 
   const renderAmenity = (amenity: string, index: number) => (
     <View style={styles.amenityCard} key={index}>
@@ -1009,29 +1016,27 @@ const FurnitureSection = ({ property }: { property: any }) => {
     Microwave: "microwave",
     Oven: "microwave",
     "Study Table": "book-open-check",
-    "Bookshelf": "library",
+    Bookshelf: "library",
     "Coffee Table": "cup-soda",
     "Shoe Rack": "shoe",
-    "Curtains": "window",
+    Curtains: "window",
     Fan: "fan",
     Mirror: "mirror",
     Lamp: "lamp-desk",
     Mattress: "bed-single",
     Desk: "panel-top",
-    "Wardrobe": "wardrobe", // alias
+    Wardrobe: "wardrobe", // alias
     "Chest of Drawers": "boxes",
-    "Stool": "stool",
-    "Recliner": "couch",
+    Stool: "stool",
+    Recliner: "couch",
     "Bar Stool": "stool",
     "Kitchen Cabinets": "boxes",
     "Gas Stove": "flame",
-  };
+  }
 
   // Filter furniture that exists in the property
   const availableFurniture =
-    property?.furnitures?.filter(
-      (item: string) => typeof item === "string" && item.trim().length > 0
-    ) || [];
+    property?.furnitures?.filter((item: string) => typeof item === "string" && item.trim().length > 0) || []
 
   const renderFurnitureItem = (furniture: string, index: number) => (
     <View style={styles.furnitureCard} key={index}>

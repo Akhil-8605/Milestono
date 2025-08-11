@@ -18,6 +18,7 @@ import {
 } from "react-native"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useRoute, RouteProp } from "@react-navigation/native" // Import route hooks
+import { useRouter } from "expo-router"
 import { BASE_URL } from "@env"
 import Header from "./components/Header"
 
@@ -175,7 +176,9 @@ const ContactedPropertyCard = ({ item, onViewDetails }: ContactedPropertyCardPro
 export default function PropertyActivities() {
   const route = useRoute<RouteProp<RouteParams, 'MyActivityPage'>>()
   const initialTab = route.params?.initialTab || "viewed" // Get initial tab from params
-  
+
+  const router = useRouter()
+
   const [activeTab, setActiveTab] = useState(initialTab)
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -192,10 +195,13 @@ export default function PropertyActivities() {
   }, [route.params?.initialTab])
 
   // Dummy navigation function for React Native context
-  const handleViewDetails = (id: string) => {
-    Alert.alert("Navigate to Details", `Would navigate to property details for ID: ${id}`)
-    // In a real Expo app, you would use navigation like:
-    // navigation.navigate("PropertyDetails", { id });
+  const handleViewDetails = (property_id: string) => {
+    router.push({
+      pathname: "/PropertyDetailsPage" as any,
+      params: {
+        id: property_id,
+      },
+    })
   }
 
   const fetchData = useCallback(
@@ -407,7 +413,7 @@ export default function PropertyActivities() {
 
   return (
     <SafeAreaView style={[styles.container, { marginTop: statusBarHeight }]}>
-      <Header/>
+      <Header />
       <View style={styles.tabContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScroll}>
           {TABS.map((tab) => (

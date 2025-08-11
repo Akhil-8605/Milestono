@@ -13,13 +13,14 @@ import {
   Platform,
   ScrollView,
   Alert,
+  RefreshControl,
+  Image, // Add Image import
 } from "react-native"
 import { FontAwesome5 } from "@expo/vector-icons"
 import ToggleMenus from "./ToggleMenus"
 import type { NavigationProp } from "@react-navigation/native"
 import { useNavigation } from "expo-router"
 import axios from "axios"
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from "@env"
 
@@ -40,6 +41,13 @@ interface IUserData {
   countOfProvidedService: number
 }
 
+// Define UserProfile interface as seen in ProfilePage.tsx
+interface UserProfile {
+  email?: string
+  phone?: string
+  profile?: string // Base64 string for image
+}
+
 const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
   const navigation = useNavigation<NavigationProp<any>>()
   const [showModal, setShowModal] = useState(visible)
@@ -58,6 +66,10 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
     countOfRequestedService: 0,
     countOfProvidedService: 0,
   })
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false) // New state for pull-to-refresh
+  const [profileImageSrc, setProfileImageSrc] = useState<string | null>(
+    "/placeholder.svg?height=100&width=100",
+  ) // New state for profile image
 
   // Authentication function
   const authenticateUser = async (): Promise<void> => {
@@ -69,11 +81,11 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
         return
       }
 
-      const response = await axios.get(`${BASE_URL}/api/authenticate`, {
+      const response = (await axios.get(`${BASE_URL}/api/authenticate`, {
         headers: {
           Authorization: token,
         },
-      }) as any
+      })) as any
 
       setIsAuthenticated(response.data.role === "user")
     } catch (error) {
@@ -92,11 +104,11 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
         return
       }
 
-      const response = await axios.get(`${BASE_URL}/api/crm-access`, {
+      const response = (await axios.get(`${BASE_URL}/api/crm-access`, {
         headers: {
           Authorization: token,
         },
-      }) as any
+      })) as any
 
       setCrmAccess(response.data.crmAccess === true)
     } catch (error) {
@@ -136,6 +148,33 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
     }
   }
 
+  // New function to fetch profile image
+  const fetchProfileImage = async (): Promise<void> => {
+    try {
+      const token = await AsyncStorage.getItem("auth")
+      if (!token) {
+        console.log("No auth token found for profile image")
+        setProfileImageSrc("/placeholder.svg?height=100&width=100") // Set dummy on no token
+        return
+      }
+
+      const response = await axios.get<UserProfile>(`${BASE_URL}/api/userdetail`, {
+        headers: {
+          Authorization: token,
+        },
+      })
+
+      if (response.data.profile) {
+        setProfileImageSrc(response.data.profile)
+      } else {
+        setProfileImageSrc("/placeholder.svg?height=100&width=100") // Set dummy if no profile image
+      }
+    } catch (error) {
+      console.error("Error fetching profile image:", error)
+      setProfileImageSrc("/placeholder.svg?height=100&width=100") // Set dummy on error
+    }
+  }
+
   // Google logout function
   const handleGoogleLogout = async (): Promise<void> => {
     try {
@@ -167,6 +206,7 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
         countOfRequestedService: 0,
         countOfProvidedService: 0,
       })
+      setProfileImageSrc("/placeholder.svg?height=100&width=100") // Reset profile image on logout
 
       // Close modal and navigate
       onClose()
@@ -179,15 +219,27 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
     }
   }
 
-  // Initialize data when modal opens
+  // Initialize data when modal opens or on refresh
   const initializeData = async (): Promise<void> => {
     setLoading(true)
     try {
-      await Promise.all([authenticateUser(), authenticateAgent(), getUserData()])
+      await Promise.all([authenticateUser(), authenticateAgent(), getUserData(), fetchProfileImage()]) // Add fetchProfileImage
     } catch (error) {
       console.error("Failed to initialize data:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Handle pull-to-refresh
+  const onRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await initializeData()
+    } catch (error) {
+      console.error("Refresh failed:", error)
+    } finally {
+      setIsRefreshing(false)
     }
   }
 
@@ -242,26 +294,33 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
             style={styles.scrollView}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollViewContent}
+            refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
           >
-            {/* Header with greeting and login/logout */}
+            {/* Header with greeting, profile image, and login/logout */}
             <View style={styles.header}>
-              <View style={styles.headerContent}>
-                <Text style={styles.greeting}>Hello {firstName || "User"} 👋</Text>
-                {isAuthenticated ? (
-                  <TouchableOpacity style={styles.loginButton} onPress={logout}>
-                    <Text style={styles.loginText}>Logout</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.loginButton}
-                    onPress={() => {
-                      onClose()
-                      navigation.navigate("LoginPage")
-                    }}
-                  >
-                    <Text style={styles.loginText}>Login</Text>
-                  </TouchableOpacity>
-                )}
+              <View style={styles.profileImageContainer}>
+                <Image
+                  source={profileImageSrc ? { uri: profileImageSrc } : require("../../assets/images/PersonDummy.png")}
+                  style={styles.profileAvatar}
+                />
+                <View style={styles.headerContent}>
+                  <Text style={styles.greeting}>Hello {firstName || "User"} 👋</Text>
+                  {isAuthenticated ? (
+                    <TouchableOpacity style={styles.loginButton} onPress={logout}>
+                      <Text style={styles.loginText}>Logout</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.loginButton}
+                      onPress={() => {
+                        onClose()
+                        navigation.navigate("LoginPage")
+                      }}
+                    >
+                      <Text style={styles.loginText}>Login</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <FontAwesome5 name="times" size={24} color="#fff" />
@@ -407,6 +466,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#232761",
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+  },
+  profileImageContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  profileAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: "#fff",
+    marginRight: 15,
   },
   headerContent: {
     flex: 1,

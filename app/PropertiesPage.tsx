@@ -131,63 +131,11 @@ const PropertyCard = ({ property }: { property: Property }) => {
 
   const navigateToDetails = () => {
     try {
-      // Clean and validate image arrays
-      const cleanImages = (images: any[]) => {
-        if (!Array.isArray(images)) return []
-        return images
-          .filter((img) => {
-            if (!img) return false
-            if (typeof img === "number") return false
-            if (typeof img !== "string") return false
-            if (img.trim() === "") return false
-            return true
-          })
-          .map((img) => String(img).trim())
-      }
-
-      // Ensure all required fields are present and properly formatted
-      const propertyForNavigation = {
-        _id: String(property._id || ""),
-        heading: String(property.heading || "Property"),
-        propertyCategory: String(property.propertyCategory || ""),
-        sellType: String(property.sellType || ""),
-        bedrooms: String(property.bedrooms || ""),
-        areaSqft: String(property.areaSqft || "0"),
-        builtUpArea: String(property.builtUpArea || property.areaSqft || "0"),
-        expectedPrice: String(property.expectedPrice || "0"),
-        pricePerMonth: property.pricePerMonth ? String(property.pricePerMonth) : undefined,
-        landmark: String(property.landmark || ""),
-        city: String(property.city || ""),
-        propertyLocation: String(
-          property.propertyLocation || `${property.landmark || ""}, ${property.city || ""}`.trim(),
-        ),
-        uploadedPhotos: cleanImages(property.uploadedPhotos || []),
-        propertyImages: cleanImages(property.propertyImages || []),
-        amenities: Array.isArray(property.amenities) ? property.amenities : [],
-        furnitures: Array.isArray(property.furnitures) ? property.furnitures : [],
-        propertyContains: String(property.propertyContains || ""),
-        sellerType: String(property.sellerType || ""),
-        oldProperty: String(property.oldProperty || ""),
-        createdAt: String(property.createdAt || ""),
-        updatedAt: String(property.updatedAt || ""),
-        latitude: property.latitude || 0,
-        longitude: property.longitude || 0,
-        propertyType: String(property.propertyType || property.propertyCategory || ""),
-      }
-
-      console.log("Navigating with property data:", {
-        id: propertyForNavigation._id,
-        heading: propertyForNavigation.heading,
-        price: propertyForNavigation.expectedPrice,
-        area: propertyForNavigation.builtUpArea,
-        location: propertyForNavigation.propertyLocation,
-      })
-
-      // Navigate using the correct route structure
+      console.log("Navigating with property ID:", property._id)
       router.push({
         pathname: "/PropertyDetailsPage" as any,
         params: {
-          propertyData: JSON.stringify(propertyForNavigation),
+          id: property._id,
         },
       })
     } catch (error) {
