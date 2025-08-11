@@ -18,10 +18,11 @@ import {
   StatusBar,
 } from "react-native"
 import { Feather, Ionicons, FontAwesome5, MaterialIcons, AntDesign, MaterialCommunityIcons } from "@expo/vector-icons"
-import { launchImageLibrary, type ImageLibraryOptions, type PhotoQuality } from "react-native-image-picker"
-import { useNavigation } from "expo-router"
+import { useNavigation, useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics"
 import { LinearGradient } from "expo-linear-gradient"
+import { BASE_URL } from "@env"
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -38,11 +39,38 @@ import Animated, {
 import { BlurView } from "expo-blur"
 import HeroSection from "./servicepage/HeroSection"
 const { width, height } = Dimensions.get("window")
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from 'expo-location';
+import { Picker } from "@react-native-picker/picker";
+
+const categories = [
+  "Property Legal",
+  "Plumbing",
+  "Electrician",
+  "Construction",
+  "Painting",
+  "Cleaning",
+  "Interior Designing",
+  "Pest Control",
+  "Appliance Repair",
+  "Carpentry",
+  "Landscaping",
+  "Courier",
+];
 
 interface FormData {
-  altNumber: string
-  address: string
-  description: string
+  name: string;
+  description: string;
+  landmark: string;
+  category: string;
+  image: {
+    uri: string;
+    name: string;
+    type: string;
+  } | null;
+  address: string;
+  coordinates: [number, number];
 }
 
 interface ServiceType {
@@ -142,12 +170,18 @@ const SuccessAnimation: React.FC = () => {
 }
 
 const ServicesPage: React.FC = () => {
-  const [selectedService, setSelectedService] = useState<string>("property-legal")
+  const [selectedService, setSelectedService] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
-    altNumber: "",
-    address: "",
+    name: "",
     description: "",
-  })
+    landmark: "",
+    category: "",
+    image: null,
+    address: "",
+    coordinates: [0, 0],
+  });
+  const [loading, setLoading] = useState<boolean>(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [fileName, setFileName] = useState<string>("")
   const [imageUri, setImageUri] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
@@ -171,6 +205,7 @@ const ServicesPage: React.FC = () => {
   ).current
 
   const navigation = useNavigation()
+  const router = useRouter();
 
   // Animated value for service selection
   const serviceScale = useSharedValue(1)
@@ -230,6 +265,7 @@ const ServicesPage: React.FC = () => {
   const handleServiceSelect = (service: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     setSelectedService(service)
+    setFormData(prev => ({ ...prev, category: service }))
 
     // Add animation when selecting a service
     serviceScale.value = withSequence(
@@ -244,115 +280,182 @@ const ServicesPage: React.FC = () => {
       ...formData,
       [name]: value,
     })
-  }
-
-  const handleSubmit = () => {
-    if (!formData.address || !formData.description) {
-      Alert.alert("Missing Information", "Please fill in all required fields")
-      return
+    // Clear error when user types
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: "" }))
     }
-
-    setIsSubmitting(true)
-
-    // Button press animation
-    buttonScale.value = withSequence(
-      withTiming(0.95, { duration: 100, easing: Easing.out(Easing.cubic) }),
-      withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) }),
-    )
-
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
-      setShowSuccess(true)
-
-      setTimeout(() => {
-        Alert.alert(
-          "Success",
-          "Your service request has been submitted! We'll find you the best service professionals near you",
-          [
-            {
-              text: "OK",
-              onPress: () => navigation.navigate("ServiceMansPage" as never),
-            },
-          ],
-        )
-      }, 1500)
-    }, 1500)
-  }
-
-  const requestLocationPermission = async (): Promise<boolean> => {
-    if (Platform.OS === "android") {
-      try {
-        const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
-        return granted === PermissionsAndroid.RESULTS.GRANTED
-      } catch (err) {
-        console.warn(err)
-        return false
-      }
-    }
-    return true
-  }
-
-  const detectLocation = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-
-    const hasPermission = await requestLocationPermission()
-    if (!hasPermission) {
-      Alert.alert("Permission denied", "Unable to access your location")
-      return
-    }
-
-    // Simulate location detection
-    setFormData({
-      ...formData,
-      address: "123 Main Street, New York, NY 10001",
-    })
-
-    // Animation for success
-    locationScale.value = withSequence(
-      withTiming(1.05, { duration: 150, easing: Easing.out(Easing.cubic) }),
-      withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) }),
-    )
   }
 
   const pickImage = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    const options: ImageLibraryOptions = {
-      mediaType: "photo",
-      quality: 1 as PhotoQuality,
-      includeExtra: true,
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission Required", "Permission to access media library is required!");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const nameFromUri = asset.uri.split("/").pop() || "image.jpg";
+        const extension = nameFromUri.split(".").pop() || "jpg";
+        const type = `image/${extension}`;
+
+        const file = {
+          uri: asset.uri,
+          name: asset.fileName || nameFromUri,
+          type,
+        };
+
+        console.log(formData);
+
+        setFormData({ ...formData, image: file });
+        setImageUri(asset.uri);
+        setFileName(file.name);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image");
+    }
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setFormErrors({});
+
+    const token = await AsyncStorage.getItem("auth");
+    if (!token) {
+      setLoading(false);
+      Alert.alert("Login Required", "You must be logged in to request a service");
+      navigation.navigate("Login" as never);
+      return;
     }
 
-    launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        console.log("User cancelled image picker")
-      } else if (response.errorCode) {
-        Alert.alert("Error", response.errorMessage || "Unknown error")
-      } else if (response.assets && response.assets.length > 0) {
-        const asset = response.assets[0]
-        setImageUri(asset.uri || null)
-        // Extract the file name from the URI
-        const uriParts = asset.uri?.split("/") || []
-        setFileName(uriParts[uriParts.length - 1] || "image.jpg")
+    const errors: Record<string, string> = {};
+    if (!formData.name) errors.name = "Problem name is required";
+    if (!formData.description) errors.description = "Description is required";
+    if (!formData.category) errors.category = "Category is required";
 
-        // Add a success animation
-        scale.value = withSequence(
-          withTiming(1.05, { duration: 150, easing: Easing.out(Easing.cubic) }),
-          withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) }),
-        )
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      setLoading(false);
+      return;
+    }
 
-        // Stop the pulsing animation
-        cancelAnimation(uploadPulse)
-        uploadPulse.value = 1
-        setUploadPulseState(1)
+    try {
+      const data = new FormData();
+      data.append("formData", JSON.stringify({
+        name: formData.name,
+        description: formData.description,
+        landmark: formData.landmark,
+        category: formData.category,
+        address: formData.address,
+        coordinates: [formData.coordinates[1],formData.coordinates[0]],
+        status: "requested",
+        price: "",
+        otp: ""
+      }));
+
+      if (formData.image) {
+        data.append("serviceImage", {
+          uri: formData.image.uri,
+          name: formData.image.name,
+          type: formData.image.type
+        } as any);
       }
-    })
-  }
 
-  // Animated styles
+
+      const response = await axios.post<{ _id: string }>(
+        `${BASE_URL}/api/services`,
+        data,
+        {
+          headers: {
+            Authorization: token,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        router.push({
+          pathname: "/ServiceMansPage",
+          params: { serviceId: response.data._id },
+        });
+
+        // Reset form
+        setFormData({
+          name: "",
+          description: "",
+          landmark: "",
+          category: "",
+          image: null,
+          address: "",
+          coordinates: [0, 0],
+        });
+        setFileName("");
+        setSelectedService(null);
+      }, 1500);
+    } catch (error: any) {
+      console.error("Error submitting form:", error);
+      Alert.alert(
+        "Error", 
+        error.response?.data?.message || error.message || "An error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const detectLocation = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'We need location permissions to detect your location');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      const [latitude, longitude] = [location.coords.latitude, location.coords.longitude];
+      
+      // Get human-readable address
+      let addressResponse = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude
+      });
+      
+      const address = addressResponse[0]?.name || 
+        `Detected location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+
+      setFormData(prev => ({
+        ...prev,
+        coordinates: [latitude, longitude],
+        address: address
+      }));
+
+      // Animation feedback
+      locationScale.value = withSequence(
+        withTiming(0.95, { duration: 100 }),
+        withTiming(1.05, { duration: 150 }),
+        withTiming(1, { duration: 200 })
+      );
+    } catch (error) {
+      console.error("Error getting location:", error);
+      Alert.alert('Error', 'Could not determine your location');
+    }
+  };
+
   const mainContentStyle = useAnimatedStyle(() => {
     return {
       opacity: fadeIn.value,
@@ -398,74 +501,74 @@ const ServicesPage: React.FC = () => {
 
   const serviceTypes = [
     {
-      id: "property-legal",
+      id: "Property Legal",
       name: "Property Legal",
       icon: (
-        <FontAwesome5 name="gavel" size={24} color={selectedService === "property-legal" ? "#10b981" : "#9ca3af"} />
+        <FontAwesome5 name="gavel" size={24} color={selectedService === "Property Legal" ? "#10b981" : "#9ca3af"} />
       ),
     },
     {
-      id: "electrician",
+      id: "Electrician",
       name: "Electrician",
       icon: (
         <MaterialCommunityIcons
           name="lightning-bolt"
           size={24}
-          color={selectedService === "electrician" ? "#10b981" : "#9ca3af"}
+          color={selectedService === "Electrician" ? "#10b981" : "#9ca3af"}
         />
       ),
     },
     {
-      id: "construction",
+      id: "Construction",
       name: "Construction",
       icon: (
-        <FontAwesome5 name="hard-hat" size={24} color={selectedService === "construction" ? "#10b981" : "#9ca3af"} />
+        <FontAwesome5 name="hard-hat" size={24} color={selectedService === "Construction" ? "#10b981" : "#9ca3af"} />
       ),
     },
     {
-      id: "interior-designing",
+      id: "Interior Designing",
       name: "Interior Designing",
       icon: (
         <MaterialCommunityIcons
           name="home-outline"
           size={24}
-          color={selectedService === "interior-designing" ? "#10b981" : "#9ca3af"}
+          color={selectedService === "Interior Designing" ? "#10b981" : "#9ca3af"}
         />
       ),
     },
     {
-      id: "whitewash-paint",
-      name: "Whitewash & Paint",
+      id: "Painting",
+      name: "Painting",
       icon: (
         <MaterialCommunityIcons
           name="roller-skate"
           size={24}
-          color={selectedService === "whitewash-paint" ? "#10b981" : "#9ca3af"}
+          color={selectedService === "Painting" ? "#10b981" : "#9ca3af"}
         />
       ),
     },
     {
-      id: "cleaning",
+      id: "Cleaning",
       name: "Cleaning",
       icon: (
         <MaterialCommunityIcons
           name="spray-bottle"
           size={24}
-          color={selectedService === "cleaning" ? "#10b981" : "#9ca3af"}
+          color={selectedService === "Cleaning" ? "#10b981" : "#9ca3af"}
         />
       ),
     },
     {
-      id: "masonry",
-      name: "Masonry",
+      id: "Plumbing",
+      name: "Plumbing",
       icon: (
-        <MaterialCommunityIcons name="wall" size={24} color={selectedService === "masonry" ? "#10b981" : "#9ca3af"} />
+        <MaterialCommunityIcons name="pipe" size={24} color={selectedService === "Plumbing" ? "#10b981" : "#9ca3af"} />
       ),
     },
     {
-      id: "other",
+      id: "Other",
       name: "Other",
-      icon: <MaterialIcons name="more-horiz" size={24} color={selectedService === "other" ? "#10b981" : "#9ca3af"} />,
+      icon: <MaterialIcons name="more-horiz" size={24} color={selectedService === "Other" ? "#10b981" : "#9ca3af"} />,
     },
   ]
 
@@ -474,19 +577,19 @@ const ServicesPage: React.FC = () => {
       title: "Home Service",
       description: "Professional home maintenance and repair services",
       icon: "home",
-      color: "#10b981", // Indigo
+      color: "#10b981",
     },
     {
       title: "Appliance Repair",
       description: "Expert repair for all household appliances",
       icon: "settings",
-      color: "#8b5cf6", // Purple
+      color: "#8b5cf6",
     },
     {
       title: "Emergency Service",
       description: "24/7 emergency repair and maintenance",
       icon: "alert-circle",
-      color: "#ec4899", // Pink
+      color: "#ec4899",
     },
   ]
 
@@ -508,10 +611,15 @@ const ServicesPage: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      // behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={[styles.container, { marginTop: statusBarHeight }]}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
         <HeroSection />
         <Animated.View style={[styles.content, mainContentStyle]}>
           {/* Left Section */}
@@ -633,7 +741,7 @@ const ServicesPage: React.FC = () => {
           </View>
 
           {/* Right Section - Form */}
-          <Animated.View style={[styles.rightSection, formContainerStyle]}>
+          <Animated.View style={[styles.rightSection, { opacity: fadeIn, transform: [{ translateY: slideUp }] }]}>
             <View style={styles.formContainer}>
               <View style={styles.formTitleContainer}>
                 <Text style={styles.formTitle}>Request Service</Text>
@@ -644,53 +752,86 @@ const ServicesPage: React.FC = () => {
 
               <View style={styles.formFields}>
                 <View style={styles.formGroup}>
-                  <Text style={styles.label}>Alternative Number</Text>
+                  <Text style={styles.label}>Problem Name</Text>
                   <View style={styles.inputContainer}>
-                    <Feather name="phone" size={16} color="#9ca3af" style={styles.inputIcon} />
+                    <Feather name="alert-circle" size={16} color="#9ca3af" style={styles.inputIcon} />
+                    <TextInput
+                      style={[styles.input, formErrors.name && styles.errorInput]}
+                      placeholder="Problem Name"
+                      value={formData.name}
+                      onChangeText={(text) => handleInputChange("name", text)}
+                      placeholderTextColor="#9ca3af"
+                    />
+                  </View>
+                  {formErrors.name && (
+                    <Text style={styles.errorText}>{formErrors.name}</Text>
+                  )}
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Problem Description</Text>
+                  <View style={styles.inputContainer}>
+                    <Feather name="file-text" size={16} color="#9ca3af" style={styles.inputIcon} />
+                    <TextInput
+                      style={[styles.input, styles.textArea, formErrors.description && styles.errorInput]}
+                      placeholder="Describe your problem in detail"
+                      value={formData.description}
+                      onChangeText={(text) => handleInputChange("description", text)}
+                      placeholderTextColor="#9ca3af"
+                      multiline
+                      numberOfLines={4}
+                    />
+                  </View>
+                  {formErrors.description && (
+                    <Text style={styles.errorText}>{formErrors.description}</Text>
+                  )}
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Area Landmark</Text>
+                  <View style={styles.inputContainer}>
+                    <Feather name="map-pin" size={16} color="#9ca3af" style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Alternative Phone Number"
-                      value={formData.altNumber}
-                      onChangeText={(text) => handleInputChange("altNumber", text)}
-                      keyboardType="phone-pad"
+                      placeholder="Enter nearest landmark"
+                      value={formData.landmark}
+                      onChangeText={(text) => handleInputChange("landmark", text)}
                       placeholderTextColor="#9ca3af"
                     />
                   </View>
                 </View>
 
                 <View style={styles.formGroup}>
-                  <View style={styles.addressHeader}>
-                    <Text style={styles.label}>
-                      Enter Address <Text style={styles.requiredStar}>*</Text>
-                    </Text>
-                    <Animated.View style={locationButtonStyle}>
-                      <TouchableOpacity style={styles.locationButton} onPress={detectLocation} activeOpacity={0.7}>
-                        <Ionicons name="location" size={14} color="#10b981" />
-                        <Text style={styles.locationButtonText}>Detect Location</Text>
-                      </TouchableOpacity>
-                    </Animated.View>
+                  <Text style={styles.label}>Problem Category</Text>
+                  <View style={[styles.pickerWrapper, formErrors.category && styles.errorInput]}>
+                    <Picker
+                      selectedValue={formData.category}
+                      onValueChange={(itemValue) => {
+                        handleServiceSelect(itemValue);
+                        handleInputChange("category", itemValue);
+                      }}
+                      style={styles.picker}
+                    >
+                      <Picker.Item label="Select a category" value="" />
+                      {categories.map((cat) => (
+                        <Picker.Item key={cat} label={cat} value={cat} />
+                      ))}
+                    </Picker>
                   </View>
-                  <View style={styles.inputContainer}>
-                    <Feather name="map-pin" size={16} color="#9ca3af" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter Address"
-                      value={formData.address}
-                      onChangeText={(text) => handleInputChange("address", text)}
-                      placeholderTextColor="#9ca3af"
-                    />
-                  </View>
+                  {formErrors.category && (
+                    <Text style={styles.errorText}>{formErrors.category}</Text>
+                  )}
                 </View>
 
                 <View style={styles.formGroup}>
                   <Text style={styles.label}>Upload photo of your problem</Text>
                   <Animated.View style={uploadPulseStyle}>
                     <TouchableOpacity
-                      style={[styles.uploadArea, imageUri ? styles.hasFileUploadArea : null]}
+                      style={[styles.uploadArea, formData.image ? styles.hasFileUploadArea : null]}
                       onPress={pickImage}
                       activeOpacity={0.7}
                     >
-                      {imageUri ? (
+                      {formData.image ? (
                         <View style={styles.fileSelected}>
                           <View style={styles.fileInfoContainer}>
                             <Feather name="check-circle" size={20} color="#10b981" />
@@ -698,16 +839,16 @@ const ServicesPage: React.FC = () => {
                               {fileName}
                             </Text>
                           </View>
-                          {imageUri && (
-                            <>
-                              <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
-                              <BlurView intensity={20} style={styles.imageOverlay}>
-                                <TouchableOpacity style={styles.changePhotoButton} onPress={pickImage}>
-                                  <Text style={styles.changePhotoText}>Change Photo</Text>
-                                </TouchableOpacity>
-                              </BlurView>
-                            </>
-                          )}
+                          <Image 
+                            source={{ uri: formData.image.uri }} 
+                            style={styles.previewImage} 
+                            resizeMode="cover" 
+                          />
+                          <BlurView intensity={20} style={styles.imageOverlay}>
+                            <TouchableOpacity style={styles.changePhotoButton} onPress={pickImage}>
+                              <Text style={styles.changePhotoText}>Change Photo</Text>
+                            </TouchableOpacity>
+                          </BlurView>
                         </View>
                       ) : (
                         <View style={styles.uploadContent}>
@@ -723,30 +864,38 @@ const ServicesPage: React.FC = () => {
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={styles.label}>
-                    Problem Description <Text style={styles.requiredStar}>*</Text>
-                  </Text>
-                  <View style={styles.textAreaContainer}>
+                  <View style={styles.addressHeader}>
+                    <Text style={styles.label}>Location</Text>
+                    <TouchableOpacity 
+                      style={styles.locationButton} 
+                      onPress={detectLocation} 
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="location" size={14} color="#10b981" />
+                      <Text style={styles.locationButtonText}>Detect Location</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.inputContainer}>
+                    <Feather name="map" size={16} color="#9ca3af" style={styles.inputIcon} />
                     <TextInput
-                      style={[styles.input, styles.textArea]}
-                      placeholder="Please describe your problem in detail..."
-                      value={formData.description}
-                      onChangeText={(text) => handleInputChange("description", text)}
-                      multiline
-                      numberOfLines={4}
+                      style={styles.input}
+                      placeholder="Address"
+                      value={formData.address}
+                      onChangeText={(text) => handleInputChange("address", text)}
                       placeholderTextColor="#9ca3af"
+                      multiline
                     />
                   </View>
                 </View>
 
-                <Animated.View style={buttonScaleStyle}>
+                <Animated.View style={buttonScaleStyle}>                        
                   <TouchableOpacity
-                    style={[styles.submitButton, isSubmitting && styles.submittingButton]}
+                    style={[styles.submitButton, loading && styles.submittingButton]}
                     onPress={handleSubmit}
                     activeOpacity={0.8}
-                    disabled={isSubmitting}
+                    disabled={loading}
                   >
-                    {isSubmitting ? (
+                    {loading ? (
                       <View style={styles.loadingContainer}>
                         <Animated.View style={spinStyle}>
                           <Feather name="loader" size={20} color="#ffffff" />
@@ -1272,6 +1421,14 @@ const styles = StyleSheet.create({
     color: "#10b981",
     fontWeight: "900",
   },
+  errorText: {
+    color: "#ef4444",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  errorInput: {
+    borderColor: "#ef4444",
+  },
   serviceGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1322,6 +1479,17 @@ const styles = StyleSheet.create({
   selectedServiceName: {
     color: "#10b981",
     fontWeight: "600",
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 6,
+    overflow: "hidden",
+  },
+  picker: {
+    height: 50,
+    width: "100%",
+    color: "#1f2937",
   },
   checkmarkBadge: {
     position: "absolute",

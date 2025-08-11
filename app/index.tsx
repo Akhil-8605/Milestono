@@ -1,47 +1,62 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react";
 import {
   View,
   ScrollView,
   StatusBar,
   ActivityIndicator,
-} from "react-native"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import Homepage from "./homepage"           // adjust paths if needed
-import Footer from "./components/Footer"
-import BottomNavbar from "./components/BottomNavbar"
-import SplashScreen from "./SplashScreen"
+import Homepage from "./homepage";
+import BottomNavbar from "./components/BottomNavbar";
+import SplashScreen from "./SplashScreen";
 
 export default function Main() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasLaunched, setHasLaunched] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem("auth")
-      .then(value => {
-        setIsLoggedIn(value === "true")
-      })
-      .catch(err => console.error("Error reading login flag", err))
-      .finally(() => setIsLoading(false))
-  }, [])
+    const checkFirstLaunch = async () => {
+      try {
+        const value = await AsyncStorage.getItem("hasLaunched");
+        if (value === null) {
+          // First time launch
+          setHasLaunched(false);
+        } else {
+          setHasLaunched(true);
+        }
+      } catch (error) {
+        console.error("Error checking launch flag", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkFirstLaunch();
+  }, []);
 
-  const handleGetStarted = () => {
-    setIsLoggedIn(true)
-  }
+  const handleGetStarted = async () => {
+    try {
+      await AsyncStorage.setItem("hasLaunched", "true");
+    } catch (error) {
+      console.error("Failed to set launch flag", error);
+    }
+    setHasLaunched(true);
+  };
 
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
       </View>
-    )
+    );
   }
 
-  if (!isLoggedIn) {
-    return <SplashScreen onGetStarted={handleGetStarted} />
+  if (!hasLaunched) {
+    return <SplashScreen onGetStarted={handleGetStarted} />;
   }
 
-  const statusBarHeight = StatusBar.currentHeight || 0
+  const statusBarHeight = StatusBar.currentHeight || 0;
+
   return (
     <View style={{ flex: 1, marginTop: statusBarHeight }}>
       <StatusBar backgroundColor="white" barStyle="dark-content" />
@@ -54,5 +69,5 @@ export default function Main() {
       </ScrollView>
       <BottomNavbar />
     </View>
-  )
+  );
 }

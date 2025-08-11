@@ -8,14 +8,49 @@ import {
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
+import axios from "axios";
 import { useNavigation } from "expo-router";
+import { BASE_URL } from "@env";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-    const navigation = useNavigation();
-  
+  const navigation = useNavigation();
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      Alert.alert("Validation Error", "Please enter your email address.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post(`${BASE_URL}/api/forgot-password`, {
+        email,
+      });
+
+      setMessage(response.data.message || "Reset link sent successfully.");
+      Alert.alert("Success", response.data.message || "Reset link sent.");
+      setEmail("");
+
+      setTimeout(() => {
+        setMessage("");
+        navigation.navigate("LoginPage" as never);
+      }, 3000);
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || "Failed to send reset link."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ImageBackground
@@ -49,9 +84,19 @@ export default function ForgotPasswordScreen() {
                 autoCapitalize="none"
               />
 
-              <TouchableOpacity style={styles.resetButton}>
-                <Text style={styles.resetButtonText}>Send Reset Link</Text>
+              <TouchableOpacity
+                style={styles.resetButton}
+                onPress={handleForgotPassword}
+                disabled={loading}
+              >
+                <Text style={styles.resetButtonText}>
+                  {loading ? "Sending..." : "Send Reset Link"}
+                </Text>
               </TouchableOpacity>
+
+              {message ? (
+                <Text style={styles.successMessage}>{message}</Text>
+              ) : null}
 
               <TouchableOpacity
                 style={styles.backToLogin}
@@ -140,5 +185,11 @@ const styles = StyleSheet.create({
   },
   backToLogin: {
     marginTop: 14,
+  },
+  successMessage: {
+    textAlign: "center",
+    color: "green",
+    fontSize: 13,
+    marginBottom: 10,
   },
 });

@@ -11,7 +11,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  Linking,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import axios from "axios";
@@ -19,7 +18,7 @@ import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@env";
-
+import * as Linking from "expo-linking";
 const { width } = Dimensions.get("window");
 
 export default function LoginScreen() {
@@ -56,10 +55,23 @@ export default function LoginScreen() {
   };
 
   const handleGoogleSignup = async () => {
-    const result = await WebBrowser.openBrowserAsync(
-      `${BASE_URL}/auth/google/callback`
-    );
-  };
+  const redirectUri = Linking.createURL("auth");
+  const authUrl = `${BASE_URL}/auth/google?platform=mobile&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+  const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+
+  if (result.type === "success" && result.url) {
+    const tokenParam = Linking.parse(result.url)?.queryParams?.token;
+    
+    const token = Array.isArray(tokenParam) ? tokenParam[0] : tokenParam;
+
+    if (typeof token === "string" && token.trim()) {
+      await AsyncStorage.setItem("auth", token);
+      router.replace("/");
+    }
+  }
+};
+
 
   useEffect(() => {
     const token = searchParams.token;

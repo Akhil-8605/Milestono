@@ -20,10 +20,10 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useRoute, type RouteProp } from "@react-navigation/native"
 import { BASE_URL } from "@env"
-
+import { useRouter } from "expo-router";
 // Local image imports - you'll need to add these to your assets
 const serviceRequestImage = require("../assets/images/serviceRequest.jpg")
-
+const router = useRouter();
 const TABS = [
   { id: "requested", title: "Requested Services" },
   { id: "provided", title: "Provided Services" },
@@ -294,9 +294,20 @@ const ServiceDetailModal = ({
             {service.otp && <DetailRow label="OTP" value={service.otp} />}
           </View>
 
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionButtonText}>{isProvided ? "Go To Request ➡️" : "Go To Request ➡️"}</Text>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() =>
+              router.push({
+                pathname: "/ServiceMansPage",
+                params: { serviceId: service._id },
+              })
+            }
+          >
+            <Text style={styles.actionButtonText}>
+              {isProvided ? "Go To Request ➡️" : "Go To Request ➡️"}
+            </Text>
           </TouchableOpacity>
+
         </ScrollView>
       </SafeAreaView>
     </Modal>

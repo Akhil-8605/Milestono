@@ -1,36 +1,51 @@
-import React from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import { WebView } from "react-native-webview";
+import axios from "axios";
+import { BASE_URL } from "@env";
 
-// Get device width for responsive design
 const { width } = Dimensions.get("window");
 
 const MilestonoVideoSection = () => {
+  const [adLink, setAdLink] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAdLink = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/advertise`);
+      setAdLink(response.data.ad || null);
+    } catch (error) {
+      console.error("Error fetching ad link:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdLink();
+  }, []);
+
   return (
     <View style={styles.container}>
-      {/* Section Heading */}
       <Text style={styles.heading}>Watch Video About MILESTONO</Text>
       <Text style={styles.subHeading}>Watch the video what is Milestono</Text>
 
-      {/* Embedded YouTube Video */}
-      <View style={styles.videoContainer}>
-        <WebView
-          style={{ flex: 1 }}
-          javaScriptEnabled
-          source={{
-            uri: "https://www.youtube.com/embed/QyF0oGxdG80?si=q2_PHs5qza8PFSGV",
-          }}
-        />
-        {/* <iframe
-          width="100%"
-          height="100%"
-          src="https://www.youtube.com/embed/QyF0oGxdG80?si=q2_PHs5qza8PFSGV"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allowFullScreen
-        ></iframe> */}
-      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="#1a237e" />
+      ) : adLink ? (
+        <View style={styles.videoContainer}>
+          <WebView
+            style={styles.video}
+            javaScriptEnabled
+            source={{ uri: adLink }}
+            allowsFullscreenVideo
+          />
+        </View>
+      ) : (
+        <Text style={{ textAlign: "center", color: "#999" }}>
+          No video available
+        </Text>
+      )}
     </View>
   );
 };
@@ -47,11 +62,6 @@ const styles = StyleSheet.create({
     color: "#333333",
     marginBottom: 5,
   },
-  highlight: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#000",
-  },
   subHeading: {
     fontSize: 12,
     fontWeight: "600",
@@ -60,10 +70,11 @@ const styles = StyleSheet.create({
   },
   videoContainer: {
     width: width * 0.9,
-    height: (width * 0.9 * 9) / 16, // Maintain 16:9 aspect ratio
+    height: (width * 0.9 * 9) / 16,
     borderRadius: 10,
     overflow: "hidden",
     alignSelf: "center",
+    backgroundColor: "#000",
   },
   video: {
     flex: 1,

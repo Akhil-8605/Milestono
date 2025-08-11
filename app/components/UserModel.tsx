@@ -19,7 +19,8 @@ import ToggleMenus from "./ToggleMenus"
 import type { NavigationProp } from "@react-navigation/native"
 import { useNavigation } from "expo-router"
 import axios from "axios"
-import * as SecureStore from "expo-secure-store"
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from "@env"
 
 const { width } = Dimensions.get("window")
@@ -61,7 +62,7 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
   // Authentication function
   const authenticateUser = async (): Promise<void> => {
     try {
-      const token = await SecureStore.getItemAsync("auth")
+      const token = await AsyncStorage.getItem("auth")
       if (!token) {
         console.log("No auth token found")
         setIsAuthenticated(false)
@@ -84,7 +85,7 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
   // Agent/CRM access check
   const authenticateAgent = async (): Promise<void> => {
     try {
-      const token = await SecureStore.getItemAsync("auth")
+      const token = await AsyncStorage.getItem("auth")
       if (!token) {
         console.log("No auth token found for CRM access")
         setCrmAccess(false)
@@ -107,7 +108,7 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
   // Fetch user data including all counts
   const getUserData = async (): Promise<void> => {
     try {
-      const token = await SecureStore.getItemAsync("auth")
+      const token = await AsyncStorage.getItem("auth")
       if (!token) {
         console.log("No auth token found for user data")
         return
@@ -148,8 +149,8 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
   const logout = async (): Promise<void> => {
     try {
       // Remove local tokens
-      await SecureStore.deleteItemAsync("auth")
-      await SecureStore.deleteItemAsync("user_id")
+      await AsyncStorage.removeItem("auth")
+      await AsyncStorage.removeItem("user_id")
 
       // Call Google logout
       await handleGoogleLogout()
@@ -339,7 +340,7 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
               <View style={styles.actionContainer}>
                 <TouchableOpacity
                   style={[styles.actionBox, { backgroundColor: "#FFF3E0" }]}
-                  onPress={() => navigateToRoute("RequestServiceForm")}
+                  onPress={() => navigateToRoute("ServiceFormPage")}
                 >
                   <FontAwesome5 name="hands-helping" size={24} color="#F57C00" />
                   <Text style={styles.actionText}>Use Service</Text>
@@ -349,7 +350,7 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
 
                 <TouchableOpacity
                   style={[styles.actionBox, { backgroundColor: "#FCE4EC" }]}
-                  onPress={() => navigateToRoute("ReceivedServiceRequests")}
+                  onPress={() => navigateToRoute("ServiceProviderMap")}
                 >
                   <FontAwesome5 name="cogs" size={24} color="#C2185B" />
                   <Text style={styles.actionText}>Received Service Requests</Text>
@@ -360,27 +361,20 @@ const UserModel: React.FC<UserModelProps> = ({ visible, onClose }) => {
             {/* Additional Menu Items */}
             {isAuthenticated && (
               <View style={styles.menuSection}>
-                <TouchableOpacity style={styles.menuItem} onPress={() => navigateToRoute("MyProperty")}>
+                <TouchableOpacity style={styles.menuItem} onPress={() => navigateToRoute("MyActivityPage")}>
                   <FontAwesome5 name="building" size={20} color="#666" />
                   <Text style={styles.menuText}>My Property</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.menuItem} onPress={() => navigateToRoute("MyService")}>
+                <TouchableOpacity style={styles.menuItem} onPress={() => navigateToRoute("MyServicePage")}>
                   <FontAwesome5 name="wrench" size={20} color="#666" />
                   <Text style={styles.menuText}>My Service</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.menuItem} onPress={() => navigateToRoute("Premium")}>
+                <TouchableOpacity style={styles.menuItem} onPress={() => navigateToRoute("PremiumAccountPage")}>
                   <FontAwesome5 name="gem" size={20} color="#666" />
                   <Text style={styles.menuText}>Premium Account</Text>
                 </TouchableOpacity>
-
-                {crmAccess && (
-                  <TouchableOpacity style={styles.menuItem} onPress={() => navigateToRoute("AgentDashboard")}>
-                    <FontAwesome5 name="user-secret" size={20} color="#666" />
-                    <Text style={styles.menuText}>Agent Dashboard</Text>
-                  </TouchableOpacity>
-                )}
               </View>
             )}
 
