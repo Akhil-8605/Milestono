@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -56,6 +56,21 @@ const Form2: React.FC<Form2Props> = ({
     formData.uniqueFeatures || ""
   );
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // <CHANGE> Auto-calculate price per sq ft when area or expected price changes
+  useEffect(() => {
+    if (areaSqft && expectedPrice && formData.sellType === "Sell") {
+      const area = parseFloat(areaSqft);
+      const price = parseFloat(expectedPrice);
+
+      if (area > 0 && price > 0) {
+        const calculatedPricePerSqFt = (price / area).toFixed(2);
+        setPricePerSqFt(calculatedPricePerSqFt);
+      } else {
+        setPricePerSqFt("");
+      }
+    }
+  }, [areaSqft, expectedPrice, formData.sellType]);
 
   const validateForm = () => {
 
@@ -423,12 +438,17 @@ const Form2: React.FC<Form2Props> = ({
               <Text style={styles.errorText}>{errors.expectedPrice}</Text>
             )}
 
+            {/* <CHANGE> Made price per sq ft field read-only since it's auto-calculated */}
             <TextInput
-              style={[styles.input, errors.pricePerSqFt && styles.inputError]}
+              style={[
+                styles.input,
+                errors.pricePerSqFt && styles.inputError,
+                styles.calculatedInput
+              ]}
               value={pricePerSqFt}
-              onChangeText={setPricePerSqFt}
-              placeholder="₹ Price per sq.ft."
+              placeholder="₹ Price per sq.ft. (Auto-calculated)"
               keyboardType="numeric"
+              editable={false}
             />
             {errors.pricePerSqFt && (
               <Text style={styles.errorText}>{errors.pricePerSqFt}</Text>
@@ -571,6 +591,11 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: "#ff0000",
+  },
+  // <CHANGE> Added style for calculated input field
+  calculatedInput: {
+    backgroundColor: "#f5f5f5",
+    color: "#666",
   },
   errorText: {
     color: "#ff0000",

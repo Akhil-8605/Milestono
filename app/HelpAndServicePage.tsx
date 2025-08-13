@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Statu
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
 import { goBack } from "expo-router/build/global-state/routing"
+import { useNavigation } from "expo-router"
 
 const { width } = Dimensions.get("window")
 
@@ -10,13 +11,9 @@ interface HelpAndServicePageProps {
     navigation?: any
 }
 
-const HelpAndServicePage: React.FC<HelpAndServicePageProps> = ({ navigation }) => {
+const HelpAndServicePage: React.FC<HelpAndServicePageProps> = () => {
 
-    const navigateToContact = () => {
-        if (navigation) {
-            navigation.navigate("ContactUs")
-        }
-    }
+    const navigation = useNavigation()
 
     const helpCategories = [
         {
@@ -172,7 +169,7 @@ const HelpAndServicePage: React.FC<HelpAndServicePageProps> = ({ navigation }) =
                             Can't find what you're looking for? Our support team is ready to provide personalized assistance for all
                             your real estate needs.
                         </Text>
-                        <TouchableOpacity style={styles.contactButton} onPress={navigateToContact}>
+                        <TouchableOpacity style={styles.contactButton} onPress={() => { navigation.navigate("ContactUsPage" as never) }}>
                             <LinearGradient colors={["#667eea", "#764ba2"]} style={styles.contactButtonGradient}>
                                 <Ionicons name="mail" size={20} color="white" />
                                 <Text style={styles.contactButtonText}>Contact Us Now</Text>
@@ -190,7 +187,7 @@ const HelpAndServicePage: React.FC<HelpAndServicePageProps> = ({ navigation }) =
                             <Text style={styles.emergencyText}>
                                 For urgent property-related issues, call our emergency hotline available 24/7.
                             </Text>
-                            <Text style={styles.emergencyNumber}>Emergency: +91 XXXXX XXXXX</Text>
+                            <Text style={styles.emergencyNumber}>Emergency: +91 92125 85873</Text>
                         </View>
                     </View>
                 </View>

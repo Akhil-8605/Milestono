@@ -3,19 +3,15 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Statu
 import { LinearGradient } from "expo-linear-gradient"
 import { Foundation, Ionicons } from "@expo/vector-icons"
 import { FontAwesome5 } from "@expo/vector-icons"
-
+import { useNavigation } from "expo-router"
 const { width } = Dimensions.get("window")
 
 interface AboutUsPageProps {
     navigation?: any
 }
 
-const AboutUsPage: React.FC<AboutUsPageProps> = ({ navigation }) => {
-    const navigateToVideo = () => {
-        if (navigation) {
-            navigation.navigate("ViewAboutVideo")
-        }
-    }
+const AboutUsPage: React.FC<AboutUsPageProps> = () => {
+    const navigation = useNavigation()
 
     const statusBarHeight = StatusBar.currentHeight || 0
 
@@ -126,7 +122,7 @@ const AboutUsPage: React.FC<AboutUsPageProps> = ({ navigation }) => {
                         For more detailed information about our journey, values, and commitment to excellence, watch our
                         comprehensive video.
                     </Text>
-                    <TouchableOpacity style={styles.videoButton} onPress={navigateToVideo}>
+                    <TouchableOpacity style={styles.videoButton} onPress={()=>{navigation.navigate("ViewVideoPage" as never)}}>
                         <LinearGradient colors={["#667eea", "#764ba2"]} style={styles.videoButtonGradient}>
                             <Ionicons name="play" size={20} color="white" />
                             <Text style={styles.videoButtonText}>View Milestono Video</Text>
@@ -144,7 +140,7 @@ const AboutUsPage: React.FC<AboutUsPageProps> = ({ navigation }) => {
                         Our dedicated support team is here to assist you with any inquiries about our services, properties, or
                         processes.
                     </Text>
-                    <TouchableOpacity style={styles.helpButton} onPress={() => navigation?.navigate("HelpAndService")}>
+                    <TouchableOpacity style={styles.helpButton} onPress={() => navigation.navigate("HelpAndServicePage" as never)}>
                         <LinearGradient colors={["#667eea", "#764ba2"]} style={styles.helpButtonGradient}>
                             <FontAwesome5 name="info-circle" size={20} color="white" />
                             <Text style={styles.helpButtonText}>Get Help & Support</Text>

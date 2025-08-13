@@ -43,6 +43,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from 'expo-location';
 import { Picker } from "@react-native-picker/picker";
+import PopularServicesSection from "./servicepage/PopularServicesSection";
 
 const categories = [
   "Property Legal",
@@ -79,22 +80,15 @@ interface ServiceType {
   icon: React.ReactNode
 }
 
-interface SuggestionCard {
-  title: string
-  description: string
-  icon: string
-  color: string
-}
-
 // Helper functions for color manipulation
 const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   return result
     ? {
-        r: Number.parseInt(result[1], 16),
-        g: Number.parseInt(result[2], 16),
-        b: Number.parseInt(result[3], 16),
-      }
+      r: Number.parseInt(result[1], 16),
+      g: Number.parseInt(result[2], 16),
+      b: Number.parseInt(result[3], 16),
+    }
     : { r: 0, g: 0, b: 0 }
 }
 
@@ -179,9 +173,9 @@ const ServicesPage: React.FC = () => {
     image: null,
     address: "",
     coordinates: [0, 0],
-  });
-  const [loading, setLoading] = useState<boolean>(false);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  })
+  const [loading, setLoading] = useState<boolean>(false)
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [fileName, setFileName] = useState<string>("")
   const [imageUri, setImageUri] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
@@ -196,13 +190,6 @@ const ServicesPage: React.FC = () => {
   const formSlide = useSharedValue(20)
   const uploadPulse = useSharedValue(1)
   const spinValue = useSharedValue(0)
-
-  // Card animations
-  const cardAnimValues = useRef(
-    Array(3)
-      .fill(0)
-      .map(() => useSharedValue(50)),
-  ).current
 
   const navigation = useNavigation()
   const router = useRouter();
@@ -228,11 +215,6 @@ const ServicesPage: React.FC = () => {
     scale.value = withTiming(1, {
       duration: 800,
       easing: Easing.out(Easing.cubic),
-    })
-
-    // Stagger card animations
-    cardAnimValues.forEach((anim, index) => {
-      anim.value = withDelay(150 * index, withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) }))
     })
 
     // Form animations
@@ -339,7 +321,7 @@ const ServicesPage: React.FC = () => {
       return;
     }
 
-    const errors: Record<string, string> = {};
+    const errors: Record<string, string> = {}
     if (!formData.name) errors.name = "Problem name is required";
     if (!formData.description) errors.description = "Description is required";
     if (!formData.category) errors.category = "Category is required";
@@ -358,11 +340,12 @@ const ServicesPage: React.FC = () => {
         landmark: formData.landmark,
         category: formData.category,
         address: formData.address,
-        coordinates: [formData.coordinates[1],formData.coordinates[0]],
+        coordinates: [formData.coordinates[1], formData.coordinates[0]],
         status: "requested",
         price: "",
-        otp: ""
-      }));
+        otp: "",
+      }),
+      )
 
       if (formData.image) {
         data.append("serviceImage", {
@@ -372,25 +355,20 @@ const ServicesPage: React.FC = () => {
         } as any);
       }
 
+      const response = await axios.post<{ _id: string }>(`${BASE_URL}/api/services`, data, {
+        headers: {
+          Authorization: token,
+          "Content-Type": "multipart/form-data",
+        },
+      })
 
-      const response = await axios.post<{ _id: string }>(
-        `${BASE_URL}/api/services`,
-        data,
-        {
-          headers: {
-            Authorization: token,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      setShowSuccess(true);
+      setShowSuccess(true)
       setTimeout(() => {
-        setShowSuccess(false);
+        setShowSuccess(false)
         router.push({
           pathname: "/ServiceMansPage",
           params: { serviceId: response.data._id },
-        });
+        })
 
         // Reset form
         setFormData({
@@ -401,42 +379,38 @@ const ServicesPage: React.FC = () => {
           image: null,
           address: "",
           coordinates: [0, 0],
-        });
-        setFileName("");
-        setSelectedService(null);
-      }, 1500);
+        })
+        setFileName("")
+        setSelectedService(null)
+      }, 1500)
     } catch (error: any) {
-      console.error("Error submitting form:", error);
-      Alert.alert(
-        "Error", 
-        error.response?.data?.message || error.message || "An error occurred"
-      );
+      console.error("Error submitting form:", error)
+      Alert.alert("Error", error.response?.data?.message || error.message || "An error occurred")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const detectLocation = async () => {
     try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission denied', 'We need location permissions to detect your location');
-        return;
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status !== "granted") {
+        Alert.alert("Permission denied", "We need location permissions to detect your location")
+        return
       }
 
-      let location = await Location.getCurrentPositionAsync({});
-      const [latitude, longitude] = [location.coords.latitude, location.coords.longitude];
-      
+      const location = await Location.getCurrentPositionAsync({})
+      const [latitude, longitude] = [location.coords.latitude, location.coords.longitude]
+
       // Get human-readable address
-      let addressResponse = await Location.reverseGeocodeAsync({
+      const addressResponse = await Location.reverseGeocodeAsync({
         latitude,
-        longitude
-      });
-      
-      const address = addressResponse[0]?.name || 
-        `Detected location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+        longitude,
+      })
+
+      const address = addressResponse[0]?.name || `Detected location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`
 
       setFormData(prev => ({
         ...prev,
@@ -572,27 +546,6 @@ const ServicesPage: React.FC = () => {
     },
   ]
 
-  const suggestionCards: SuggestionCard[] = [
-    {
-      title: "Home Service",
-      description: "Professional home maintenance and repair services",
-      icon: "home",
-      color: "#10b981",
-    },
-    {
-      title: "Appliance Repair",
-      description: "Expert repair for all household appliances",
-      icon: "settings",
-      color: "#8b5cf6",
-    },
-    {
-      title: "Emergency Service",
-      description: "24/7 emergency repair and maintenance",
-      icon: "alert-circle",
-      color: "#ec4899",
-    },
-  ]
-
   const statusBarHeight = StatusBar.currentHeight || 0
 
   // Animated style for service selection
@@ -615,8 +568,8 @@ const ServicesPage: React.FC = () => {
       style={[styles.container, { marginTop: statusBarHeight }]}
       keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
-      <ScrollView 
-        showsVerticalScrollIndicator={false} 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
@@ -670,74 +623,7 @@ const ServicesPage: React.FC = () => {
                 </View>
               </ScrollView>
             </View>
-
-            <View style={styles.suggestionsContainer}>
-              <View style={styles.suggestionsHeader}>
-                <Text style={styles.suggestionsTitle}>Popular Services</Text>
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>Recommended</Text>
-                </View>
-              </View>
-
-              <ScrollView
-                horizontal={width < 768}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.cardsContainer}
-              >
-                {suggestionCards.map((card, index) => {
-                  const cardAnimStyle = useAnimatedStyle(() => {
-                    return {
-                      transform: [
-                        {
-                          translateY: cardAnimValues[index % cardAnimValues.length].value,
-                        },
-                        {
-                          scale: interpolate(fadeIn.value, [0, 1], [0.95, 1], Extrapolate.CLAMP),
-                        },
-                      ],
-                    }
-                  })
-
-                  return (
-                    <Animated.View key={index} style={[styles.card, cardAnimStyle]}>
-                      <LinearGradient
-                        colors={[card.color, darkenColor(card.color, 10)]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.cardAccent}
-                      />
-                      <View style={styles.cardContent}>
-                        <View style={styles.cardTitleContainer}>
-                          <View style={styles.cardTitleWithIcon}>
-                            <View
-                              style={[
-                                styles.cardIconContainer,
-                                {
-                                  backgroundColor: lightenColor(card.color, 40),
-                                },
-                              ]}
-                            >
-                              <Feather name={card.icon as any} size={16} color={card.color} />
-                            </View>
-                            <Text style={styles.cardTitle}>{card.title}</Text>
-                          </View>
-                          <Feather name="chevron-right" size={16} color={card.color} />
-                        </View>
-                        <Text style={styles.cardDescription}>{card.description}</Text>
-                        <TouchableOpacity
-                          style={[styles.detailsButton, { borderColor: lightenColor(card.color, 30) }]}
-                          activeOpacity={0.7}
-                          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-                        >
-                          <Text style={[styles.detailsButtonText, { color: card.color }]}>View Details</Text>
-                          <Feather name="arrow-right" size={12} color={card.color} />
-                        </TouchableOpacity>
-                      </View>
-                    </Animated.View>
-                  )
-                })}
-              </ScrollView>
-            </View>
+            <PopularServicesSection />
           </View>
 
           {/* Right Section - Form */}
@@ -839,10 +725,10 @@ const ServicesPage: React.FC = () => {
                               {fileName}
                             </Text>
                           </View>
-                          <Image 
-                            source={{ uri: formData.image.uri }} 
-                            style={styles.previewImage} 
-                            resizeMode="cover" 
+                          <Image
+                            source={{ uri: formData.image.uri }}
+                            style={styles.previewImage}
+                            resizeMode="cover"
                           />
                           <BlurView intensity={20} style={styles.imageOverlay}>
                             <TouchableOpacity style={styles.changePhotoButton} onPress={pickImage}>
@@ -866,9 +752,9 @@ const ServicesPage: React.FC = () => {
                 <View style={styles.formGroup}>
                   <View style={styles.addressHeader}>
                     <Text style={styles.label}>Location</Text>
-                    <TouchableOpacity 
-                      style={styles.locationButton} 
-                      onPress={detectLocation} 
+                    <TouchableOpacity
+                      style={styles.locationButton}
+                      onPress={detectLocation}
                       activeOpacity={0.7}
                     >
                       <Ionicons name="location" size={14} color="#10b981" />
@@ -888,7 +774,7 @@ const ServicesPage: React.FC = () => {
                   </View>
                 </View>
 
-                <Animated.View style={buttonScaleStyle}>                        
+                <Animated.View style={buttonScaleStyle}>
                   <TouchableOpacity
                     style={[styles.submitButton, loading && styles.submittingButton]}
                     onPress={handleSubmit}

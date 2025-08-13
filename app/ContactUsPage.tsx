@@ -87,19 +87,19 @@ const ContactUsPage: React.FC<ContactUsPageProps> = ({ navigation }) => {
         {
             icon: "mail-outline",
             title: "Email Us",
-            value: "milestono8@gmail.com",
-            action: "mailto:milestono8@gmail.com",
+            value: "info@milestono.in",
+            action: "mailto:info@milestono.in",
         },
         {
             icon: "call-outline",
             title: "Call Us",
-            value: "+91 XXXXX XXXXX",
-            action: "tel:+91XXXXXXXXX",
+            value: "+91 92125 85873",
+            action: "tel:+919212585873",
         },
         {
             icon: "location-outline",
             title: "Visit Our Office",
-            value: "Mahavir Enclave, Palam\nNew Delhi-110045",
+            value: "Dwarka",
             action: null,
         },
     ]
