@@ -339,23 +339,53 @@ const Form1: React.FC<Form1Props> = ({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Property Services</Text>
           <View style={styles.optionsContainer}>
-            {[
-              "Plots/Apartment",
-              "Independent House/Villa",
-              "Independent/Builder Floor",
-              "Plot/Land",
-              "RK/Studio Apartment",
-              "Serviced Apartment",
-              "Farmhouse",
-              "Other",
-            ].map((service) => (
-              <MultiSelectButton
-                key={service}
-                title={service}
-                selected={propertyContains.includes(service)}
-                onPress={() => togglePropertyService(service)}
-              />
-            ))}
+            {propertyCategory === "Commercial"
+              ? // Commercial property services - single selection only
+              [
+                "Shop",
+                "Industrial land",
+                "Office",
+                "Godown",
+                "Agricultural land",
+                "Industrial plots",
+                "Showrooms",
+                "Warehouse",
+                "Kiosk",
+                "Factory",
+                "Guest house",
+                "Banquet halls",
+                "Hotels",
+                "Resorts",
+              ].map((service) => (
+                <SelectionButton
+                  key={service}
+                  title={service}
+                  selected={propertyContains.includes(service)}
+                  onPress={() => {
+                    // Single selection for commercial properties
+                    setPropertyContains(propertyContains.includes(service) ? [] : [service])
+                  }}
+                  error={errors.propertyContains}
+                />
+              ))
+              : // Residential property services - multi selection
+              [
+                "Plots/Apartment",
+                "Independent House/Villa",
+                "Independent/Builder Floor",
+                "Plot/Land",
+                "RK/Studio Apartment",
+                "Serviced Apartment",
+                "Farmhouse",
+                "Other",
+              ].map((service) => (
+                <MultiSelectButton
+                  key={service}
+                  title={service}
+                  selected={propertyContains.includes(service)}
+                  onPress={() => togglePropertyService(service)}
+                />
+              ))}
           </View>
           {errors.propertyContains && (
             <Text style={styles.errorText}>{errors.propertyContains}</Text>

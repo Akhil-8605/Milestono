@@ -14,10 +14,9 @@ import {
   Alert,
 } from "react-native"
 import { useNavigation } from "expo-router"
-import { NavigationProp } from "@react-navigation/native";
+import type { NavigationProp } from "@react-navigation/native"
 import MultiSlider from "@ptomasroos/react-native-multi-slider"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { BASE_URL } from "@env";
 
 const FiltersPage = () => {
   const [selectedBedrooms, setSelectedBedrooms] = useState<string[]>([])
@@ -35,9 +34,25 @@ const FiltersPage = () => {
   const [selectedType, setSelectedType] = useState<string>("")
   const [loading, setLoading] = useState(false)
 
-  const navigation = useNavigation<NavigationProp<{ PropertiesPage: { filters: any } }>>();
+  const navigation = useNavigation<NavigationProp<{ PropertiesPage: { filters: any } }>>()
 
   const bedroomOptions = ["1RK", "1BHK", "2BHK", "3BHK", "4BHK", "5+BHK"]
+  const commercialPropertyTypes = [
+    "Shop",
+    "Industrial land",
+    "Office",
+    "Godown",
+    "Agricultural land",
+    "Industrial plots",
+    "Showrooms",
+    "Warehouse",
+    "Kiosk",
+    "Factory",
+    "Guest house",
+    "Banquet halls",
+    "Hotels",
+    "Resorts",
+  ]
   const propertyTypeOptions = [
     "Flats/Apartment",
     "Independent House/Villa",
@@ -204,7 +219,7 @@ const FiltersPage = () => {
 
         {/* Bedrooms Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Bedrooms</Text>
+          <Text style={styles.sectionTitle}>{selectedCategory === "Commercial" ? "Rooms" : "Bedrooms"}</Text>
           <View style={styles.bedroomsContainer}>
             {bedroomOptions.map((bedroom) => (
               <TouchableOpacity
@@ -328,7 +343,7 @@ const FiltersPage = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Type of property</Text>
           <View style={styles.bedroomsContainer}>
-            {propertyTypeOptions.map((type) => (
+            {(selectedCategory === "Commercial" ? commercialPropertyTypes : propertyTypeOptions).map((type) => (
               <TouchableOpacity
                 key={type}
                 style={[styles.bedroomChip, selectedPropertyTypes.includes(type) && styles.selectedChip]}

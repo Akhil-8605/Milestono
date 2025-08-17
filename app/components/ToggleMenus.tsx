@@ -130,6 +130,17 @@ const menuItems = {
       { title: "Bangalore Overview", icon: "building", linkto: "SearchPage", cityName: "Bangalore" }, // Added cityName param
     ],
   },
+  "Privacy Policy": {
+    icon: "shield-alt",
+    items: [
+      { title: "Privacy Policy", icon: "shield-alt", linkto: "PrivacyPolicyPage" },
+      { title: "Terms and Conditions", icon: "file-contract", linkto: "TermsConditionsPage" },
+      { title: "Terms of Service", icon: "file-alt", linkto: "TermsOfServicePage" },
+      { title: "Refund Policy", icon: "undo", linkto: "RefundPolicyPage" },
+      { title: "Disclaimer", icon: "exclamation-circle", linkto: "DisclaimerPage" },
+      { title: "Delivery Timeline", icon: "clock", linkto: "DeliveryTimelinePage" }
+    ]
+  },
 }
 
 interface ToggledMenusProps {
@@ -328,13 +339,13 @@ const ToggledMenus: React.FC<ToggledMenusProps> = ({ onClose }) => {
             <Text style={styles.menuTitle}>Premium Account</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.menuHeader]} activeOpacity={0.7} onPress={() => { navigation.navigate("ContactUsPage")}}>
+        <TouchableOpacity style={[styles.menuHeader]} activeOpacity={0.7} onPress={() => { navigation.navigate("ContactUsPage") }}>
           <View style={styles.menuTitleContainer}>
             <FontAwesome5 name={"envelope"} size={18} color="#232761" solid />
             <Text style={styles.menuTitle}>Contact Us</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.menuHeader]} activeOpacity={0.7} onPress={() => {  navigation.navigate("HelpAndServicePage")}}>
+        <TouchableOpacity style={[styles.menuHeader]} activeOpacity={0.7} onPress={() => { navigation.navigate("HelpAndServicePage") }}>
           <View style={styles.menuTitleContainer}>
             <FontAwesome5 name={"question-circle"} size={18} color="#232761" solid />
             <Text style={styles.menuTitle}>Help & Support</Text>

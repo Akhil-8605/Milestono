@@ -228,11 +228,23 @@ const PropertyCard = ({ property }: { property: Property }) => {
             <View style={styles.detailIconContainer}>
               <Icon name="bed" size={16} color="#4ECDC4" />
             </View>
-            <Text style={styles.detailLabel}>Bedrooms</Text>
-            <Text style={styles.detailValue}>
-              {property.bedrooms}
-              {property.bedrooms !== "1RK" ? " BHK" : ""}
-            </Text>
+            {property.propertyCategory === "Commercial" ?
+              (
+                <>
+                  <Text style={styles.detailLabel}>Rooms</Text>
+                  <Text style={styles.detailValue}>
+                    {property.bedrooms}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.detailLabel}>Bedrooms</Text>
+                  <Text style={styles.detailValue}>
+                    {property.bedrooms}
+                    {property.bedrooms !== "1RK" ? " BHK" : ""}
+                  </Text>
+                </>)}
+
           </View>
 
           <View style={styles.detailItem}>
