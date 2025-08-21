@@ -4,27 +4,50 @@
     "appVersionSource": "remote"
   },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
-    "preview": {
-      "distribution": "internal"
-    },
-    "production": {
-      "autoIncrement": true
-    },
     "shared": {
       "node": "20.19.4",
       "yarn": "1.22.22"
     },
+    "development": {
+      "extends": "shared",
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
+    "preview": {
+      "extends": "shared",
+      "distribution": "internal",
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
+    "internal": {
+      "extends": "shared",
+      "distribution": "internal",
+      "env": {
+        "YARN_IGNORE_ENGINES": "true"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
+    "production": {
+      "extends": "shared",
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "autoIncrement": true
+    },
     "apk": {
+      "extends": "shared",
       "env": {
         "BASE_URL": "https://api.milestono.com:6005",
         "GOOGLE_API_KEY": "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw",
         "RAZORPAY_KEY_ID": "rzp_live_pm762YfvGOPF3L"
-      },  
-      "extends": "shared",
+      },
       "android": {
         "buildType": "apk"
       },
