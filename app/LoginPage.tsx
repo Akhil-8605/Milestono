@@ -17,9 +17,12 @@ import axios from "axios";
 import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useRouter, useLocalSearchParams } from "expo-router";
-import { BASE_URL } from "@env";
+import { BASE_URL, GOOGLE_CLIENT_ID, GOOGLE_ANDROID_ID, GOOGLE_APPLE_ID } from "@env";
 import * as Linking from "expo-linking";
+import * as Google from "expo-auth-session/providers/google";
+
 const { width } = Dimensions.get("window");
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -30,6 +33,11 @@ export default function LoginScreen() {
   const navigation = useNavigation();
   const router = useRouter();
   const searchParams = useLocalSearchParams();
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: "399602931639-f9e6jnaep66vmv9jlta1l8oqqjbcmhpf.apps.googleusercontent.com",
+    iosClientId: "399602931639-vc7uudesksisd0i0ftn8it9nulqkqbnk.apps.googleusercontent.com",
+    webClientId: "399602931639-uo23pfet6gg9afmkoilftkhvrn7atc0j.apps.googleusercontent.com",
+  });
 
   const handleLogin = async () => {
     if (!acceptTerms) {
@@ -55,23 +63,36 @@ export default function LoginScreen() {
   };
 
   const handleGoogleSignup = async () => {
-  const redirectUri = Linking.createURL("auth");
-  const authUrl = `${BASE_URL}/auth/google?platform=mobile&redirect_uri=${encodeURIComponent(redirectUri)}`;
-
-  const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
-
-  if (result.type === "success" && result.url) {
-    const tokenParam = Linking.parse(result.url)?.queryParams?.token;
-    
-    const token = Array.isArray(tokenParam) ? tokenParam[0] : tokenParam;
-
-    if (typeof token === "string" && token.trim()) {
-      await AsyncStorage.setItem("auth", token);
-      router.replace("/");
+    if (!acceptTerms) {
+      Alert.alert(
+        "Terms Required",
+        "You must accept the privacy policy and terms to log in."
+      );
+      return;
     }
-  }
-};
+    promptAsync();
+  };
 
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { authentication } = response;
+      if (authentication?.idToken) {
+        axios
+          .post(`${BASE_URL}/api/auth/mobile-google`, {
+            token: authentication.idToken,
+          })
+          .then(async (res) => {
+            const { token } = res.data as { token: string }; 
+            await AsyncStorage.setItem("auth", token);
+            router.replace("/");
+          })
+          .catch((err) => {
+            console.error("Google login failed:", err.response?.data || err.message);
+            Alert.alert("Google Login Failed", "Please try again.");
+          });
+      }
+    }
+  }, [response]);
 
   useEffect(() => {
     const token = searchParams.token;
@@ -174,7 +195,11 @@ export default function LoginScreen() {
                 <View style={styles.dividerLine} />
               </View>
 
-              <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignup}>
+              <TouchableOpacity
+                style={styles.googleButton}
+                onPress={handleGoogleSignup}
+                disabled={!request} // disable until request is ready
+              >
                 <Image
                   source={{ uri: "https://www.google.com/favicon.ico" }}
                   style={styles.googleIcon}
