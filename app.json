@@ -57,12 +57,17 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "e26857be-3431-4036-8e56-f996387c15fc"
+        "projectId": "0e62eed0-33d3-4e0d-a23f-28e80579cdc3"
       },
       "BASE_URL": "https://api.milestono.com:6005",
       "RAZORPAY_KEY_ID": "rzp_live_pm762YfvGOPF3L",
-      "GOOGLE_API_KEY": "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw"
+      "GOOGLE_API_KEY": "AIzaSyCd2I5FCBPa4-W9Ms1VQxhuKm4LeAF-Iiw",
+      "googleSignIn": {
+        "expoClientId": "399602931639-uo23pfet6gg9afmkoilftkhvrn7atc0j.apps.googleusercontent.com",
+        "iosClientId": "399602931639-f9e6jnaep66vmv9jlta1l8oqqjbcmhpf.apps.googleusercontent.com",
+        "androidClientId": "399602931639-vc7uudesksisd0i0ftn8it9nulqkqbnk.apps.googleusercontent.com"
+      }
     },
-    "owner": "akhil-8421"
+    "owner": "timesofstudies"
   }
 }
