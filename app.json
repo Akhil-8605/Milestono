@@ -57,7 +57,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "0e62eed0-33d3-4e0d-a23f-28e80579cdc3"
+        "projectId": "3645b4c7-0789-446d-919f-158cc06c6596"
       },
       "BASE_URL": "https://api.milestono.com:6005",
       "RAZORPAY_KEY_ID": "rzp_live_pm762YfvGOPF3L",
@@ -68,6 +68,6 @@
         "androidClientId": "399602931639-vc7uudesksisd0i0ftn8it9nulqkqbnk.apps.googleusercontent.com"
       }
     },
-    "owner": "timesofstudies"
+    "owner": "jayash-1234"
   }
 }

@@ -13,6 +13,7 @@ import {
   Animated,
   Pressable,
   Alert,
+  type ImageSourcePropType,
 } from "react-native"
 import Svg, { G, Path } from "react-native-svg"
 import MenuModal from "../components/HeroModel"
@@ -20,6 +21,7 @@ import { useNavigation, useRouter } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import * as Location from "expo-location"
+import { LinearGradient } from "expo-linear-gradient"
 import { BASE_URL, GOOGLE_API_KEY } from "@env"
 
 const cities = [
@@ -43,6 +45,9 @@ interface UserData {
   userFullName: string
 }
 
+const OVERLAY_COLOR = "rgba(35, 39, 97, 0.6)"
+const OVERLAY_SOLID = "rgba(35, 39, 97, 1)"
+
 const HeroSection: React.FC = () => {
   const navigation = useNavigation()
   const router = useRouter()
@@ -53,6 +58,11 @@ const HeroSection: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   const [userData, setUserData] = useState<UserData>({ premiumEndDate: "", userFullName: "" })
   const [latLong, setLatLong] = useState<[number, number]>([18.52097398044019, 73.86017831259551])
+
+  const [images, setImages] = useState<string[]>([])
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null)
+  const rotateIndexRef = useRef(0)
+
   const translateY = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
@@ -209,15 +219,76 @@ const HeroSection: React.FC = () => {
     getUserData()
   }, [])
 
+  useEffect(() => {
+    let isMounted = true
+    let rotateTimer: ReturnType<typeof setInterval> | null = null
+
+    const fetchImages = async () => {
+      try {
+        const screenWidth = Dimensions.get("window").width
+        const endpoint = screenWidth > 768 ? `${BASE_URL}/api/gallery` : `${BASE_URL}/api/mob-gallery`
+
+        const res = await axios.get(endpoint, { timeout: 10000 })
+        const data = res.data as Array<{ image?: string } | string>
+
+        const urls: string[] = Array.isArray(data)
+          ? data.map((item) => (typeof item === "string" ? item : item?.image)).filter((u): u is string => !!u)
+          : []
+
+        if (!isMounted) return
+
+        if (urls.length) {
+          setImages(urls)
+          rotateIndexRef.current = 0
+          setCurrentImageUrl(urls[0])
+
+          // rotate every 3s like the web version
+          rotateTimer && clearInterval(rotateTimer)
+          rotateTimer = setInterval(() => {
+            rotateIndexRef.current = (rotateIndexRef.current + 1) % urls.length
+            setCurrentImageUrl(urls[rotateIndexRef.current])
+          }, 3000)
+        } else {
+          setImages([])
+          setCurrentImageUrl(null)
+        }
+      } catch (e) {
+        console.error("Failed to fetch hero gallery:", e)
+        if (isMounted) {
+          setImages([])
+          setCurrentImageUrl(null)
+        }
+      }
+    }
+
+    fetchImages()
+
+    // clean up on unmount
+    return () => {
+      isMounted = false
+      if (rotateTimer) clearInterval(rotateTimer)
+    }
+  }, [])
+
+  const backgroundSource: ImageSourcePropType = currentImageUrl
+    ? { uri: currentImageUrl }
+    : require("../../assets/images/homebg.jpg")
+
   return (
     <View style={stylesHero.container}>
       <StatusBar translucent backgroundColor="transparent" />
-      <ImageBackground
-        source={require("../../assets/images/homebg.jpg")}
-        style={stylesHero.backgroundImage}
-        resizeMode="cover"
-      >
+      <ImageBackground source={backgroundSource} style={stylesHero.backgroundImage} resizeMode="cover">
         <View style={stylesHero.overlay} />
+
+        {/* Right-to-left fade overlay using LinearGradient.
+            Opaque on the right, smoothly fading to transparent on the left. */}
+        <LinearGradient
+          colors={[OVERLAY_SOLID, "rgba(35, 39, 97, 0.5)", "rgba(255, 255, 255, 0)"]}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 0 }}
+          style={stylesHero.fadeOverlay}
+          pointerEvents="none"
+        />
 
         <View style={stylesHero.header}>
           <Text style={stylesHero.logo}>milestono</Text>
@@ -277,10 +348,7 @@ const HeroSection: React.FC = () => {
         </View>
       </ImageBackground>
 
-      <MenuModal
-        isVisible={isMenuVisible}
-        onClose={() => setIsMenuVisible(false)}
-      />
+      <MenuModal isVisible={isMenuVisible} onClose={() => setIsMenuVisible(false)} />
     </View>
   )
 }
@@ -296,7 +364,10 @@ const stylesHero = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(35, 39, 97, 0.6)",
+    backgroundColor: OVERLAY_COLOR,
+  },
+  fadeOverlay: {
+    ...StyleSheet.absoluteFillObject,
   },
   header: {
     flexDirection: "row",

@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+"use client"
+
+import { useEffect, useState, useRef } from "react"
 import {
   StyleSheet,
   View,
@@ -8,16 +10,18 @@ import {
   Dimensions,
   StatusBar,
   Animated,
-  Pressable,
-  Linking,
   Alert,
-} from "react-native";
-import Svg, { G, Path } from "react-native-svg";
-import { useNavigation } from "expo-router";
-import MenuModal from "../components/HeroModel";
-import * as Location from "expo-location";
-import { GOOGLE_API_KEY } from "@env";
-import { goBack } from "expo-router/build/global-state/routing";
+} from "react-native"
+import Svg, { Path } from "react-native-svg"
+import { useNavigation } from "expo-router"
+import MenuModal from "../components/HeroModel"
+import * as Location from "expo-location"
+import { GOOGLE_API_KEY, BASE_URL } from "@env"
+import axios from "axios"
+import { LinearGradient } from "expo-linear-gradient"
+import type { ImageSourcePropType } from "react-native"
+import { goBack } from "expo-router/build/global-state/routing"
+
 const cities = [
   "Pune",
   "Mumbai",
@@ -32,15 +36,23 @@ const cities = [
   "Chennai",
   "Kolkata",
   "Ahmedabad",
-];
+]
+
+const OVERLAY_COLOR = "rgba(35, 39, 97, 0.6)"
+const OVERLAY_SOLID = "rgba(35, 39, 97, 1)"
 
 const HeroSection = () => {
-  const navigation = useNavigation();
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
-  const [index, setIndex] = useState(0);
-  const [city, setCity] = useState("Loading...");
-  const [latLong, setLatLong] = useState([18.52097398044019, 73.86017831259551]);
-  const translateY = useRef(new Animated.Value(0)).current;
+  const navigation = useNavigation()
+  const [isMenuVisible, setIsMenuVisible] = useState(false)
+  const [index, setIndex] = useState(0)
+  const [city, setCity] = useState("Loading...")
+  const [latLong, setLatLong] = useState<[number, number]>([18.52097398044019, 73.86017831259551])
+
+  const [images, setImages] = useState<string[]>([])
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null)
+  const rotateIndexRef = useRef(0)
+
+  const translateY = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     getCityName(latLong[0], latLong[1])
@@ -72,15 +84,15 @@ const HeroSection = () => {
   }, [])
 
   const getCityName = async (latitude: number, longitude: number) => {
-    const apiKey = GOOGLE_API_KEY;
+    const apiKey = GOOGLE_API_KEY
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
 
     try {
       const response = await fetch(url)
       const data = await response.json()
       if (data.status === "OK" && data.results.length > 0) {
-        const cityComponent = data.results[0].address_components.find(
-          (component: any) => component.types.includes("locality")
+        const cityComponent = data.results[0].address_components.find((component: any) =>
+          component.types.includes("locality"),
         )
         setCity(cityComponent ? cityComponent.long_name : "Unknown Location")
       } else {
@@ -106,36 +118,87 @@ const HeroSection = () => {
           useNativeDriver: true,
         }),
       ]).start(() => {
-        setIndex((prevIndex) => (prevIndex + 1) % cities.length);
-      });
-    }, 2000);
+        setIndex((prevIndex) => (prevIndex + 1) % cities.length)
+      })
+    }, 2000)
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
-    getCityName(latLong[0], latLong[1]);
-  }, []);
+    let isMounted = true
+    let rotateTimer: ReturnType<typeof setInterval> | null = null
+
+    const fetchImages = async () => {
+      try {
+        const screenWidth = Dimensions.get("window").width
+        const endpoint = screenWidth > 768 ? `${BASE_URL}/api/gallery` : `${BASE_URL}/api/mob-gallery`
+
+        const res = await axios.get(endpoint, { timeout: 10000 })
+        const data = res.data as Array<{ image?: string } | string>
+
+        const urls: string[] = Array.isArray(data)
+          ? data.map((item) => (typeof item === "string" ? item : item?.image)).filter((u): u is string => !!u)
+          : []
+
+        if (!isMounted) return
+
+        if (urls.length) {
+          setImages(urls)
+          rotateIndexRef.current = 0
+          setCurrentImageUrl(urls[0])
+
+          if (rotateTimer) clearInterval(rotateTimer)
+          rotateTimer = setInterval(() => {
+            rotateIndexRef.current = (rotateIndexRef.current + 1) % urls.length
+            setCurrentImageUrl(urls[rotateIndexRef.current])
+          }, 3000)
+        } else {
+          setImages([])
+          setCurrentImageUrl(null)
+        }
+      } catch (e) {
+        console.error("[v0] Failed to fetch services hero gallery:", e)
+        if (isMounted) {
+          setImages([])
+          setCurrentImageUrl(null)
+        }
+      }
+    }
+
+    fetchImages()
+    return () => {
+      isMounted = false
+      if (rotateTimer) clearInterval(rotateTimer)
+    }
+  }, [])
+
+  const backgroundSource: ImageSourcePropType = currentImageUrl
+    ? { uri: currentImageUrl }
+    : require("../../assets/images/homebg.jpg")
 
   return (
     <View style={stylesHero.container}>
       <StatusBar translucent backgroundColor="transparent" />
-      <ImageBackground
-        source={require("../../assets/images/homebg.jpg")}
-        style={stylesHero.backgroundImage}
-        resizeMode="cover"
-      >
+      <ImageBackground source={backgroundSource} style={stylesHero.backgroundImage} resizeMode="cover">
+        {/* Base navy overlay */}
         <View style={stylesHero.overlay} />
 
+        <LinearGradient
+          colors={[OVERLAY_SOLID, "rgba(35, 39, 97, 0.5)", "rgba(35, 39, 97, 0)"]}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 0 }}
+          style={stylesHero.fadeOverlay}
+          pointerEvents="none"
+        />
+
+        {/* Header */}
         <View style={stylesHero.header}>
           <Text style={stylesHero.logo}>milestono</Text>
           <View style={stylesHero.buyButton}>
             <Text style={stylesHero.buyLink}>Buy in {city}</Text>
           </View>
-          <TouchableOpacity
-            style={stylesHero.menuButton}
-            onPress={() => setIsMenuVisible(true)}
-          >
+          <TouchableOpacity style={stylesHero.menuButton} onPress={() => setIsMenuVisible(true)}>
             <Svg width="30" height="30" viewBox="0 0 24 24" fill="white">
               <Path
                 fillRule="evenodd"
@@ -147,19 +210,18 @@ const HeroSection = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Body */}
         <View style={stylesHero.content}>
           <View style={stylesHero.textWrapper}>
             <Text style={stylesHero.description}>
-              <Text style={stylesHero.mainTitle}>Milestono Services</Text> connects you with trusted service providers across every city. From home repairs to professional services, find the right expert for your needs.
+              <Text style={stylesHero.mainTitle}>Milestono Services</Text> connects you with trusted service providers
+              across every city. From home repairs to professional services, find the right expert for your needs.
             </Text>
           </View>
 
           <View style={stylesHero.searchWrapper}>
             <View style={stylesHero.tabContainer}>
-              <TouchableOpacity
-                style={stylesHero.inactiveTab}
-                onPress={() => goBack()}
-              >
+              <TouchableOpacity style={stylesHero.inactiveTab} onPress={() => goBack()}>
                 <Text style={stylesHero.inactiveTabText}>Real Estate</Text>
               </TouchableOpacity>
               <TouchableOpacity style={stylesHero.activeTab}>
@@ -169,7 +231,9 @@ const HeroSection = () => {
 
             <TouchableOpacity
               style={[stylesHero.tabContainer, { padding: 12 }]}
-              onPress={() => { navigation.navigate("ServiceFormPage" as never) }}
+              onPress={() => {
+                navigation.navigate("ServiceFormPage" as never)
+              }}
             >
               <Text style={stylesHero.ServiceTitle}>
                 Are you a Service Provider?
@@ -180,15 +244,11 @@ const HeroSection = () => {
         </View>
       </ImageBackground>
 
-      <MenuModal
-        isVisible={isMenuVisible}
-        onClose={() => setIsMenuVisible(false)}
-      />
+      <MenuModal isVisible={isMenuVisible} onClose={() => setIsMenuVisible(false)} />
     </View>
-  );
-};
+  )
+}
 
-const { width, height } = Dimensions.get("window");
 const stylesHero = StyleSheet.create({
   container: {
     marginBottom: 5,
@@ -199,7 +259,10 @@ const stylesHero = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(35, 39, 97, 0.6)",
+    backgroundColor: OVERLAY_COLOR,
+  },
+  fadeOverlay: {
+    ...StyleSheet.absoluteFillObject,
   },
   header: {
     flexDirection: "row",
@@ -294,6 +357,6 @@ const stylesHero = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
   },
-});
+})
 
-export default HeroSection;
+export default HeroSection
