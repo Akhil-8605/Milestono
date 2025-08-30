@@ -20,12 +20,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const FiltersPage = () => {
   const [selectedBedrooms, setSelectedBedrooms] = useState<string[]>([])
-  const [areaRange, setAreaRange] = useState<[number, number]>([1800, 12400])
-  const [minArea, setMinArea] = useState("1800")
-  const [maxArea, setMaxArea] = useState("12400")
-  const [priceRange, setPriceRange] = useState<[number, number]>([21.0, 64.3])
-  const [minPrice, setMinPrice] = useState("210321000")
-  const [maxPrice, setMaxPrice] = useState("642981000")
+  const [areaRange, setAreaRange] = useState<[number, number]>([0, 20000])
+  const [minArea, setMinArea] = useState("0")
+  const [maxArea, setMaxArea] = useState("20000")
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100.0])
+  const [minPrice, setMinPrice] = useState("0")
+  const [maxPrice, setMaxPrice] = useState("1000000000")
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([])
   const [selectedConstructionStatus, setSelectedConstructionStatus] = useState<string[]>([])
   const [selectedPostedBy, setSelectedPostedBy] = useState<string[]>([])
@@ -37,6 +37,7 @@ const FiltersPage = () => {
   const navigation = useNavigation<NavigationProp<{ PropertiesPage: { filters: any } }>>()
 
   const bedroomOptions = ["1RK", "1BHK", "2BHK", "3BHK", "4BHK", "5+BHK"]
+  const commercialBedroomOptions = ["1", "2", "3", "4", "5+"]
   const commercialPropertyTypes = [
     "Shop",
     "Industrial land",
@@ -73,12 +74,12 @@ const FiltersPage = () => {
       if (savedFilters) {
         const filters = JSON.parse(savedFilters)
         setSelectedBedrooms(filters.bedrooms || [])
-        setAreaRange(filters.areaRange || [1800, 12400])
-        setMinArea(filters.minArea || "1800")
-        setMaxArea(filters.maxArea || "12400")
-        setPriceRange(filters.priceRange || [21.0, 64.3])
-        setMinPrice(filters.minPrice || "210321000")
-        setMaxPrice(filters.maxPrice || "642981000")
+        setAreaRange(filters.areaRange || [0, 20000])
+        setMinArea(filters.minArea || "0")
+        setMaxArea(filters.maxArea || "20000")
+        setPriceRange(filters.priceRange || [0, 100.0])
+        setMinPrice(filters.minPrice || "0")
+        setMaxPrice(filters.maxPrice || "1000000000")
         setSelectedPropertyTypes(filters.propertyTypes || [])
         setSelectedConstructionStatus(filters.constructionStatus || [])
         setSelectedPostedBy(filters.postedBy || [])
@@ -217,23 +218,50 @@ const FiltersPage = () => {
           </View>
         </View>
 
-        {/* Bedrooms Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{selectedCategory === "Commercial" ? "Rooms" : "Bedrooms"}</Text>
-          <View style={styles.bedroomsContainer}>
-            {bedroomOptions.map((bedroom) => (
-              <TouchableOpacity
-                key={bedroom}
-                style={[styles.bedroomChip, selectedBedrooms.includes(bedroom) && styles.selectedChip]}
-                onPress={() => toggleItem(bedroom, selectedBedrooms, setSelectedBedrooms)}
-              >
-                <Text style={[styles.bedroomText, selectedBedrooms.includes(bedroom) && styles.selectedChipText]}>
-                  {bedroom}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <Text style={styles.sectionTitle}>
+            {selectedCategory === "Commercial" ? "Rooms" : "Bedrooms"}
+          </Text>
+
+          {selectedCategory === "Commercial" ? (
+            <View style={styles.bedroomsContainer}>
+              {commercialBedroomOptions.map((display) => {
+                const value = display === "5+" ? "5+BHK" : `${display}BHK`;
+                const isSelected = selectedBedrooms.includes(value);
+
+                return (
+                  <TouchableOpacity
+                    key={display}
+                    style={[styles.bedroomChip, isSelected && styles.selectedChip]}
+                    onPress={() => toggleItem(value, selectedBedrooms, setSelectedBedrooms)}
+                  >
+                    <Text style={[styles.bedroomText, isSelected && styles.selectedChipText]}>
+                      {display}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : (
+            <View style={styles.bedroomsContainer}>
+              {bedroomOptions.map((bedroom) => {
+                const isSelected = selectedBedrooms.includes(bedroom);
+                return (
+                  <TouchableOpacity
+                    key={bedroom}
+                    style={[styles.bedroomChip, isSelected && styles.selectedChip]}
+                    onPress={() => toggleItem(bedroom, selectedBedrooms, setSelectedBedrooms)}
+                  >
+                    <Text style={[styles.bedroomText, isSelected && styles.selectedChipText]}>
+                      {bedroom}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
         </View>
+
 
         {/* Area Range Section */}
         <View style={styles.section}>
@@ -343,17 +371,30 @@ const FiltersPage = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Type of property</Text>
           <View style={styles.bedroomsContainer}>
-            {(selectedCategory === "Commercial" ? commercialPropertyTypes : propertyTypeOptions).map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={[styles.bedroomChip, selectedPropertyTypes.includes(type) && styles.selectedChip]}
-                onPress={() => toggleItem(type, selectedPropertyTypes, setSelectedPropertyTypes)}
-              >
-                <Text style={[styles.bedroomText, selectedPropertyTypes.includes(type) && styles.selectedChipText]}>
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {selectedCategory === "Commercial" ?
+              (commercialPropertyTypes.map((type) => (
+                <TouchableOpacity
+                  key={type}
+                  style={[styles.bedroomChip, selectedPropertyTypes.includes(type) && styles.selectedChip]}
+                  onPress={() => toggleItem(type, selectedPropertyTypes, setSelectedPropertyTypes)}
+                >
+                  <Text style={[styles.bedroomText, selectedPropertyTypes.includes(type) && styles.selectedChipText]}>
+                    {type}
+                  </Text>
+                </TouchableOpacity>
+              )))
+              :
+              (propertyTypeOptions.map((type) => (
+                <TouchableOpacity
+                  key={type}
+                  style={[styles.bedroomChip, selectedPropertyTypes.includes(type) && styles.selectedChip]}
+                  onPress={() => toggleItem(type, selectedPropertyTypes, setSelectedPropertyTypes)}
+                >
+                  <Text style={[styles.bedroomText, selectedPropertyTypes.includes(type) && styles.selectedChipText]}>
+                    {type}
+                  </Text>
+                </TouchableOpacity>
+              )))}
           </View>
         </View>
 

@@ -79,9 +79,11 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
   onApplyFilters,
 }) => {
   // Additional filter states from SearchFiltersPage
-  const [selectedCategory, setSelectedCategory] = useState<string>("Residential")
-  const [selectedType, setSelectedType] = useState<string>("Sell")
+  const [selectedCategory, setSelectedCategory] = useState<string>("")
+  const [selectedType, setSelectedType] = useState<string>("")
   const [loading, setLoading] = useState(false)
+
+  const commercialBedroomOptions = ["1", "2", "3", "4", "5+"]
 
   // Load saved filters from AsyncStorage when component mounts
   const loadSavedFilters = async () => {
@@ -91,8 +93,8 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
         const filters = JSON.parse(savedFilters)
 
         // Load category and type
-        setSelectedCategory(filters.category || "Residential")
-        setSelectedType(filters.type || "Sell")
+        setSelectedCategory(filters.category || "")
+        setSelectedType(filters.type || "")
 
         // Update parent component states with saved filters
         if (filters.bedrooms && filters.bedrooms.length > 0) {
@@ -148,7 +150,7 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
         maxArea,
         priceRange,
         minPrice,
-        maxPrice, 
+        maxPrice,
         propertyTypes: selectedPropertyTypes,
         constructionStatus: selectedConstructionStatus,
         postedBy: selectedPostedBy,
@@ -311,16 +313,15 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
   // Enhanced clear all function (matching SearchFiltersPage)
   const handleClearAll = () => {
     clearAll()
-    setSelectedCategory("Residential")
-    setSelectedType("Sell")
+    setSelectedCategory("")
 
     // Reset to SearchFiltersPage default values
-    setAreaRange([1800, 12400])
-    setMinArea("1800")
-    setMaxArea("12400")
-    setPriceRange([21.0, 64.3])
-    setMinPrice("210321000")
-    setMaxPrice("642981000")
+    setAreaRange([0, 20000])
+    setMinArea("0")
+    setMaxArea("20000")
+    setPriceRange([0, 100.0])
+    setMinPrice("0")
+    setMaxPrice("1000000000")
   }
 
   // Add commercial property types for when Commercial category is selected
@@ -397,19 +398,43 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
       <View style={styles.section}>
         {/* Change label to "Rooms" when Commercial category is selected */}
         <Text style={styles.sectionTitle}>{selectedCategory === "Commercial" ? "Rooms" : "Bedrooms"}</Text>
-        <View style={styles.bedroomsContainer}>
-          {bedroomOptions.map((bedroom) => (
-            <TouchableOpacity
-              key={bedroom}
-              style={[styles.bedroomChip, selectedBedrooms.includes(bedroom) && styles.selectedChip]}
-              onPress={() => toggleItem(bedroom, selectedBedrooms, setSelectedBedrooms)}
-            >
-              <Text style={[styles.bedroomText, selectedBedrooms.includes(bedroom) && styles.selectedChipText]}>
-                {bedroom}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {selectedCategory === "Commercial" ? (
+          <View style={styles.bedroomsContainer}>
+            {commercialBedroomOptions.map((display) => {
+              const value = display === "5+" ? "5+BHK" : `${display}BHK`;
+              const isSelected = selectedBedrooms.includes(value);
+
+              return (
+                <TouchableOpacity
+                  key={display}
+                  style={[styles.bedroomChip, isSelected && styles.selectedChip]}
+                  onPress={() => toggleItem(value, selectedBedrooms, setSelectedBedrooms)}
+                >
+                  <Text style={[styles.bedroomText, isSelected && styles.selectedChipText]}>
+                    {display}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : (
+          <View style={styles.bedroomsContainer}>
+            {bedroomOptions.map((bedroom) => {
+              const isSelected = selectedBedrooms.includes(bedroom);
+              return (
+                <TouchableOpacity
+                  key={bedroom}
+                  style={[styles.bedroomChip, isSelected && styles.selectedChip]}
+                  onPress={() => toggleItem(bedroom, selectedBedrooms, setSelectedBedrooms)}
+                >
+                  <Text style={[styles.bedroomText, isSelected && styles.selectedChipText]}>
+                    {bedroom}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
       </View>
 
       {/* Area Range Section - Matching SearchFiltersPage styling */}
@@ -520,18 +545,32 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Type of property</Text>
         <View style={styles.bedroomsContainer}>
-          {/* Show commercial property types when Commercial category is selected, allow multiple selection */}
-          {(selectedCategory === "Commercial" ? commercialPropertyTypes : propertyTypeOptions).map((type) => (
-            <TouchableOpacity
-              key={type}
-              style={[styles.bedroomChip, selectedPropertyTypes.includes(type) && styles.selectedChip]}
-              onPress={() => toggleItem(type, selectedPropertyTypes, setSelectedPropertyTypes)}
-            >
-              <Text style={[styles.bedroomText, selectedPropertyTypes.includes(type) && styles.selectedChipText]}>
-                {type}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          <View style={styles.bedroomsContainer}>
+            {selectedCategory === "Commercial" ?
+              (commercialPropertyTypes.map((type) => (
+                <TouchableOpacity
+                  key={type}
+                  style={[styles.bedroomChip, selectedPropertyTypes.includes(type) && styles.selectedChip]}
+                  onPress={() => toggleItem(type, selectedPropertyTypes, setSelectedPropertyTypes)}
+                >
+                  <Text style={[styles.bedroomText, selectedPropertyTypes.includes(type) && styles.selectedChipText]}>
+                    {type}
+                  </Text>
+                </TouchableOpacity>
+              )))
+              :
+              (propertyTypeOptions.map((type) => (
+                <TouchableOpacity
+                  key={type}
+                  style={[styles.bedroomChip, selectedPropertyTypes.includes(type) && styles.selectedChip]}
+                  onPress={() => toggleItem(type, selectedPropertyTypes, setSelectedPropertyTypes)}
+                >
+                  <Text style={[styles.bedroomText, selectedPropertyTypes.includes(type) && styles.selectedChipText]}>
+                    {type}
+                  </Text>
+                </TouchableOpacity>
+              )))}
+          </View>
         </View>
       </View>
 
