@@ -284,9 +284,11 @@ const Form2: React.FC<Form2Props> = ({
 
         {/* Bedrooms */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>No. of Bedrooms (RK)</Text>
+          <Text style={styles.sectionTitle}>
+            {formData.propertyCategory === "Commercial" ? "No. of Rooms" : "No. of Bedrooms (RK)"}
+          </Text>
           <View style={styles.optionsContainer}>
-            {["1RK", "1", "2", "3", "4", "5+"].map((num) => (
+            {formData.propertyCategory === "Commercial" ? ["1RK", "1", "2", "3", "4", "5+"] : ["1", "2", "3", "4", "5+"].map((num) => (
               <SelectionButton
                 key={num}
                 title={num}
@@ -321,19 +323,16 @@ const Form2: React.FC<Form2Props> = ({
         </View>
 
         {/* Balconies */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>No. of Balconies</Text>
-          <View style={styles.optionsContainer}>
-            {["1", "2", "3", "4", "5+"].map((num) => (
-              <SelectionButton
-                key={num}
-                title={num}
-                selected={balconies === num}
-                onPress={() => setBalconies(num)}
-              />
-            ))}
+        {formData.propertyCategory !== "Commercial" && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>No. of Balconies</Text>
+            <View style={styles.optionsContainer}>
+              {["1", "2", "3", "4", "5+"].map((num) => (
+                <SelectionButton key={num} title={num} selected={balconies === num} onPress={() => setBalconies(num)} />
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Furnitures */}
         <View style={styles.section}>

@@ -148,7 +148,7 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
         maxArea,
         priceRange,
         minPrice,
-        maxPrice,
+        maxPrice, 
         propertyTypes: selectedPropertyTypes,
         constructionStatus: selectedConstructionStatus,
         postedBy: selectedPostedBy,
@@ -323,6 +323,24 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
     setMaxPrice("642981000")
   }
 
+  // Add commercial property types for when Commercial category is selected
+  const commercialPropertyTypes = [
+    "Shop",
+    "Industrial land",
+    "Office",
+    "Godown",
+    "Agricultural land",
+    "Industrial plots",
+    "Showrooms",
+    "Warehouse",
+    "Kiosk",
+    "Factory",
+    "Guest house",
+    "Banquet halls",
+    "Hotels",
+    "Resorts"
+  ]
+
   return (
     <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
       {/* Header */}
@@ -377,7 +395,8 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
 
       {/* Bedrooms Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Bedrooms</Text>
+        {/* Change label to "Rooms" when Commercial category is selected */}
+        <Text style={styles.sectionTitle}>{selectedCategory === "Commercial" ? "Rooms" : "Bedrooms"}</Text>
         <View style={styles.bedroomsContainer}>
           {bedroomOptions.map((bedroom) => (
             <TouchableOpacity
@@ -501,7 +520,8 @@ const FilterDesign: React.FC<FilterDesignProps> = ({
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Type of property</Text>
         <View style={styles.bedroomsContainer}>
-          {propertyTypeOptions.map((type) => (
+          {/* Show commercial property types when Commercial category is selected, allow multiple selection */}
+          {(selectedCategory === "Commercial" ? commercialPropertyTypes : propertyTypeOptions).map((type) => (
             <TouchableOpacity
               key={type}
               style={[styles.bedroomChip, selectedPropertyTypes.includes(type) && styles.selectedChip]}

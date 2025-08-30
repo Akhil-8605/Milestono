@@ -41,8 +41,8 @@ interface Property {
   landmark: string
   city: string
   propertyLocation?: string
-  uploadedPhotos: string[]
-  propertyImages?: string[]
+  uploadedPhotos: any[]
+  propertyImages?: any[]
   amenities: string[]
   furnitures?: string[]
   propertyContains: string
@@ -79,34 +79,62 @@ const PropertyCard = ({ property }: { property: Property }) => {
     return "Price on request"
   }
 
-  // Fixed image handling function
+  // Updated image handling function
   const getPropertyImage = () => {
     try {
-      const images = property.uploadedPhotos || property.propertyImages || []
+      // Prefer the first uploaded photo if present, else fall back to propertyImages
+      const imagesRaw =
+        (property?.uploadedPhotos && property.uploadedPhotos.length > 0
+          ? property.uploadedPhotos
+          : property?.propertyImages) || []
 
-      // Filter out invalid URIs and ensure they are strings
-      const validImages = images
-        .filter((img) => {
-          if (!img) return false
-          if (typeof img === "number") return false
-          if (typeof img !== "string") return false
-          if (img.trim() === "") return false
-          return true
-        })
-        .map((img) => String(img).trim())
-
-      if (validImages.length > 0) {
-        // Validate the first image URL
-        const firstImage = validImages[0]
-        if (firstImage.startsWith("http") || firstImage.startsWith("file://") || firstImage.startsWith("/")) {
-          return { uri: firstImage }
+      const toUrlString = (item: any): string | null => {
+        if (!item) return null
+        if (typeof item === "string") {
+          const val = item.trim()
+          return val.length ? val : null
         }
+        if (typeof item === "object") {
+          // Common possible keys coming from APIs/uploaders
+          const candidates = [
+            item.url,
+            item.uri,
+            item.secure_url,
+            item.path,
+            item.sourceURL,
+            item.value,
+            item?.file?.url,
+          ]
+          for (const c of candidates) {
+            if (typeof c === "string" && c.trim().length) return c.trim()
+          }
+        }
+        return null
+      }
+
+      const list = Array.isArray(imagesRaw) ? imagesRaw : [imagesRaw]
+
+      // Explicitly prefer the first image of uploadedPhotos per request
+      // but still sanitize it; if invalid, try the rest as fallback.
+      const extracted = list.map(toUrlString).filter((u): u is string => !!u && u.length > 0)
+
+      if (extracted.length > 0) {
+        const first = extracted[0]
+        // Accept common valid URI schemes for React Native Image
+        if (/^(https?:\/\/|file:\/\/|content:\/\/)/.test(first)) {
+          return { uri: first }
+        }
+        // If you receive server-relative paths like "/uploads/..",
+        // they won't load in RN unless prefixed with your API base.
+        // Add your API base here if needed, e.g.:
+        // const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL
+        // if (first.startsWith("/") && API_BASE) return { uri: `${API_BASE}${first}` }
       }
     } catch (error) {
       console.warn("Error processing property image:", error)
     }
 
-    // Return dummy image as fallback
+    // Fallback to local dummy image
     return dummyImg
   }
 
@@ -228,11 +256,20 @@ const PropertyCard = ({ property }: { property: Property }) => {
             <View style={styles.detailIconContainer}>
               <Icon name="bed" size={16} color="#4ECDC4" />
             </View>
-            <Text style={styles.detailLabel}>Bedrooms</Text>
-            <Text style={styles.detailValue}>
-              {property.bedrooms}
-              {property.bedrooms !== "1RK" ? " BHK" : ""}
-            </Text>
+            {property.propertyCategory === "Commercial" ? (
+              <>
+                <Text style={styles.detailLabel}>Rooms</Text>
+                <Text style={styles.detailValue}>{property.bedrooms}</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.detailLabel}>Bedrooms</Text>
+                <Text style={styles.detailValue}>
+                  {property.bedrooms}
+                  {property.bedrooms !== "1RK" ? " BHK" : ""}
+                </Text>
+              </>
+            )}
           </View>
 
           <View style={styles.detailItem}>
@@ -519,47 +556,47 @@ const PropertyListingScreen = () => {
         // Transform the data to ensure compatibility with PropertyDetailsPage
         const transformedProperties = Array.isArray(response.data)
           ? response.data.map((property: any) => {
-            const heading = String(property?.heading || property?.propertyTitle || "Untitled")
+              const heading = String(property?.heading || property?.propertyTitle || "Untitled")
 
-            // Clean image arrays
-            const uploadedPhotos = cleanImageArray(property?.uploadedPhotos || [])
-            const propertyImages = cleanImageArray(property?.propertyImages || [])
+              // Clean image arrays
+              const uploadedPhotos = cleanImageArray(property?.uploadedPhotos || [])
+              const propertyImages = cleanImageArray(property?.propertyImages || [])
 
-            const landmark = String(property?.landmark || "")
-            const city = String(property?.city || "")
-            const propertyLocation = String(
-              property?.propertyLocation ||
-              `${landmark}, ${city}`.trim().replace(/^,\s*/, "") ||
-              "Location not specified",
-            )
+              const landmark = String(property?.landmark || "")
+              const city = String(property?.city || "")
+              const propertyLocation = String(
+                property?.propertyLocation ||
+                  `${landmark}, ${city}`.trim().replace(/^,\s*/, "") ||
+                  "Location not specified",
+              )
 
-            return {
-              _id: String(property._id || ""),
-              heading,
-              propertyCategory: String(property.propertyCategory || ""),
-              sellType: String(property.sellType || ""),
-              bedrooms: String(property.bedrooms || ""),
-              areaSqft: String(property.areaSqft || "0"),
-              builtUpArea: String(property.builtUpArea || property.areaSqft || "0"),
-              expectedPrice: String(property.expectedPrice || "0"),
-              pricePerMonth: property.pricePerMonth ? String(property.pricePerMonth) : undefined,
-              landmark,
-              city,
-              propertyLocation,
-              uploadedPhotos,
-              propertyImages,
-              amenities: Array.isArray(property.amenities) ? property.amenities : [],
-              furnitures: Array.isArray(property.furnitures) ? property.furnitures : [],
-              propertyContains: String(property.propertyContains || ""),
-              sellerType: String(property.sellerType || ""),
-              oldProperty: String(property.oldProperty || ""),
-              createdAt: String(property.createdAt || ""),
-              updatedAt: String(property.updatedAt || ""),
-              latitude: property.latitude || 0,
-              longitude: property.longitude || 0,
-              propertyType: String(property.propertyType || property.propertyCategory || ""),
-            } as Property
-          })
+              return {
+                _id: String(property._id || ""),
+                heading,
+                propertyCategory: String(property.propertyCategory || ""),
+                sellType: String(property.sellType || ""),
+                bedrooms: String(property.bedrooms || ""),
+                areaSqft: String(property.areaSqft || "0"),
+                builtUpArea: String(property.builtUpArea || property.areaSqft || "0"),
+                expectedPrice: String(property.expectedPrice || "0"),
+                pricePerMonth: property.pricePerMonth ? String(property.pricePerMonth) : undefined,
+                landmark,
+                city,
+                propertyLocation,
+                uploadedPhotos,
+                propertyImages,
+                amenities: Array.isArray(property.amenities) ? property.amenities : [],
+                furnitures: Array.isArray(property.furnitures) ? property.furnitures : [],
+                propertyContains: String(property.propertyContains || ""),
+                sellerType: String(property.sellerType || ""),
+                oldProperty: String(property.oldProperty || ""),
+                createdAt: String(property.createdAt || ""),
+                updatedAt: String(property.updatedAt || ""),
+                latitude: property.latitude || 0,
+                longitude: property.longitude || 0,
+                propertyType: String(property.propertyType || property.propertyCategory || ""),
+              } as Property
+            })
           : []
 
         setOriginalProperties(transformedProperties)
